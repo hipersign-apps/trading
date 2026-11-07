@@ -1,0 +1,42 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-codocs",
+ "page_name": "hipersign-codocs",
+ "title": "Company Compliance",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Managing Director"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "HR Manager"
+  },
+  {
+   "role": "Demo Viewer"
+  },
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Logistics Coordinator"
+  },
+  {
+   "role": "Stock Manager"
+  }
+ ],
+ "owner": "Administrator",
+ "creation": "2026-10-30 14:00:00",
+ "modified": "2026-11-03 15:00:00.000000"
+}

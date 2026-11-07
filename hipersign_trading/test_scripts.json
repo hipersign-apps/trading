@@ -1,0 +1,1625 @@
+[
+ {
+  "id": "PUR-01",
+  "section": "Purchasing",
+  "role": "Buyer",
+  "steps": "New Purchase Order for Global Supplies (USD) above AED 100,000 → Submit for Approval",
+  "expected": "Goes to Purchase Manager, then Finance Manager",
+  "route": [
+   "List",
+   "Purchase Order"
+  ]
+ },
+ {
+  "id": "IMP-01",
+  "section": "Imports & Shipments",
+  "role": "Logistics",
+  "steps": "Open the shipment *Under Customs Clearance* → Move to Cleared",
+  "expected": "Blocked until Bill of Entry and all documents are on file",
+  "route": [
+   "List",
+   "Import Shipment"
+  ]
+ },
+ {
+  "id": "IMP-02",
+  "section": "Imports & Shipments",
+  "role": "Storekeeper",
+  "steps": "Try a Purchase Receipt for the PO of a shipment not yet cleared",
+  "expected": "Blocked: \"Goods can be received only after customs clearance\"",
+  "route": [
+   "List",
+   "Import Shipment"
+  ]
+ },
+ {
+  "id": "LC-01",
+  "section": "Landed cost & LCs",
+  "role": "Accountant",
+  "steps": "Cleared shipment → Landed cost voucher → Submit",
+  "expected": "Charges spread over received items; valuation rises",
+  "route": [
+   "List",
+   "Letter of Credit"
+  ]
+ },
+ {
+  "id": "SAL-01",
+  "section": "Sales",
+  "role": "Sales Executive",
+  "steps": "Sales Order for Al Noor at list rate → Submit",
+  "expected": "Approved directly (Contractor −5%)",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "SAL-02",
+  "section": "Sales",
+  "role": "Sales Executive",
+  "steps": "Sales Order with a 15% discount → Submit for Approval",
+  "expected": "Pending Sales Manager",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "SAL-03",
+  "section": "Sales",
+  "role": "Finance Manager",
+  "steps": "Approve the Elite Systems order",
+  "expected": "Credit check explained in *Approval reason*; order released",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "CRD-01",
+  "section": "Credit",
+  "role": "Sales Executive",
+  "steps": "Raise a customer credit limit",
+  "expected": "Limit stays; Credit Limit Request pending Finance Manager",
+  "route": [
+   "List",
+   "Credit Limit Request"
+  ]
+ },
+ {
+  "id": "QTN-01",
+  "section": "Sales",
+  "role": "Sales Executive",
+  "steps": "Quotation with items, a service and printed terms → Send → WhatsApp",
+  "expected": "Bilingual quotation; wa.me opens with an expiring PDF link",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "TRK-01",
+  "section": "Order Tracker",
+  "role": "Sales Manager",
+  "steps": "Sales Order Tracker → hover each stage → Reports → Statement of Account",
+  "expected": "Stage popups and party ledger",
+  "route": [
+   "sales-order-tracker"
+  ]
+ },
+ {
+  "id": "CRM-01",
+  "section": "CRM & Leads",
+  "role": "Sales Executive",
+  "steps": "Lead → Log activity, move stage on Hipersign Lead Pipeline board",
+  "expected": "Stage, probability and next follow-up saved; ToDo created when due",
+  "route": [
+   "List",
+   "Lead"
+  ]
+ },
+ {
+  "id": "EXP-01",
+  "section": "Exports",
+  "role": "Sales Executive",
+  "steps": "Export Sales Order for Muscat Integrated Systems",
+  "expected": "Zero-rated export tax template; Proforma print",
+  "route": [
+   "List",
+   "Export Shipment"
+  ]
+ },
+ {
+  "id": "EXP-02",
+  "section": "Exports",
+  "role": "Logistics",
+  "steps": "Export Shipment → Pack → export invoice → declaration → Shipped",
+  "expected": "Steps blocked until invoice, declaration, BL/CMR and CoO exist",
+  "route": [
+   "List",
+   "Export Shipment"
+  ]
+ },
+ {
+  "id": "EXP-03",
+  "section": "Exports",
+  "role": "Accountant",
+  "steps": "Kenya shipment → tick LC documents → Documents Complete",
+  "expected": "Proof of export recorded; daily alert stops",
+  "route": [
+   "List",
+   "Export Shipment"
+  ]
+ },
+ {
+  "id": "DSH-01",
+  "section": "Home",
+  "role": "Managing Director",
+  "steps": "Hipersign Trading workspace",
+  "expected": "Gross and net profit cards, sales/purchases charts",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "HOME-01",
+  "section": "Home",
+  "role": "Accountant, Sales Manager, Warehouse Manager",
+  "steps": "Log in",
+  "expected": "Each lands on their own workspace with their own cards",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "RET-01",
+  "section": "Returns",
+  "role": "Sales Executive",
+  "steps": "Sales Invoice → Create → Return / Credit Note, pick a reason → Submit",
+  "expected": "Credit note saved as a draft; the Sales Executive has no Submit — only the Sales Manager (or Accounts) can submit it",
+  "route": [
+   "List",
+   "Sales Invoice"
+  ]
+ },
+ {
+  "id": "RET-02",
+  "section": "Returns",
+  "role": "Sales Manager",
+  "steps": "Submit the pending Al Noor credit note → Print (Hipersign Tax Invoice)",
+  "expected": "Prints as **TAX CREDIT NOTE** with the original invoice and reason; outstanding falls",
+  "route": [
+   "List",
+   "Sales Invoice"
+  ]
+ },
+ {
+  "id": "PDC-01",
+  "section": "Cheques",
+  "role": "Accountant",
+  "steps": "Post Dated Cheque 000418 (date reached) → Deposit → Cleared",
+  "expected": "Payment Entry (mode Cheque) created; Horizon's invoice outstanding falls",
+  "route": [
+   "List",
+   "Post Dated Cheque"
+  ]
+ },
+ {
+  "id": "PDC-02",
+  "section": "Cheques",
+  "role": "Accountant",
+  "steps": "Cheque 553019 (deposited) → Bounced",
+  "expected": "Bank charges journal posted; customer's *Bounced cheques* +1; invoice stays open",
+  "route": [
+   "List",
+   "Post Dated Cheque"
+  ]
+ },
+ {
+  "id": "PDC-03",
+  "section": "Cheques",
+  "role": "Accountant",
+  "steps": "Bounced cheque → Replacement cheque",
+  "expected": "New cheque in hand; old one marked Replaced",
+  "route": [
+   "List",
+   "Post Dated Cheque"
+  ]
+ },
+ {
+  "id": "SER-01",
+  "section": "Serial & Warranty",
+  "role": "Warehouse Manager",
+  "steps": "Serial & Warranty Look-up → scan an ACR-… serial",
+  "expected": "Customer, delivery note and warranty end date shown",
+  "route": [
+   "serial-lookup"
+  ]
+ },
+ {
+  "id": "SER-02",
+  "section": "Serial & Warranty",
+  "role": "Warehouse Manager",
+  "steps": "Look-up → Register warranty claim → Resolution Replace + replacement serial",
+  "expected": "Claim saved with warranty status filled in",
+  "route": [
+   "serial-lookup"
+  ]
+ },
+ {
+  "id": "DRV-01",
+  "section": "Driver App",
+  "role": "Driver (phone)",
+  "steps": "`/driver` → open stop → tick items → sign → photo → Confirm",
+  "expected": "Delivery Note shows Delivered, receiver, signature, photo, GPS; print shows the signature",
+  "route": null
+ },
+ {
+  "id": "PRT-01",
+  "section": "Customer Portal",
+  "role": "Customer (portal user)",
+  "steps": "`/me` → Statement of account, Warranty, Invoices",
+  "expected": "Own ledger with cheques; own serialised units with warranty",
+  "route": null
+ },
+ {
+  "id": "HR-01",
+  "section": "HR & Payroll",
+  "role": "HR Manager",
+  "steps": "Employee → UAE documents → set visa expiry in 30 days; run `bench execute hipersign_trading.tasks.employee_document_alerts`",
+  "expected": "ToDo for HR Manager",
+  "route": [
+   "List",
+   "Employee"
+  ]
+ },
+ {
+  "id": "WPS-01",
+  "section": "HR & Payroll",
+  "role": "HR Manager",
+  "steps": "Submitted Payroll Entry → Hipersign → WPS salary file (SIF)",
+  "expected": ".SIF file with EDR lines per employee and the SCR total line",
+  "route": [
+   "List",
+   "Payroll Entry"
+  ]
+ },
+ {
+  "id": "BNK-01",
+  "section": "Banking",
+  "role": "Accountant",
+  "steps": "Bank Statement Import → Bank Reconciliation Tool",
+  "expected": "Statement lines matched to payments",
+  "route": [
+   "List",
+   "Bank Transaction"
+  ]
+ },
+ {
+  "id": "MST-07",
+  "section": "Masters",
+  "role": "Sales Manager (supplier: Purchase Manager)",
+  "steps": "Open item ITM-002, customer Al Noor LLC, supplier EuroSafe",
+  "expected": "Brand/model, Carton = 100 Nos, weight, minimum order, default supplier; territory, sales person, website; supplier lead time",
+  "route": [
+   "List",
+   "Item"
+  ]
+ },
+ {
+  "id": "ADV-01",
+  "section": "Advances",
+  "role": "Warehouse Manager",
+  "steps": "Al Noor order **ANL/PO/7802** (50% advance terms) → Create → Delivery Note / Pick List → Submit (run before ADV-02)",
+  "expected": "Blocked: \"Advance before delivery … has not been received\"",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "ADV-02",
+  "section": "Advances",
+  "role": "Accountant",
+  "steps": "Same order → Create → Receive advance → Submit the Payment Entry; try the delivery again",
+  "expected": "Advance status *Received*; delivery allowed; on the invoice *Get advances* applies it",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "ADV-03",
+  "section": "Advances",
+  "role": "Finance Manager",
+  "steps": "Future Build order **FB/PO/0951**; then order **FB/PO/0932**",
+  "expected": "FB/PO/0951: advance *Received*, stock reserved. FB/PO/0932: a draft Pick List (ERPNext 16 allows no pick list while stock is reserved)",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "COL-01",
+  "section": "Collections",
+  "role": "Accountant",
+  "steps": "Gulf Projects invoice → Collection → Promise to pay; run `bench execute hipersign_trading.tasks.collection_reminders`",
+  "expected": "Promised invoices are skipped; other overdue invoices get their stage and a ToDo",
+  "route": [
+   "List",
+   "Sales Invoice"
+  ]
+ },
+ {
+  "id": "COL-02",
+  "section": "Collections",
+  "role": "Sales Executive",
+  "steps": "New Sales Order for **Horizon Trading** (invoice for HT-5101 is more than 60 days overdue)",
+  "expected": "*Approval needed: … collections hold* → goes to the Finance Manager",
+  "route": [
+   "List",
+   "Sales Invoice"
+  ]
+ },
+ {
+  "id": "KYC-01",
+  "section": "KYC & Compliance",
+  "role": "Sales Manager",
+  "steps": "Approve the pending Gulf Projects order (GP-2026-344)",
+  "expected": "Blocked: trade licence expired / KYC blocked; drafts and quotations still allowed",
+  "route": [
+   "List",
+   "Customer"
+  ]
+ },
+ {
+  "id": "KYC-02",
+  "section": "KYC & Compliance",
+  "role": "Sales Manager",
+  "steps": "Customer Gulf Projects → KYC: new expiry date next year, status Verified → approve the order again",
+  "expected": "Order confirmed",
+  "route": [
+   "List",
+   "Customer"
+  ]
+ },
+ {
+  "id": "PUR-02",
+  "section": "Purchasing",
+  "role": "Buyer",
+  "steps": "Request for Quotation from *Ceiling speakers restock* → Supplier Quotation Comparison",
+  "expected": "Both supplier offers side by side in AED with lead times",
+  "route": [
+   "List",
+   "Purchase Order"
+  ]
+ },
+ {
+  "id": "RO-01",
+  "section": "Purchasing",
+  "role": "Buyer",
+  "steps": "Report **Hipersign Smart Reorder** → Create purchase orders",
+  "expected": "Suggestions rounded to cartons, not below minimum order, grouped by default supplier into draft POs",
+  "route": [
+   "query-report",
+   "Hipersign Smart Reorder"
+  ]
+ },
+ {
+  "id": "LC-02",
+  "section": "Landed cost & LCs",
+  "role": "Accountant",
+  "steps": "Letter of Credit MSQ-ILC-26-1107 (accepted, usance 90)",
+  "expected": "Maturity date and trust receipt due/interest shown; Create → Trust receipt journal entry (draft)",
+  "route": [
+   "List",
+   "Letter of Credit"
+  ]
+ },
+ {
+  "id": "LC-03",
+  "section": "Landed cost & LCs",
+  "role": "Purchase Manager",
+  "steps": "Letter of Credit ENBD-ILC-26-0418 (run before LC-04)",
+  "expected": "Expiry warning on the form; ToDo from `letter_of_credit_alerts`",
+  "route": [
+   "List",
+   "Letter of Credit"
+  ]
+ },
+ {
+  "id": "VAT-01",
+  "section": "VAT & Tax",
+  "role": "Finance Manager",
+  "steps": "Tax Return for last month (Pending Finance Manager) → Approve & lock → Filed on EmaraTax (reference) → Record payment",
+  "expected": "Status Approved → Submitted → Paid; an Accounting Period now refuses invoices dated in that month",
+  "route": [
+   "List",
+   "Tax Return"
+  ]
+ },
+ {
+  "id": "FX-01",
+  "section": "Finance",
+  "role": "Finance Manager",
+  "steps": "Exchange Rate Revaluation (draft, today or a month end not yet locked by a VAT return) → Get entries → Submit → Make journal entries",
+  "expected": "Unrealised gain/loss on EUR/CNY balances; reversal journal on the 1st. A month locked by an approved VAT return refuses the entry (closed accounting period)",
+  "route": [
+   "List",
+   "Exchange Rate Revaluation"
+  ]
+ },
+ {
+  "id": "GRP-01",
+  "section": "Group Companies",
+  "role": "Finance Manager",
+  "steps": "Consolidated Financial Statement → company *Hipersign Demo Group*",
+  "expected": "LLC, FZE and Oman figures with the group total",
+  "route": [
+   "query-report",
+   "Hipersign Group Consolidation"
+  ]
+ },
+ {
+  "id": "GRP-02",
+  "section": "Group Companies",
+  "role": "Accountant",
+  "steps": "Sales Invoice to *Hipersign Demo Trading FZE* → Create → Inter-company purchase invoice",
+  "expected": "Purchase invoice in the FZE's books linked to the sales invoice",
+  "route": [
+   "query-report",
+   "Hipersign Group Consolidation"
+  ]
+ },
+ {
+  "id": "SET-01",
+  "section": "Set-up",
+  "role": "Administrator (new site)",
+  "steps": "Log in → *Set up Hipersign ERP* → Single company, Starter → Finish",
+  "expected": "Menus for CRM, LCs, HR, assets hidden; approval workflows off; forms open in Quick mode",
+  "route": [
+   "Form",
+   "Hipersign Settings"
+  ]
+ },
+ {
+  "id": "SET-02",
+  "section": "Set-up",
+  "role": "Administrator",
+  "steps": "Hipersign Settings → Pack → Enterprise, Group",
+  "expected": "Everything back; workflows on; nothing was deleted",
+  "route": [
+   "Form",
+   "Hipersign Settings"
+  ]
+ },
+ {
+  "id": "SET-03",
+  "section": "Set-up",
+  "role": "Administrator (new site)",
+  "steps": "Hipersign Settings → Set-up → Load demo data → type DEMO",
+  "expected": "Notification *Hipersign demo data loaded* after a few minutes",
+  "route": [
+   "Form",
+   "Hipersign Settings"
+  ]
+ },
+ {
+  "id": "FM-01",
+  "section": "Form modes",
+  "role": "Sales Executive",
+  "steps": "Quotations → **New · Quick** → customer, type `3 cam` + Enter → Save",
+  "expected": "Quotation saved with list price; opens the form",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "FM-02",
+  "section": "Form modes",
+  "role": "Sales Executive",
+  "steps": "Sales Orders → New · Quick → Gulf Trading LLC → *Repeat last order* → Submit order",
+  "expected": "Lines copied at today's prices; over AED 50,000 without LPO it is kept as a draft with the Documents box showing what is missing",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "FM-03",
+  "section": "Form modes",
+  "role": "Accountant",
+  "steps": "Sales Invoices → New · Quick → Create invoice on a delivery",
+  "expected": "Tax invoice created and submitted from the delivery note",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "FM-04",
+  "section": "Form modes",
+  "role": "Accountant",
+  "steps": "Payment Entries → New · Quick → customer, amount → Record receipt",
+  "expected": "One payment applied to the oldest invoices first",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "FM-05",
+  "section": "Form modes",
+  "role": "Any",
+  "steps": "Draft form → **Form mode** → Detailed / Standard",
+  "expected": "Rare fields shown / hidden; choice remembered",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "DOC-01",
+  "section": "Documents & exceptions",
+  "role": "Sales Executive",
+  "steps": "Draft sales order ≥ AED 50,000 → Submit",
+  "expected": "Blocked: *Document needed — Customer LPO*",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "DOC-02",
+  "section": "Documents & exceptions",
+  "role": "Sales Executive",
+  "steps": "Documents box → Request exception → reason, date → Send",
+  "expected": "Waiver pending; Sales Manager gets a ToDo",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "DOC-03",
+  "section": "Documents & exceptions",
+  "role": "Sales Manager",
+  "steps": "Document Waiver → Decide → Approve; Sales Executive submits the order",
+  "expected": "Order goes on; waiver *Used*; overdue alert if the LPO is not attached by the date",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "DOC-04",
+  "section": "Documents & exceptions",
+  "role": "Accountant",
+  "steps": "Report **Missing Documents**",
+  "expected": "Every record missing a required document, with level and exceptions",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "CMP-01",
+  "section": "Company compliance",
+  "role": "Managing Director",
+  "steps": "Company Document *Establishment card* (expired) → Record renewal",
+  "expected": "New expiry; status Valid; reminders restart",
+  "route": [
+   "List",
+   "Company Document"
+  ]
+ },
+ {
+  "id": "CMP-02",
+  "section": "Company compliance",
+  "role": "Accountant",
+  "steps": "Company Deadline *VAT return* → Mark done",
+  "expected": "Next month's deadline created",
+  "route": [
+   "List",
+   "Company Document"
+  ]
+ },
+ {
+  "id": "GRP-03",
+  "section": "Group Companies",
+  "role": "Finance Manager",
+  "steps": "Report **Hipersign Group Consolidation** → Sync all members",
+  "expected": "Columns per company, eliminations, group total; balance sheet balances; Oman 30% minority shown",
+  "route": [
+   "query-report",
+   "Hipersign Group Consolidation"
+  ]
+ },
+ {
+  "id": "PDC-04",
+  "section": "Cheques",
+  "role": "Accountant (new site)",
+  "steps": "Post Dated Cheque received against an invoice",
+  "expected": "Journal entry: cheques in hand / customer; invoice outstanding falls at once; clearing moves it to the bank",
+  "route": [
+   "List",
+   "Post Dated Cheque"
+  ]
+ },
+ {
+  "id": "PDC-05",
+  "section": "Cheques",
+  "role": "Accountant",
+  "steps": "Supplier invoice with an issued cheque → Payment Entry for the full amount",
+  "expected": "Blocked: only the remaining amount can be paid",
+  "route": [
+   "List",
+   "Post Dated Cheque"
+  ]
+ },
+ {
+  "id": "BC-01",
+  "section": "Finance",
+  "role": "Accountant",
+  "steps": "Customer paid AED 25 less → Payment Entry → *Book the difference as bank charges*",
+  "expected": "Invoice settled in full; above the limit only the Accounts Manager can save it",
+  "route": [
+   "List",
+   "Payment Entry"
+  ]
+ },
+ {
+  "id": "LC-04",
+  "section": "Landed cost & LCs",
+  "role": "Accountant",
+  "steps": "Letter of Credit with margin → status Paid (date today)",
+  "expected": "Draft margin release journal created; a future paid date is refused",
+  "route": [
+   "List",
+   "Letter of Credit"
+  ]
+ },
+ {
+  "id": "PL-01",
+  "section": "Sales",
+  "role": "Sales Executive",
+  "steps": "Quotation for a Wholesale customer → item list",
+  "expected": "Only items in the Wholesale price list; tick *All items* to see the rest",
+  "route": [
+   "List",
+   "Quotation"
+  ]
+ },
+ {
+  "id": "LOOK-01",
+  "section": "Look & menus",
+  "role": "Any user",
+  "steps": "Log in",
+  "expected": "Lands on Hipersign Home; navy Hipersign menu with the logo; prototype fonts and colours",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "LOOK-02",
+  "section": "Look & menus",
+  "role": "Any user",
+  "steps": "Avatar menu → Toggle theme → Dark",
+  "expected": "Dark navy look as in the prototype's dark mode",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "LOOK-03",
+  "section": "Look & menus",
+  "role": "Sales Executive (Arabic)",
+  "steps": "Language Arabic → Sales Orders",
+  "expected": "Right-to-left; menu on the right; Arabic menu labels",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "NAV-01",
+  "section": "Look & menus",
+  "role": "Administrator",
+  "steps": "Open Sales Orders, then General Ledger, then Hipersign Settings",
+  "expected": "The Hipersign menu stays; the current page is highlighted",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "NAV-02",
+  "section": "Look & menus",
+  "role": "Administrator",
+  "steps": "Desktop (logo → Desktop)",
+  "expected": "Only the Hipersign ERP tile; Hipersign Settings → Look & menus → untick *Show only Hipersign ERP* → the other tiles return",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "NAV-03",
+  "section": "Look & menus",
+  "role": "Administrator",
+  "steps": "Hipersign Settings → Pack → Starter",
+  "expected": "LCs, imports, CRM disappear from the menu; Enterprise brings them back",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "HOM-01",
+  "section": "Overview screens",
+  "role": "Managing Director",
+  "steps": "Hipersign Home → This month / Last month / Year to date; click a lifecycle stage and a KPI card",
+  "expected": "Group block, 7-stage lifecycle, work for today, priority alerts, KPI cards, P&L and the 12-month chart; every figure opens its records",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "HOM-02",
+  "section": "Overview screens",
+  "role": "Sales Executive",
+  "steps": "Log in → Hipersign Home",
+  "expected": "Only the figures the user can open (no group block, P&L or purchase figures)",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "APR-01",
+  "section": "Overview screens",
+  "role": "Sales Manager",
+  "steps": "Approvals → Only items I can approve → Approve the 15% discount order",
+  "expected": "The order moves to its next workflow state, exactly as from the form; KYC and credit rules still apply",
+  "route": [
+   "hipersign-approvals"
+  ]
+ },
+ {
+  "id": "APR-02",
+  "section": "Overview screens",
+  "role": "Finance Manager",
+  "steps": "Approvals → VAT return → Approve",
+  "expected": "Return approved and locked; it leaves the queue",
+  "route": [
+   "hipersign-approvals"
+  ]
+ },
+ {
+  "id": "ALR-01",
+  "section": "Overview screens",
+  "role": "Managing Director",
+  "steps": "Insights & Alerts → open the customs-documents alert → Mark actioned with a note",
+  "expected": "Alert moves to Actioned with the note; it stays actioned until the situation changes",
+  "route": [
+   "hipersign-alerts"
+  ]
+ },
+ {
+  "id": "ALR-02",
+  "section": "Overview screens",
+  "role": "Warehouse Manager",
+  "steps": "Insights & Alerts",
+  "expected": "Only alerts on records the user may open (stock, slow-moving, shipments)",
+  "route": [
+   "hipersign-alerts"
+  ]
+ },
+ {
+  "id": "MSG-01",
+  "section": "Overview screens",
+  "role": "Logistics",
+  "steps": "Messages → the shipment under customs clearance → reply with @Omar Haddad",
+  "expected": "Comment added on the shipment; Omar gets a mention notification; the thread shows on the shipment form too",
+  "route": [
+   "hipersign-messages"
+  ]
+ },
+ {
+  "id": "TJ-01",
+  "section": "Overview screens",
+  "role": "Purchase Manager",
+  "steps": "Trade Journey → pick the received import PO",
+  "expected": "Seven stages from supplier order to customer payment, each linked to its documents",
+  "route": [
+   "hipersign-journey"
+  ]
+ },
+ {
+  "id": "LCM-01",
+  "section": "Overview screens",
+  "role": "Finance Manager",
+  "steps": "Landed Cost & Margin → pick a shipment; Price helper → item, 25%",
+  "expected": "Goods + freight + duty + insurance = landed cost per unit; lowest price for the margin and the list-price margin",
+  "route": [
+   "hipersign-landed"
+  ]
+ },
+ {
+  "id": "TST-01",
+  "section": "Overview screens",
+  "role": "Any user",
+  "steps": "Test Centre → mark a test Pass with a note",
+  "expected": "Result, note, who and when kept on the site for everyone",
+  "route": [
+   "hipersign-tests"
+  ]
+ },
+ {
+  "id": "ADD-01",
+  "section": "Overview screens",
+  "role": "Sales Executive",
+  "steps": "Add-ons & Pricing → tick Automatic WhatsApp alerts → Print / PDF estimate",
+  "expected": "WhatsApp Business integration added automatically; hours, cost and third-party fees on a printable estimate",
+  "route": [
+   "hipersign-addons"
+  ]
+ },
+ {
+  "id": "NEW-01",
+  "section": "Top bar",
+  "role": "Any",
+  "steps": "Click **+ New** in the top bar",
+  "expected": "A Create new panel drops down under the button (13 groups as in the prototype) with a Quick / Standard / Detailed chip on documents that have form modes; All → opens the full Create New page; the side menu has no Create New entry",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "SRCH-01",
+  "section": "Top bar",
+  "role": "Any",
+  "steps": "Type in the top bar search: `so`, then `Al Noor`, then a sales order number, then `HDMI`, then a serial number",
+  "expected": "Results drop down as you type, labelled by type (Customer, Item, Sales order, Invoice, Shipment, Serial …) as number — name; clicking opens the record; only records the user may see, in the selected company; last row Search everywhere",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "TOP-01",
+  "section": "Top bar",
+  "role": "Administrator",
+  "steps": "Top bar: choose a company in the scope drop-down, then Last month in the period drop-down; open Home, then New → Sales order",
+  "expected": "One scope and one period drop-down in the top bar; Home has no buttons or company drop-down of its own and follows both; the new order uses the chosen company",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "NAV-04",
+  "section": "Navigation",
+  "role": "Any",
+  "steps": "Click ☰ at the left of the top bar; reload; click it again; narrow the window below 900 px and click it",
+  "expected": "Desktop: menu shrinks to an icon rail with tooltips and unread dots, stays after reload, restores on the second click. Narrow: menu slides in over the page with a backdrop",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "NAV-05",
+  "section": "Navigation",
+  "role": "Administrator",
+  "steps": "Look at the side menu; open each section; click Quotations & Orders, then its Sales Orders sub-item; reload",
+  "expected": "Top level = the prototype's 32 entries in its order and names (Overview: Home, Messages, Approvals, Insights & Alerts, Trade Journey; Accounting and Corporate Tax as their own entries); each module shows its list sub-items; no Create New or Add Sidebar Item; count badges on Messages, Approvals, Insights & Alerts and CRM; open sections remembered after reload",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "BELL-01",
+  "section": "Top bar",
+  "role": "Administrator",
+  "steps": "Click the bell",
+  "expected": "Grouped panel: approvals, lead follow-ups, high alerts, email review, each with a count; Mark all read; Open the full list; no CRM-app sample tasks",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "USR-01",
+  "section": "Top bar",
+  "role": "Administrator (demo site)",
+  "steps": "Avatar menu → View as → Sales Executive; then back to Administrator",
+  "expected": "The desk reloads as the Sales Executive with that user's menu, Home and approvals; the switch is logged; going back restores Administrator",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "MSG-02",
+  "section": "Messages",
+  "role": "Logistics",
+  "steps": "Messages → open a thread → type `@Om` → pick Omar Haddad → Send",
+  "expected": "A people list opens above the box (readable in dark mode); the mention is inserted; Omar gets a Mention notification; only one Send button",
+  "route": [
+   "hipersign-messages"
+  ]
+ },
+ {
+  "id": "MSG-03",
+  "section": "Messages",
+  "role": "Any",
+  "steps": "Messages → New message on a record → pick SHP-… → write → Send",
+  "expected": "A thread is started on the shipment and appears in the inbox and on the shipment's form",
+  "route": [
+   "hipersign-messages"
+  ]
+ },
+ {
+  "id": "SET-04",
+  "section": "Set-up",
+  "role": "Administrator",
+  "steps": "Hipersign Settings → Setup & features → Feature pack → Starter → Save (site with several companies)",
+  "expected": "Confirmation, then every switch set to Starter; the field stays Starter (Group kept on separately); banner shows Pack: Starter · Group",
+  "route": [
+   "Form",
+   "Hipersign Settings"
+  ]
+ },
+ {
+  "id": "SET-05",
+  "section": "Set-up",
+  "role": "Administrator",
+  "steps": "With Starter on, open Home, the New panel, Insights & Alerts and a new Sales Order; then switch back to Enterprise",
+  "expected": "Starter: no LC, import, export, CRM, HR or KYC on Home, in the New panel, in the menu or in alerts; forms open in Quick. Enterprise brings everything back and forms open Detailed",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "QC-01",
+  "section": "Quick forms",
+  "role": "Sales Executive",
+  "steps": "CRM & Leads → New · Quick → company, contact, mobile, interested in, value, next follow-up → Save",
+  "expected": "A small quick card (prototype fields), not the full Lead form; the lead is saved with stage New and the follow-up ToDo",
+  "route": [
+   "List",
+   "Lead"
+  ]
+ },
+ {
+  "id": "QC-02",
+  "section": "Quick forms",
+  "role": "Sales Executive",
+  "steps": "New → Customer (Quick) → name, group, emirate, contact, mobile, TRN, credit limit, payment terms → Save",
+  "expected": "Prototype fields only — no GSTIN, GST Category, postal code or state; customer, contact and address created",
+  "route": [
+   "List",
+   "Customer"
+  ]
+ },
+ {
+  "id": "QC-03",
+  "section": "Quick forms",
+  "role": "Purchase Manager",
+  "steps": "New → Supplier (Quick) → name, country, currency, terms, incoterm, contact, TRN, IBAN → Save",
+  "expected": "Prototype fields, no GST; supplier saved with currency and terms",
+  "route": [
+   "List",
+   "Supplier"
+  ]
+ },
+ {
+  "id": "QC-04",
+  "section": "Quick forms",
+  "role": "Purchase Manager",
+  "steps": "New → Item (Quick) → English and Arabic name, category, unit, HS code, origin, cost, selling price, reorder level, warehouse → Save",
+  "expected": "Item saved with Arabic name, HS code, origin, standard buying and selling prices, reorder level and default warehouse",
+  "route": [
+   "List",
+   "Item"
+  ]
+ },
+ {
+  "id": "QC-05",
+  "section": "Quick forms",
+  "role": "Administrator",
+  "steps": "New → each of Warehouse, Employee, Fixed asset, Customer group, Payment terms, Bank account, Contact, Address, Driver & vehicle",
+  "expected": "Each opens a quick card with the prototype's fields (Employee includes salary parts, IBAN and document expiries; Driver & vehicle together) and saves",
+  "route": [
+   "hipersign-create"
+  ]
+ },
+ {
+  "id": "QC-06",
+  "section": "Quick forms",
+  "role": "Any",
+  "steps": "Draft Lead / Customer / Item → type some fields → Form mode → Quick, then Standard",
+  "expected": "What was typed is kept in every mode",
+  "route": [
+   "List",
+   "Lead"
+  ]
+ },
+ {
+  "id": "FM-06",
+  "section": "Form modes",
+  "role": "System Manager",
+  "steps": "For each of the 26 forms that gain the Form mode drop-down (Supplier … Company Document): open New in Quick, Standard and Detailed; fill only what is shown; save; switch mode on a draft",
+  "expected": "Every mode saves without a hidden-mandatory error; Standard hides only the listed rarely used fields; typed values survive a mode switch; New buttons carry the mode chip",
+  "route": [
+   "List",
+   "Supplier"
+  ]
+ },
+ {
+  "id": "UI-01",
+  "section": "Look",
+  "role": "Any",
+  "steps": "Open the Sales Order, Customer, Item, ToDo and Workflow lists; then add a filter",
+  "expected": "No empty dark box at the end of rows; the last column fully visible; no sideways scroll at 1366 px or wider; the active Filters button readable in dark mode",
+  "route": [
+   "List",
+   "Sales Order"
+  ]
+ },
+ {
+  "id": "BNK-02",
+  "section": "Banking",
+  "role": "Accountant",
+  "steps": "Finance → Bank reconciliation → import the demo Emirates NBD statement → Match all → book the bank charge line",
+  "expected": "Lines matched to receipts, payments and cheques; charge booked in one click; unmatched transfer left for review; no chart error",
+  "route": [
+   "List",
+   "Bank Transaction"
+  ]
+ },
+ {
+  "id": "TOUR-01",
+  "section": "Demo",
+  "role": "Any",
+  "steps": "Home → Take the guided tour → follow chapter 3 (CRM & sales) to the end; change chapter with the drop-down; Escape",
+  "expected": "Each step opens its page, highlights the part and explains it; Next / Back / chapter drop-down / close work; chapters and steps follow the pack and the user's access",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "DEAL-01",
+  "section": "Demo",
+  "role": "Administrator (demo site)",
+  "steps": "Hipersign Settings → Live deal demo on Home ✓ → Home → Live deal demo → Play all → open three of the records → Reset",
+  "expected": "13 steps (fewer when LC, imports, advances or cheques are switched off), each creating and submitting the real record; the result shows revenue, landed cost, gross profit and cash; Reset cancels and deletes only that run's records and the customer it created",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "CRM-02",
+  "section": "CRM",
+  "role": "Sales Manager",
+  "steps": "CRM & Leads → check the 5 KPI tiles → Pipeline: filter by owner and source, drag a card from Contacted to Qualified → open a card → → Proposal, Log activity with a next follow-up → Create quotation; then All leads, Follow-ups and Sources & performance tabs",
+  "expected": "KPIs, stage columns with count and value, cards with need, value, coloured follow-up date, owner and source; the lead panel shows details, stage line, activity and actions; stage moves and the follow-up are saved; Create quotation opens a quotation for the lead; the other tabs show the list, the follow-ups due and the source statistics",
+  "route": [
+   "hipersign-crm"
+  ]
+ },
+ {
+  "id": "SAL-04",
+  "section": "Sales",
+  "role": "Sales Manager",
+  "steps": "Quotations & Orders → check the 6 KPIs (click each) → Sales orders tab: each status chip → open an order → Create delivery note; Quotations tab → Make sales order on an open quotation, Lost on another; Customers & credit; Price lists & pricing rules",
+  "expected": "Page as in the prototype: 6 KPIs that open their tab, 4 tabs, status chips, order and quotation panels with progress line, customer and order details, items with delivered / billed / pending, totals in words, payment schedule, documents, history and next-step buttons; Make sales order, Lost with a reason and Create delivery note open or save the real ERPNext records",
+  "route": [
+   "hipersign-orders"
+  ]
+ },
+ {
+  "id": "PANEL-02",
+  "section": "Record panel",
+  "role": "Sales Manager",
+  "steps": "Open a lead, quotation, sales order, customer, tax invoice, delivery note and item from Quotations & Orders, CRM & Leads, the Sales Order list, the top-bar search and the Order Tracker; click a linked record inside a panel, then Back; Message, Email, WhatsApp, Print; ↗ (full form)",
+  "expected": "The panel opens over the page with title, type and status, header facts, progress line where the record has stages, sections and tables (Excel download), documents box with Attach, history and footer actions; links open the linked record's panel and Back returns; ↗ opens the full form; Escape or × closes it and the page stays where it was",
+  "route": [
+   "hipersign-orders"
+  ]
+ },
+ {
+  "id": "PUR-03",
+  "section": "Purchasing",
+  "role": "Purchase Manager",
+  "steps": "Purchase Orders page → KPI *Open purchase orders* → click a PO row → panel → *Receive goods* (local PO) or *Book import shipment* (foreign PO)",
+  "expected": "KPIs, supplier and currency cards; the PO panel shows progress Draft→Paid, shipment and LC sections; the button opens a draft receipt or books a shipment",
+  "route": [
+   "hipersign-purchasing"
+  ]
+ },
+ {
+  "id": "IMP-03",
+  "section": "Imports & LCs",
+  "role": "Logistics",
+  "steps": "Imports & Shipments page → shipment board → click the *In transit* card → panel → *Mark Arrived at Port*",
+  "expected": "Panel shows 7 status steps, transport, POs, shipping documents and landed charges; status moves one step (it cannot skip steps)",
+  "route": [
+   "hipersign-imports"
+  ]
+ },
+ {
+  "id": "LC-05",
+  "section": "Imports & LCs",
+  "role": "Finance Manager",
+  "steps": "LCs & Guarantees page → click an LC → panel",
+  "expected": "Amount in LC currency and AED, expiry warning within 15 days, margin and trust receipt sections; *Mark …* / *Book trust receipt* buttons follow the LC's state",
+  "route": [
+   "hipersign-lc"
+  ]
+ },
+ {
+  "id": "RCV-01",
+  "section": "Stock",
+  "role": "Storekeeper",
+  "steps": "Goods Receiving page → *Awaiting receipt* → a shipment not yet cleared shows *Open shipment*; receipts tab → click a receipt → panel",
+  "expected": "Receive is offered only after customs clearance; the receipt panel shows accepted / rejected qty, landed cost and *Return to supplier*",
+  "route": [
+   "hipersign-receiving"
+  ]
+ },
+ {
+  "id": "STK-02",
+  "section": "Stock",
+  "role": "Warehouse Manager",
+  "steps": "Warehouse & Stock page → KPI *Below reorder level* → tabs Stock movements, Warehouses, Ageing",
+  "expected": "Low-stock chip filters the items; movements show in/out with balance; warehouses show value share; ageing shows last received / last sold and slow-moving items",
+  "route": [
+   "hipersign-stock"
+  ]
+ },
+ {
+  "id": "DSP-01",
+  "section": "Dispatch",
+  "role": "Logistics",
+  "steps": "Dispatch & Delivery page → board column *To deliver* → *Delivery note* on a card; columns Picking & packing, Ready to dispatch, Out for delivery follow the delivery notes",
+  "expected": "A draft delivery note for the order opens; trips and delivery notes tabs list the month's dispatches",
+  "route": [
+   "hipersign-dispatch"
+  ]
+ },
+ {
+  "id": "FIN-02",
+  "section": "Finance",
+  "role": "Accountant",
+  "steps": "Finance page → Receivables → *Receive* on an overdue invoice; *To bill* tab → *Invoice*",
+  "expected": "A draft receipt for the outstanding amount opens; *To bill* lists only deliveries with something left to invoice (credit notes do not put a delivery back on the list); *Invoice* opens a draft tax invoice; ageing card adds up to outstanding",
+  "route": [
+   "hipersign-fin"
+  ]
+ },
+ {
+  "id": "VAT-03",
+  "section": "Tax",
+  "role": "Finance Manager",
+  "steps": "VAT & E-invoicing page → VAT 201 tab → Sales invoices chip *TRN missing* → E-invoicing readiness",
+  "expected": "Boxes 1a–1g split by emirate add up to the output VAT KPI; invoices to companies without a TRN are listed; readiness shows Ready / Open per check",
+  "route": [
+   "hipersign-vat"
+  ]
+ },
+ {
+  "id": "PRJ-01",
+  "section": "Projects",
+  "role": "Project Manager",
+  "steps": "Open Projects. Check the KPIs; chips Execution, Handover and At risk; open the *How it works* and *Red flags* tabs.",
+  "expected": "Five projects at different stages with a total line; 26 steps in 6 phases with who, documents, approval and next trigger; red flags open their record.",
+  "route": [
+   "hipersign-projects"
+  ]
+ },
+ {
+  "id": "PRJ-02",
+  "section": "Projects",
+  "role": "Project Manager",
+  "steps": "Click PRJ-2026-014 (Business Bay hotel). In *Process — 26 steps* click steps 1, 7, 17 and 19 and use ‹ › to walk through all 26.",
+  "expected": "Each step shows status, %, date, what happens, who, documents, approval and the next trigger; steps 7, 18 and 19 are red (APG expiring, overdue invoice, variation waiting 38 days).",
+  "route": [
+   "hipersign-projects"
+  ]
+ },
+ {
+  "id": "PRJ-03",
+  "section": "Projects",
+  "role": "Project Manager",
+  "steps": "+ New → Projects → Project. Switch Quick → Standard → Detailed; create “Dubai Hills show apartment”, client Hills Living LLC (or any client), AED 650,000.",
+  "expected": "Quick shows 3 fields, Detailed 17; values are kept when switching; the project starts at step 1 with a tender (BOQ) in Estimating & BOQ.",
+  "route": [
+   "hipersign-projects"
+  ]
+ },
+ {
+  "id": "PRJ-04",
+  "section": "Projects",
+  "role": "Quantity Surveyor",
+  "steps": "Estimating & BOQ: chip 019 · Al Barsha clinic; check *Cost build-up*; open the project and *Complete step 4* (as the Managing Director). Print the BOQ.",
+  "expected": "BOQ total AED 980,000 with section totals; the tender moves to Submitted; the BOQ print is bilingual (English · Arabic).",
+  "route": [
+   "hipersign-boq"
+  ]
+ },
+ {
+  "id": "PRJ-05",
+  "section": "Projects",
+  "role": "Site Engineer",
+  "steps": "Site & procurement: *Approve* PMR-2026-034 (as the Project Manager), *Create PO* with a supplier and rate, approve the PO, then *Receive at site*.",
+  "expected": "Request → Approved → Ordered → Delivered; a receipt into the project's site store; site stock goes up; the PO carries the project and the Materials cost head.",
+  "route": [
+   "hipersign-site"
+  ]
+ },
+ {
+  "id": "PRJ-06",
+  "section": "Projects",
+  "role": "Quantity Surveyor",
+  "steps": "Progress & billing → Measurement (014 · Business Bay hotel): raise B3 to 50%. Progress certificates: *Record certification* on IPC-014-08, then *Create invoice*.",
+  "expected": "The certificate follows the measurement; the invoice = work this period − 20% advance recovery − 10% retention + 5% VAT, posted Cr Contract Revenue, Dr Advances from Customers, Dr Retention Receivable.",
+  "route": [
+   "hipersign-billing"
+  ]
+ },
+ {
+  "id": "PRJ-07",
+  "section": "Projects",
+  "role": "Quantity Surveyor",
+  "steps": "Variations: *Send to client* on VO-014-05, then *Client approved* on VO-014-03.",
+  "expected": "The revised contract rises by AED 96,000 (a line is added to the contract sales order); the red flag on step 19 clears.",
+  "route": [
+   "hipersign-billing"
+  ]
+ },
+ {
+  "id": "PRJ-08",
+  "section": "Projects",
+  "role": "Project Manager",
+  "steps": "Subcontractors → Claims: *Certify* SCC-2026-007-06, then *Pay* it. Check the Retention and Back-charges tabs.",
+  "expected": "Certified less 10% retention and the agreed back-charge; the supplier bill posts Retention Payable and is paid; the disputed back-charge stays visible.",
+  "route": [
+   "hipersign-subcontract"
+  ]
+ },
+ {
+  "id": "PRJ-09",
+  "section": "Projects",
+  "role": "Site Engineer",
+  "steps": "Timesheets & labour: *Approve submitted* (as the Project Manager); + New → Timesheet in Quick mode for Zhang Wei, 9 hours; check *By project & task*.",
+  "expected": "Approved hours add labour cost to the project; tasks show planned % against actual.",
+  "route": [
+   "hipersign-timesheets"
+  ]
+ },
+ {
+  "id": "PRJ-10",
+  "section": "Projects",
+  "role": "Project Manager",
+  "steps": "Project costing (014): compare budget, committed, actual and forecast per cost head; open *All projects*.",
+  "expected": "Labour and materials forecast over budget; forecast margin below the budget margin; actual = cost booked to the project + approved timesheets.",
+  "route": [
+   "hipersign-costing"
+  ]
+ },
+ {
+  "id": "PRJ-11",
+  "section": "Projects",
+  "role": "Managing Director",
+  "steps": "Project Tracker: hover steps in each phase; filter *Red flags*; click a flag.",
+  "expected": "One row per project with 26 steps (status, % and date) in 6 phases; flags open the right record.",
+  "route": [
+   "project-tracker"
+  ]
+ },
+ {
+  "id": "PRJ-12",
+  "section": "Projects",
+  "role": "Accountant",
+  "steps": "Print the BOQ, a progress certificate, a progress invoice, the retention invoice of PRJ-2025-009, a variation order and a subcontract order.",
+  "expected": "Navy letterhead; English with Arabic labels; amounts match the screens.",
+  "route": [
+   "hipersign-billing"
+  ]
+ },
+ {
+  "id": "MFG-01",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "Open Production. Check the KPIs and the tabs Today, Work orders, Workstation load, Stock entries and *How it works*.",
+  "expected": "WO-2026-0147 late and in final QC, WO-2026-0150 on hold for heat sinks; load bars per workstation; 22 steps in 5 phases with who, documents, approval and trigger.",
+  "route": [
+   "hipersign-production"
+  ]
+ },
+ {
+  "id": "MFG-02",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "Planning → Shortages: *Run MRP*, then *Raise PO* on the driver PCBs. Material requests: approve MMR-2026-072.",
+  "expected": "The shortage list with usable stock, open POs and a suggested order; the PO is raised (or sent for approval) and on-order goes up; the request turns approved.",
+  "route": [
+   "hipersign-planning"
+  ]
+ },
+ {
+  "id": "MFG-03",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "BOMs & routings: switch Panel → High-bay → Driver; open Versions and Where used for RM-CBL; print the BOM.",
+  "expected": "The driver sub-assembly expanded under the panel; standard cost = material + labour + overhead; the superseded v1 kept; the BOM prints in English and Chinese.",
+  "route": [
+   "hipersign-boms"
+  ]
+ },
+ {
+  "id": "MFG-04",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "Shop floor: pick Assembly line 1; on the running job card press +10, Scrap +1, Pause, Start and Complete.",
+  "expected": "Quantities, scrap and time update at once; the completed card moves on and the work order, tracker and cost follow.",
+  "route": [
+   "hipersign-shopfloor"
+  ]
+ },
+ {
+  "id": "MFG-05",
+  "section": "Manufacturing",
+  "role": "QC Inspector",
+  "steps": "Quality: accept QI-2026-0307 (Incoming); Rejects & rework: *Rework done +4*; Final: print the certificate of WO-2026-0147.",
+  "expected": "The lot is released; the rework count falls; the certificate shows the tests and Passed, in English and Chinese.",
+  "route": [
+   "hipersign-quality"
+  ]
+ },
+ {
+  "id": "MFG-06",
+  "section": "Manufacturing",
+  "role": "Accounts Manager",
+  "steps": "Costing: review standard against actual and the variance chart.",
+  "expected": "The high-bay order over standard on material (the heat-sink price increase); labour and overhead from the job cards; margin per product.",
+  "route": [
+   "hipersign-mfg-costing"
+  ]
+ },
+ {
+  "id": "MFG-07",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "Open WO-2026-0149 from Production → Work orders; walk the 22 steps; print the job ticket and the finished-goods label.",
+  "expected": "Barcodes on the job ticket and the label; Chinese product and workstation names; batch B2611-P60-01.",
+  "route": [
+   "hipersign-production"
+  ]
+ },
+ {
+  "id": "MFG-08",
+  "section": "Manufacturing",
+  "role": "Managing Director",
+  "steps": "Production Tracker: filter *In production* and *Red flags*; open MSO-2026-0221 and complete a step from its panel.",
+  "expected": "22 steps per order with status, % and date; flags for the late work order, the heat-sink shortage and the open rework; the step is logged with your name.",
+  "route": [
+   "production-tracker"
+  ]
+ },
+ {
+  "id": "MFG-09",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "+ New → Manufacturing: BOM, Work order, Production plan, Job card, Quality inspection, Manufacture entry, Material transfer to WIP — each in Quick, Standard and Detailed.",
+  "expected": "All seven open and save; the fields grow from Quick to Detailed.",
+  "route": [
+   "hipersign-production"
+  ]
+ },
+ {
+  "id": "MFG-10",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "New sales order for 300 high-bays → complete steps 1–22 from its panel: plan, approve the requests, order and receive, inspect, release, issue, run the job cards, final QC, receive, deliver, invoice, close.",
+  "expected": "Each step makes its document (plan, work orders, POs, receipts, transfer, job cards, manufacture entry, delivery, invoice); finished goods valued at material + labour + overhead; the work order closes.",
+  "route": [
+   "production-tracker"
+  ]
+ },
+ {
+  "id": "MFG-11",
+  "section": "Manufacturing",
+  "role": "Production Manager",
+  "steps": "Switch the pack to *Manufacturer* (Hipersign Settings → Pack) and back to Enterprise.",
+  "expected": "The Manufacturing menu group shows with the pack and Enterprise, and hides when the switch is off; nothing is deleted.",
+  "route": [
+   "hipersign-production"
+  ]
+ },
+ {
+  "id": "ZH-01",
+  "section": "Chinese",
+  "role": "Any user",
+  "steps": "Top bar → language button → *中文*",
+  "expected": "The page reloads in Simplified Chinese; the button shows 中; User → Language is zh",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "ZH-02",
+  "section": "Chinese",
+  "role": "Sales Executive (Chinese)",
+  "steps": "Open the menu, Home, Quotations & Orders and a Sales Order",
+  "expected": "Menu groups, page titles, tabs, buttons and messages in Chinese (销售, 报价单与订单 …); ERPNext's own labels in Chinese",
+  "route": [
+   "hipersign-orders"
+  ]
+ },
+ {
+  "id": "ZH-03",
+  "section": "Chinese",
+  "role": "Any user",
+  "steps": "Language 中文 → look at the menu, a list and a form",
+  "expected": "Chinese text uses the CJK font (PingFang SC / Microsoft YaHei / Noto Sans SC); left-to-right layout",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "ZH-04",
+  "section": "Chinese",
+  "role": "Any user",
+  "steps": "Language 中文 → + New → Create new panel; search with “/”",
+  "expected": "Group names and entries in Chinese; search placeholder in Chinese",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "ZH-05",
+  "section": "Chinese",
+  "role": "Managing Director",
+  "steps": "Language 中文 → Home → start the guided tour",
+  "expected": "Tour chapters and step texts in Chinese",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "ZH-06",
+  "section": "Chinese",
+  "role": "Any user",
+  "steps": "中文 → language button → *العربية*, then → *English*",
+  "expected": "Arabic: right to left, Arabic labels; English: left to right; no Chinese font left behind",
+  "route": [
+   "hipersign-home"
+  ]
+ },
+ {
+  "id": "ZH-07",
+  "section": "Chinese",
+  "role": "Administrator",
+  "steps": "bench migrate on a site without the zh or ar Language record",
+  "expected": "Language records ar (العربية) and zh (简体中文) exist and are enabled after migrate",
+  "route": [
+   "List",
+   "Language"
+  ]
+ },
+ {
+  "id": "MENU-01",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Admin → Menu builder",
+  "expected": "Page opens with the scope switch (Whole site / Company / Role), every menu group and screen with a switch, three name boxes (English / العربية / 中文), arrows, Preview, Add a custom link and Change log",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-02",
+  "section": "Menu builder",
+  "role": "Sales Executive",
+  "steps": "Open */app/hipersign-menu*",
+  "expected": "Not permitted — only System Manager and Managing Director open the builder",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-03",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Whole site → switch off *Customer Portal* → Save → reload as a Sales Manager",
+  "expected": "Customer Portal is gone from the menu; the Change log shows “Hide “Customer Portal”” with the user and time",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-04",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Whole site → rename *CRM & Leads*: English “Leads”, 中文 “线索” → Save → reload in English, then in 中文",
+  "expected": "Menu shows “Leads” in English, “线索” in Chinese; Arabic (no Arabic name) shows “Leads”; the sub-lists and the count badge still work",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-05",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Move *Admin* to the top with the arrows; move *Order Tracker* first in Sales → Save → reload",
+  "expected": "Preview and the sidebar show the new order",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-06",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Add a custom link “Supplier portal” (中文 供应商门户) → https://example.com under Purchasing → Save",
+  "expected": "The link shows at the end of Purchasing and opens the address; it can be moved, hidden or removed",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-07",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Whole site: hide *Imports & Shipments*. Role → Purchase Manager: switch it on → Save → reload as Buyer and as Purchase Manager",
+  "expected": "Buyer: hidden. Purchase Manager: shown (role beats whole site)",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-08",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Company → choose a company → hide *Exports & Re-exports* → Save; users working in that company reload",
+  "expected": "Hidden for that company only; other companies keep it (company beats whole site, role beats company)",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-09",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Hide *HR & Payroll* → reload → + New, and search an employee name in the top bar",
+  "expected": "Employee, Expense claim and Leave request are gone from + New; employees no longer come up in the top-bar search; the list still opens from a direct link for users who may read it",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-10",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Role scope → *Reset to standard* → confirm",
+  "expected": "Only that role's changes are removed; whole-site and company changes stay; the log shows “Reset to standard”",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-11",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "Hide a screen whose role the user lacks, then show it at role level for that user's role",
+  "expected": "The menu never grants access: a screen the role may not open stays out of the menu",
+  "route": [
+   "hipersign-menu"
+  ]
+ },
+ {
+  "id": "MENU-12",
+  "section": "Menu builder",
+  "role": "Administrator",
+  "steps": "After installing a release with a new menu group (e.g. Projects) → Admin → Menu builder",
+  "expected": "The new group and its screens are listed and can be hidden, renamed and moved with no other change",
+  "route": [
+   "hipersign-menu"
+  ]
+ }
+]

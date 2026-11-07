@@ -1,0 +1,342 @@
+"""Form modes — Quick, Standard, Detailed — and the Quick dialogs.
+
+Which mode a New document opens in: the user's own last choice → a row in Hipersign Settings
+for one of the user's roles → a row for everyone → the pack (Starter Quick, Standard Standard,
+Enterprise Detailed). Quick documents are created through the normal document engine
+(insert / workflow / submit), so price lists, credit limit, KYC, margin, approval and document
+rules all apply exactly as on the full form.
+"""
+
+import frappe
+from frappe import _
+from frappe.utils import add_days, flt, today
+
+from hipersign_trading.utils import settings
+
+COVERED = [
+	"Quotation", "Sales Order", "Purchase Order", "Sales Invoice", "Payment Entry", "Customer", "Item", "Lead",
+	# v1.5.6
+	"Supplier", "Supplier Quotation", "Material Request", "Purchase Receipt", "Purchase Invoice", "Landed Cost Voucher",
+	"Import Shipment", "Export Shipment", "Letter of Credit", "Bank Guarantee",
+	"Delivery Note", "Stock Entry", "Stock Reconciliation", "Pick List", "Delivery Trip", "Warranty Claim", "Warehouse",
+	"Journal Entry", "Post Dated Cheque", "Credit Limit Request", "Tax Return",
+	"Employee", "Leave Application", "Expense Claim", "Asset", "Company Document",
+	# quick cards only (no Standard / Detailed split)
+	"Address", "Contact", "Customer Group", "Payment Terms Template", "Bank Account", "Driver",
+	# v1.7.3: the create modal's new windows and cards
+	"Employee Advance", "Currency Exchange", "User",
+	# v1.8.0: the Projects windows
+	"Project", "Project BOQ", "Task", "Timesheet", "Progress Certificate", "Variation Order", "Subcontract Order", "Daily Site Report",
+	# v1.8.0: the Manufacturing windows
+	"BOM", "Work Order", "Production Plan", "Job Card", "Quality Inspection",
+]
+PACK_MODE = {"Starter": "Quick", "Standard": "Standard", "Contractor": "Standard", "Manufacturer": "Standard", "Enterprise": "Detailed"}
+MODES = ("Quick", "Standard", "Detailed")
+
+
+def _key(doctype):
+	return "hs_fm::" + doctype
+
+
+def pack_mode():
+	from hipersign_trading.features import pack_of
+
+	s = settings()
+	pk = s.get("feature_pack") if s.get("feature_pack") in PACK_MODE else pack_of(s)
+	return PACK_MODE.get(pk, "Detailed")
+
+
+def mode_for(doctype, user=None):
+	user = user or frappe.session.user
+	own = frappe.defaults.get_user_default(_key(doctype), user=user)
+	if own in MODES:
+		return own
+	rows = settings().get("form_modes") or []
+	roles = set(frappe.get_roles(user))
+	for r in rows:
+		if r.document_type == doctype and r.role and r.role in roles:
+			return r.mode
+	for r in rows:
+		if r.document_type == doctype and not r.role:
+			return r.mode
+	return pack_mode()
+
+
+@frappe.whitelist()
+def form_modes():
+	return {dt: mode_for(dt) for dt in COVERED}
+
+
+@frappe.whitelist()
+def set_form_mode(doctype, mode):
+	if doctype not in COVERED or mode not in MODES:
+		frappe.throw(_("Unknown form mode"))
+	frappe.defaults.set_user_default(_key(doctype), mode)
+	return mode
+
+
+def clear_all_form_modes():
+	n = 0
+	for dt in COVERED:
+		n += frappe.db.count("DefaultValue", {"defkey": _key(dt)})
+		frappe.db.delete("DefaultValue", {"defkey": _key(dt)})
+	frappe.clear_cache()
+	return n
+
+
+@frappe.whitelist()
+def clear_form_modes():
+	frappe.only_for("System Manager")
+	n = 0
+	for dt in COVERED:
+		for d in frappe.get_all("DefaultValue", filters={"defkey": _key(dt)}, pluck="name"):
+			frappe.delete_doc("DefaultValue", d, ignore_permissions=True)
+			n += 1
+	frappe.clear_cache()
+	return n
+
+
+# ---------------------------------------------------------------- Quick quotation / order / purchase order
+def _rate_preview(doctype, party, item_code):
+	"""v1.5.6 (FM-01): the price the document will really use — ERPNext's own pricing (price list, the customer group's
+	pricing rule discount) in the party's currency — so the estimate matches the saved quotation."""
+	try:
+		from erpnext.stock.get_item_details import get_item_details
+		from hipersign_trading.utils import user_company
+
+		company = user_company()
+		buying = doctype == "Purchase Order"
+		party_dt = "Supplier" if buying else "Customer"
+		currency = (party and frappe.db.get_value(party_dt, party, "default_currency")) or frappe.get_cached_value("Company", company, "default_currency")
+		pl = (party and frappe.db.get_value(party_dt, party, "default_price_list")) or frappe.db.get_single_value(
+			"Buying Settings" if buying else "Selling Settings", "buying_price_list" if buying else "selling_price_list")
+		args = {"item_code": item_code, "company": company, "doctype": doctype, "currency": currency, "conversion_rate": 1, "qty": 1,
+			"price_list": pl, "transaction_type": "buying" if buying else "selling", "price_list_currency": frappe.db.get_value("Price List", pl, "currency") if pl else currency,
+			"plc_conversion_rate": 1, "ignore_pricing_rule": 0, "transaction_date": today()}
+		if party:
+			args["supplier" if buying else "customer"] = party
+		if currency != (args["price_list_currency"] or currency):
+			from erpnext.setup.utils import get_exchange_rate
+
+			args["plc_conversion_rate"] = flt(get_exchange_rate(args["price_list_currency"], currency, today())) or 1
+		d = get_item_details(args)
+		if flt(d.get("rate")) or flt(d.get("price_list_rate")):
+			return flt(d.get("rate") or d.get("price_list_rate")), pl, True
+	except Exception:
+		frappe.clear_last_message()
+	return _rate_preview_simple(doctype, party, item_code)
+
+
+def _rate_preview_simple(doctype, party, item_code):
+	if doctype == "Purchase Order":
+		pl = (party and frappe.db.get_value("Supplier", party, "default_price_list")) or frappe.db.get_single_value("Buying Settings", "buying_price_list")
+	else:
+		pl = (party and frappe.db.get_value("Customer", party, "default_price_list")) or frappe.db.get_single_value("Selling Settings", "selling_price_list")
+	r = frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": pl}, "price_list_rate") if pl else None
+	if r is None:
+		r = frappe.db.get_value("Item", item_code, "standard_rate" if doctype != "Purchase Order" else "last_purchase_rate")
+	return flt(r), pl, r is not None
+
+
+@frappe.whitelist()
+def find_items(doctype, txt, party=None):
+	"""Smart line entry: “200 cam” → items matching cam, with the price the document will use."""
+	words = [w for w in (txt or "").lower().split() if w]
+	if not words:
+		return []
+	item = frappe.qb.DocType("Item")
+	q = frappe.qb.from_(item).select(item.name, item.item_name, item.stock_uom, item.is_stock_item).where(item.disabled == 0).where(item.has_variants == 0)
+	q = q.where(item.is_purchase_item == 1) if doctype == "Purchase Order" else q.where(item.is_sales_item == 1)
+	for w in words:
+		q = q.where((item.name.like(f"%{w}%")) | (item.item_name.like(f"%{w}%")) | (item.item_group.like(f"%{w}%")))
+	out = []
+	for code, name, uom, stock in q.limit(8).run():
+		rate, pl, listed = _rate_preview(doctype, party, code)
+		qty = flt(frappe.db.sql("select sum(actual_qty) from tabBin where item_code=%s", code)[0][0]) if stock else None
+		out.append({"item_code": code, "item_name": name, "uom": uom, "rate": rate, "price_list": pl, "listed": listed, "stock": qty})
+	return out
+
+
+@frappe.whitelist()
+def last_order(customer):
+	so = frappe.get_all("Sales Order", filters={"customer": customer, "docstatus": 1}, fields=["name", "transaction_date"], order_by="transaction_date desc, creation desc", limit=1)
+	if not so:
+		return None
+	items = frappe.get_all("Sales Order Item", filters={"parent": so[0].name}, fields=["item_code", "item_name", "qty"], order_by="idx asc")
+	return {"name": so[0].name, "date": so[0].transaction_date, "items": items}
+
+
+def _submit(doc):
+	"""Submit the way the user would: through the approval workflow when one is active."""
+	from frappe.model.workflow import apply_workflow, get_transitions, get_workflow_name
+
+	if get_workflow_name(doc.doctype):
+		acts = [t.action for t in get_transitions(doc)]
+		for a in ("Submit", "Submit for Approval"):
+			if a in acts:
+				doc = apply_workflow(doc, a)
+				return doc
+		return doc
+	doc.submit()
+	return doc
+
+
+@frappe.whitelist()
+def quick_create(doctype, data, action="save"):
+	"""Create a quotation, sales order or purchase order from the Quick dialog."""
+	if doctype not in ("Quotation", "Sales Order", "Purchase Order"):
+		frappe.throw(_("Quick entry is not available for {0}").format(doctype))
+	data = frappe.parse_json(data) if isinstance(data, str) else frappe._dict(data or {})
+	lines = [r for r in (data.get("items") or []) if r.get("item_code") and flt(r.get("qty")) > 0]
+	if not data.get("party"):
+		frappe.throw(_("Choose the {0}").format(_("supplier") if doctype == "Purchase Order" else _("customer")))
+	if not lines:
+		frappe.throw(_("Add at least one item with a quantity"))
+	from hipersign_trading.utils import user_company
+
+	# v1.6.0 (TOP-01): the top bar's company first (Hipersign Settings' company used to win over the scope)
+	company = data.get("company") or user_company()
+	doc = frappe.new_doc(doctype)
+	doc.company = company
+	need = add_days(today(), 3 if doctype == "Sales Order" else 30)
+	if doctype == "Quotation":
+		doc.quotation_to, doc.party_name = "Customer", data.party
+		doc.valid_till = add_days(today(), 14)
+		if data.get("lead"):
+			doc.quotation_to, doc.party_name = "Lead", data.lead
+	elif doctype == "Sales Order":
+		doc.customer = data.party
+		doc.delivery_date = need
+		doc.po_no = data.get("po_no") or None
+	else:
+		doc.supplier = data.party
+		doc.schedule_date = need
+	for r in lines:
+		row = {"item_code": r["item_code"], "qty": flt(r["qty"])}
+		if doctype == "Sales Order":
+			row["delivery_date"] = need
+		if doctype == "Purchase Order":
+			row["schedule_date"] = need
+		doc.append("items", row)
+	# v1.6.0 (PL-01): the party's own price list, as the dialog's prices showed (a quick quotation used Standard Selling)
+	party_dt = "Supplier" if doctype == "Purchase Order" else ("Lead" if doc.get("quotation_to") == "Lead" else "Customer")
+	pl = frappe.db.get_value(party_dt, data.party, "default_price_list") if party_dt != "Lead" else None
+	if pl and frappe.db.get_value("Price List", pl, "enabled"):
+		doc.set("buying_price_list" if doctype == "Purchase Order" else "selling_price_list", pl)
+	doc.flags.hs_quick = True
+	doc.set_missing_values()
+	doc.insert()
+	msg = _("{0} {1} created").format(_(doctype), doc.name)
+	needs = None
+	if action == "submit" and doctype in ("Sales Order", "Purchase Order"):
+		from hipersign_trading.doc_rules import DocumentNeeded
+
+		frappe.db.savepoint("hs_quick_submit")
+		try:
+			doc = _submit(doc)
+			state = doc.get("workflow_state") or (_("Submitted") if doc.docstatus == 1 else _("Draft"))
+			msg = _("{0} {1} · {2}").format(_(doctype), doc.name, _(state))
+		except DocumentNeeded as e:
+			# keep the draft: the user attaches the document (or asks for an exception) on the form and submits there
+			frappe.db.rollback(save_point="hs_quick_submit")
+			frappe.local.message_log = []
+			needs = frappe.utils.strip_html(str(e))
+			msg = _("{0} {1} saved as a draft — attach the document needed, then submit").format(_(doctype), doc.name)
+	return {"name": doc.name, "message": msg, "grand_total": doc.grand_total, "currency": doc.currency, "needs_documents": needs}
+
+
+# ---------------------------------------------------------------- Quick invoice
+@frappe.whitelist()
+def to_bill(company=None):
+	dn = frappe.qb.DocType("Delivery Note")
+	q = (frappe.qb.from_(dn).select(dn.name, dn.customer, dn.customer_name, dn.posting_date, dn.base_grand_total, dn.currency)
+		.where(dn.docstatus == 1).where(dn.is_return == 0).where(dn.per_billed < 100).orderby(dn.posting_date))
+	if company:
+		q = q.where(dn.company == company)
+	rows = [dict(name=r[0], customer=r[1], customer_name=r[2], date=r[3], amount=r[4], currency=r[5]) for r in q.limit(200).run()]
+	return [r for r in rows if _billable(r["name"])][:100]
+
+
+def _billable(delivery_note):
+	"""Something on the note is still to bill — not already invoiced from its sales order."""
+	return bool(frappe.db.sql("""select 1 from `tabDelivery Note Item` dni
+		left join `tabSales Order Item` soi on soi.name = dni.so_detail
+		where dni.parent = %s and (dni.so_detail is null or dni.so_detail = '' or soi.billed_amt < soi.amount - 0.01)
+		and dni.amount > ifnull((select sum(sii.amount) from `tabSales Invoice Item` sii where sii.dn_detail = dni.name and sii.docstatus = 1), 0) + 0.01
+		limit 1""", delivery_note))
+
+
+@frappe.whitelist()
+def quick_invoice(delivery_note):
+	from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+	frappe.get_doc("Delivery Note", delivery_note).check_permission("read")
+	si = make_sales_invoice(delivery_note)
+	si.insert()
+	si.submit()
+	return {"name": si.name, "message": _("Sales Invoice {0} · {1}").format(si.name, frappe.format(si.grand_total, {"fieldtype": "Currency", "options": si.currency}))}
+
+
+# ---------------------------------------------------------------- Quick receive payment
+@frappe.whitelist()
+def open_invoices(customer, company=None, credit_notes=1):
+	"""Open invoices, oldest first. v1.5.6: unapplied credit notes (negative balance) come first, so a receipt nets them off."""
+	f = {"customer": customer, "docstatus": 1, "outstanding_amount": [">", 0]}
+	if company:
+		f["company"] = company
+	fields = ["name", "due_date", "posting_date", "outstanding_amount", "currency", "grand_total", "is_return"]
+	rows = frappe.get_all("Sales Invoice", filters=f, fields=fields, order_by="due_date asc, posting_date asc, name asc")
+	if int(credit_notes or 0):
+		cn = dict(f, outstanding_amount=["<", 0], is_return=1)
+		rows = frappe.get_all("Sales Invoice", filters=cn, fields=fields, order_by="posting_date asc") + rows
+	return rows
+
+
+@frappe.whitelist()
+def quick_receive(customer, amount, mode_of_payment=None, reference_no=None, company=None):
+	"""One Payment Entry, applied to the customer's oldest invoices first."""
+	pe = receive_entry(customer, amount, mode_of_payment, reference_no, company)
+	pe.insert()
+	pe = _submit(pe)
+	return {"name": pe.name, "message": _("Payment {0} · {1} invoice(s)").format(pe.name, len(pe.references))}
+
+
+def receive_entry(customer, amount, mode_of_payment=None, reference_no=None, company=None):
+	"""v1.7.3: the receipt quick_receive makes — oldest invoices first, credit notes netted off — not yet saved, so the
+	create modal's Receive payment window (api.create.save_doc) can add the account, dates and bank charges."""
+	from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+	amount = flt(amount)
+	if amount <= 0:
+		frappe.throw(_("Enter the amount received"))
+	invs = open_invoices(customer, company)
+	out = sum(flt(i.outstanding_amount) for i in invs)  # credit notes count negative
+	if amount > out + 0.005:
+		frappe.throw(_("{0} is more than the {1} the customer owes — record the extra as an advance on a full Payment Entry.").format(
+			frappe.format(amount, "Currency"), frappe.format(out, "Currency")))
+	if not [i for i in invs if flt(i.outstanding_amount) > 0]:
+		frappe.throw(_("The customer has no open invoices."))
+	first = next(i for i in invs if flt(i.outstanding_amount) > 0)
+	pe = get_payment_entry("Sales Invoice", first.name, party_amount=amount)
+	pe.set("references", [])
+	credits = [i for i in invs if flt(i.outstanding_amount) < 0]
+	left = amount - sum(flt(i.outstanding_amount) for i in credits)  # each credit note frees that much more for invoices
+	for i in credits:
+		pe.append("references", {"reference_doctype": "Sales Invoice", "reference_name": i.name, "total_amount": i.grand_total,
+			"outstanding_amount": i.outstanding_amount, "allocated_amount": i.outstanding_amount, "due_date": i.due_date})
+	for i in [x for x in invs if flt(x.outstanding_amount) > 0]:
+		if left <= 0.005:
+			break
+		a = min(left, flt(i.outstanding_amount))
+		pe.append("references", {"reference_doctype": "Sales Invoice", "reference_name": i.name, "total_amount": i.grand_total,
+			"outstanding_amount": i.outstanding_amount, "allocated_amount": a, "due_date": i.due_date})
+		left -= a
+	pe.paid_amount = pe.received_amount = amount
+	if mode_of_payment:
+		pe.mode_of_payment = mode_of_payment
+		acc = frappe.db.get_value("Mode of Payment Account", {"parent": mode_of_payment, "company": pe.company}, "default_account")
+		if acc:
+			pe.paid_to = acc
+	pe.reference_no = reference_no or _("Quick receipt")
+	pe.reference_date = today()
+	return pe

@@ -1,0 +1,69 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-messages",
+ "page_name": "hipersign-messages",
+ "title": "Messages",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Managing Director"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Purchase User"
+  },
+  {
+   "role": "Purchase Manager"
+  },
+  {
+   "role": "Stock User"
+  },
+  {
+   "role": "Stock Manager"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "HR User"
+  },
+  {
+   "role": "HR Manager"
+  },
+  {
+   "role": "Production Manager"
+  },
+  {
+   "role": "QC Inspector"
+  },
+  {
+   "role": "Project Manager"
+  },
+  {
+   "role": "Quantity Surveyor"
+  },
+  {
+   "role": "Site Engineer"
+  },
+  {
+   "role": "Logistics Coordinator"
+  }
+ ],
+ "owner": "Administrator",
+ "creation": "2026-10-27 10:00:00",
+ "modified": "2026-11-03 15:00:00.000000"
+}
