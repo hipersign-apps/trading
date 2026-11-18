@@ -75,6 +75,15 @@ NAV = [
 		("Project costing", "Page", "hipersign-costing", "chart-column", "projects", {}),
 		("Project Tracker", "Page", "project-tracker", "list-checks", "projects", {}),
 	]),
+	# v1.9.0 (prototype C11): Indian contractors — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR
+	("Construction (India)", "hard-hat", [
+		("Construction Projects", "Page", "hipersign-cn-projects", "chart-gantt", "construction", {}),
+		("Tenders & EMD", "Page", "hipersign-cn-tenders", "file-text", "construction", {}),
+		("BOQ & Extra Items", "Page", "hipersign-cn-boq", "calculator", "construction", {}),
+		("Measurement Book", "Page", "hipersign-cn-mb", "ruler", "construction", {}),
+		("RA Billing", "Page", "hipersign-cn-billing", "receipt", "construction", {}),
+		("DPR & Hindrances", "Page", "hipersign-cn-site", "hard-hat", "construction", {}),
+	]),
 	# v1.8.0 (prototype p19): assemblers and factories — after Projects, before Finance & Tax, as on the prototype
 	("Manufacturing", "factory", [
 		("Production", "Page", "hipersign-production", "wrench", "manufacturing", {}),
@@ -146,6 +155,13 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0: Construction (India)
+	"Construction Projects": [("Projects", "DocType", "Project", None), ("Bank Guarantees", "DocType", "Bank Guarantee", None)],
+	"Tenders & EMD": [("Tenders", "DocType", "Tender", None)],
+	"BOQ & Extra Items": [("Project BOQs", "DocType", "Project BOQ", None), ("Extra Items", "DocType", "Extra Item", None)],
+	"Measurement Book": [("Measurement Book", "DocType", "Measurement Book", None)],
+	"RA Billing": [("RA Bills", "DocType", "RA Bill", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Payments", "DocType", "Payment Entry", None)],
+	"DPR & Hindrances": [("Daily Progress Reports", "DocType", "Daily Progress Report", None), ("Hindrances", "DocType", "Hindrance", None)],
 	# v1.8.0: Projects
 	"Projects": [("Projects", "DocType", "Project", None), ("Project Step Log", "DocType", "Project Step Log", None), ("Bank Guarantees (bonds)", "DocType", "Bank Guarantee", None)],
 	"Estimating & BOQ": [("Project BOQs & tenders", "DocType", "Project BOQ", None)],
@@ -203,6 +219,11 @@ SUB_TABS = {
 	("Workflows & Settings", "Document Rules"): ("hipersign-doccentre", "rules"), ("Workflows & Settings", "Editable Lists"): ("hipersign-settings-hub", None),
 	("Workflows & Settings", "Users"): ("hipersign-settings-hub", None), ("Workflows & Settings", "System Settings"): ("hipersign-settings-hub", None),
 	("Document Centre", "Missing Documents"): ("hipersign-doccentre", "missing"), ("Document Centre", "Document Waivers"): ("hipersign-doccentre", "waivers"),
+	("Construction Projects", "Projects"): ("hipersign-cn-projects", "port"), ("Construction Projects", "Bank Guarantees"): ("hipersign-cn-projects", "bg"),
+	("Tenders & EMD", "Tenders"): ("hipersign-cn-tenders", "tnd"), ("BOQ & Extra Items", "Project BOQs"): ("hipersign-cn-boq", "boq"),
+	("BOQ & Extra Items", "Extra Items"): ("hipersign-cn-boq", "ei"), ("Measurement Book", "Measurement Book"): ("hipersign-cn-mb", "mb"),
+	("RA Billing", "RA Bills"): ("hipersign-cn-billing", "ra"), ("DPR & Hindrances", "Daily Progress Reports"): ("hipersign-cn-site", "dpr"),
+	("DPR & Hindrances", "Hindrances"): ("hipersign-cn-site", "hin"),
 	("Projects", "Projects"): ("hipersign-projects", "port"), ("Projects", "Project Step Log"): ("hipersign-projects", "log"),
 	("Projects", "Bank Guarantees (bonds)"): ("hipersign-lc", "bgs"),
 	("Estimating & BOQ", "Project BOQs & tenders"): ("hipersign-boq", "boq"),

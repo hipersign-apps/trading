@@ -302,8 +302,12 @@ def crm_module(owner=None, source=None):
 
 
 def _fmt(v, cur):
-	"""AED 616.5K — the prototype's compact amounts."""
+	"""AED 616.5K — the prototype's compact amounts (v1.9.0: ₹1.86 Cr / ₹45.2 L for INR, as Indian readers count)."""
 	v = flt(v)
+	if cur == "INR":
+		from hipersign_trading.api.construction import inr
+
+		return inr(v)
 	for n, u in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
 		if abs(v) >= n:
 			return f"{cur} {v / n:.1f}".rstrip("0").rstrip(".") + u
@@ -399,6 +403,12 @@ def _get_module(key, owner=None, source=None):
 		if key not in module_mfg.KEYS:
 			frappe.throw(_("Unknown module"))
 		return getattr(module_mfg, key + "_module")()
+	if key.startswith("cn_"):  # v1.9.0: the Construction (India) pages
+		from hipersign_trading.api import module_cn
+
+		if key not in module_cn.KEYS:
+			frappe.throw(_("Unknown module"))
+		return getattr(module_cn, key + "_module")()
 	if key in MORE:
 		from hipersign_trading.api import module_more
 
@@ -465,6 +475,12 @@ def get_rows(key, tab, chip=None, q=None, owner=None, source=None):
 		if key not in module_mfg.KEYS:
 			frappe.throw(_("Unknown module"))
 		return getattr(module_mfg, key + "_rows")(tab, chip or None, q or None)
+	if key.startswith("cn_"):  # v1.9.0: the Construction (India) pages
+		from hipersign_trading.api import module_cn
+
+		if key not in module_cn.KEYS:
+			frappe.throw(_("Unknown module"))
+		return getattr(module_cn, key + "_rows")(tab, chip or None, q or None)
 	if key in MORE:
 		from hipersign_trading.api import module_more
 

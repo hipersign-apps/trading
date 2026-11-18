@@ -60,7 +60,7 @@ def demo_status():
 
 
 @frappe.whitelist()
-def load_demo(confirm=None):
+def load_demo(confirm=None, industry=None):
 	frappe.only_for("System Manager")
 	ok, why = demo_allowed()
 	if not ok:
@@ -70,5 +70,8 @@ def load_demo(confirm=None):
 	if frappe.cache.get_value("hs_demo_running"):
 		frappe.throw(_("Demo data is already loading — check back in a few minutes."))
 	frappe.cache.set_value("hs_demo_running", 1, expires_in_sec=3600)
-	frappe.enqueue("hipersign_trading.demo.load_from_button", queue="long", timeout=3600, user=frappe.session.user)
+	from hipersign_trading.demo import INDUSTRIES
+
+	industry = industry if industry in INDUSTRIES else INDUSTRIES[0]  # v1.9.0: Trading group or Construction (India)
+	frappe.enqueue("hipersign_trading.demo.load_from_button", queue="long", timeout=3600, user=frappe.session.user, industry=industry)
 	return _("Loading demo data in the background — it takes a few minutes. You will get a notification when it is done.")

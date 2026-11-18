@@ -676,6 +676,8 @@ def project_names(cos=None, include_closed=True):
 	"""Projects of the scope's companies that carry a contract (or tender) value; when the scope has none, every project the user
 	may read (so the Projects pages of a trading company in a group still show the contracting company's projects)."""
 	f = {"hs_contract_value": [">", 0]}
+	if frappe.get_meta("Project").has_field("hs_cn"):  # v1.9.0: Construction (India) projects have their own pages
+		f["hs_cn"] = ["!=", 1]
 	if not include_closed:
 		f["hs_step"] = ["<", 26]
 	fields = ["name", "hs_step", "hs_contract_value"]

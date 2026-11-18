@@ -1,0 +1,528 @@
+{
+ "doctype": "DocType",
+ "name": "RA Bill",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-18 14:00:00.000000",
+ "modified": "2026-11-18 14:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "field_order": [
+  "naming_series",
+  "project",
+  "company",
+  "customer",
+  "bill_no",
+  "is_final",
+  "government_client",
+  "cb1",
+  "bill_date",
+  "period_to",
+  "submitted_on",
+  "certified_on",
+  "status",
+  "sb_w",
+  "items",
+  "sb_v",
+  "extra_items_amount",
+  "cb2",
+  "work_to_date",
+  "previous_billed",
+  "claimed_amount",
+  "certified_amount",
+  "cut_amount",
+  "sb_g",
+  "gst_rate",
+  "gst_amount",
+  "cb3",
+  "gross_with_gst",
+  "sb_d",
+  "retention_pct",
+  "retention",
+  "advance_pct",
+  "advance_recovery",
+  "tds_pct",
+  "tds",
+  "cb4",
+  "gst_tds_pct",
+  "gst_tds",
+  "cess_pct",
+  "labour_cess",
+  "total_deductions",
+  "net_receivable",
+  "sb_l",
+  "sales_invoice",
+  "payment_entry",
+  "due_date",
+  "cb5",
+  "received_amount",
+  "received_on",
+  "tds_in_26as",
+  "gst_tds_ok",
+  "sb_r",
+  "remarks",
+  "currency"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "RA-.YY.-.####",
+   "default": "RA-.YY.-.####",
+   "reqd": 1,
+   "hidden": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "fetch_from": "project.company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Client",
+   "options": "Customer",
+   "fetch_from": "project.customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bill_no",
+   "fieldtype": "Int",
+   "label": "RA bill no.",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "is_final",
+   "fieldtype": "Check",
+   "label": "Final bill"
+  },
+  {
+   "fieldname": "government_client",
+   "fieldtype": "Check",
+   "label": "Government / PSU client (GST-TDS, labour cess)",
+   "fetch_from": "project.hs_cn_govt",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bill_date",
+   "fieldtype": "Date",
+   "label": "Bill date",
+   "default": "Today"
+  },
+  {
+   "fieldname": "period_to",
+   "fieldtype": "Date",
+   "label": "Work measured up to"
+  },
+  {
+   "fieldname": "submitted_on",
+   "fieldtype": "Date",
+   "label": "Submitted to client",
+   "read_only": 1
+  },
+  {
+   "fieldname": "certified_on",
+   "fieldtype": "Date",
+   "label": "Certified on",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted to client\nCertified\nInvoiced\nPart paid\nPaid\nCancelled",
+   "default": "Draft",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_w",
+   "fieldtype": "Section Break",
+   "label": "Work measured"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "RA Bill Item"
+  },
+  {
+   "fieldname": "sb_v",
+   "fieldtype": "Section Break",
+   "label": "Bill value"
+  },
+  {
+   "fieldname": "extra_items_amount",
+   "fieldtype": "Currency",
+   "label": "Extra items this bill",
+   "options": "currency"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "work_to_date",
+   "fieldtype": "Currency",
+   "label": "Work up to date",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "previous_billed",
+   "fieldtype": "Currency",
+   "label": "Billed up to previous bill",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "claimed_amount",
+   "fieldtype": "Currency",
+   "label": "Claimed this bill",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "certified_amount",
+   "fieldtype": "Currency",
+   "label": "Certified by the client",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "cut_amount",
+   "fieldtype": "Currency",
+   "label": "Cut by the client",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "sb_g",
+   "fieldtype": "Section Break",
+   "label": "GST"
+  },
+  {
+   "fieldname": "gst_rate",
+   "fieldtype": "Percent",
+   "label": "GST %",
+   "default": "18"
+  },
+  {
+   "fieldname": "gst_amount",
+   "fieldtype": "Currency",
+   "label": "GST",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "gross_with_gst",
+   "fieldtype": "Currency",
+   "label": "Invoice value (incl. GST)",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "sb_d",
+   "fieldtype": "Section Break",
+   "label": "Deductions by the client"
+  },
+  {
+   "fieldname": "retention_pct",
+   "fieldtype": "Percent",
+   "label": "Retention %"
+  },
+  {
+   "fieldname": "retention",
+   "fieldtype": "Currency",
+   "label": "Retention",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "advance_pct",
+   "fieldtype": "Percent",
+   "label": "Mobilisation advance recovery %"
+  },
+  {
+   "fieldname": "advance_recovery",
+   "fieldtype": "Currency",
+   "label": "Advance recovery",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "tds_pct",
+   "fieldtype": "Percent",
+   "label": "TDS u/s 194C %",
+   "default": "2"
+  },
+  {
+   "fieldname": "tds",
+   "fieldtype": "Currency",
+   "label": "TDS 194C",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "cb4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "gst_tds_pct",
+   "fieldtype": "Percent",
+   "label": "GST-TDS % (sec. 51)"
+  },
+  {
+   "fieldname": "gst_tds",
+   "fieldtype": "Currency",
+   "label": "GST-TDS",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "cess_pct",
+   "fieldtype": "Percent",
+   "label": "BOCW labour cess %"
+  },
+  {
+   "fieldname": "labour_cess",
+   "fieldtype": "Currency",
+   "label": "Labour cess",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "total_deductions",
+   "fieldtype": "Currency",
+   "label": "Total deductions",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "net_receivable",
+   "fieldtype": "Currency",
+   "label": "Net receivable",
+   "read_only": 1,
+   "bold": 1,
+   "in_list_view": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "sb_l",
+   "fieldtype": "Section Break",
+   "label": "Invoice & receipt"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Tax invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_entry",
+   "fieldtype": "Link",
+   "label": "Receipt",
+   "options": "Payment Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Payment due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "received_amount",
+   "fieldtype": "Currency",
+   "label": "Received",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "received_on",
+   "fieldtype": "Date",
+   "label": "Received on",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tds_in_26as",
+   "fieldtype": "Check",
+   "label": "TDS seen in Form 26AS"
+  },
+  {
+   "fieldname": "gst_tds_ok",
+   "fieldtype": "Check",
+   "label": "GST-TDS seen in GSTR-2X"
+  },
+  {
+   "fieldname": "sb_r",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "hidden": 1,
+   "fetch_from": "company.default_currency",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Managing Director"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Project Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Projects Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Quantity Surveyor"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Accounts User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Projects User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Demo Viewer"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "editable_grid": 0,
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "search_fields": "project,bill_no",
+ "description": "Construction (India): running account bill — measured work, GST, retention, advance recovery, TDS, GST-TDS, labour cess"
+}

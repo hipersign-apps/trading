@@ -62,6 +62,7 @@ app_include_js = [
 	"/assets/hipersign_trading/js/hs_deal.js" + _v,
 	"/assets/hipersign_trading/js/hs_projects.js" + _v,
 	"/assets/hipersign_trading/js/hs_manufacturing.js" + _v,
+	"/assets/hipersign_trading/js/hs_construction.js" + _v,  # v1.9.0
 ]
 
 website_context = {

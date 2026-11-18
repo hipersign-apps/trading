@@ -53,6 +53,12 @@ FEATURES = {
 		["BOM", "Work Order", "Job Card", "Production Plan", "Workstation", "Routing", "Quality Inspection", "Manufacturing Step Log"], [],
 		["hipersign-production", "hipersign-planning", "hipersign-boms", "hipersign-shopfloor", "hipersign-quality", "hipersign-mfg-costing", "production-tracker"],
 		[], ["Manufacturing"], []),
+	# v1.9.0 (prototype C11): Indian contractors — tenders and EMD, BOQ, measurement book, RA bills with GST, retention, mobilisation
+	# advance recovery, TDS 194C, GST-TDS and BOCW labour cess, DPR and hindrances (api/construction.py)
+	"construction": ("Construction (India)", "Industries", "Tenders and EMD, BOQ and extra items, measurement book, RA bills with GST, retention, TDS, GST-TDS and labour cess, DPR and hindrances", [],
+		["Tender", "Measurement Book", "RA Bill", "Extra Item", "Daily Progress Report", "Hindrance"], [],
+		["hipersign-cn-projects", "hipersign-cn-tenders", "hipersign-cn-boq", "hipersign-cn-mb", "hipersign-cn-billing", "hipersign-cn-site"],
+		[], ["Projects"], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]
 STANDARD_ON = ["crm", "tracker", "exports", "rfq", "imports", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc"]
@@ -65,7 +71,15 @@ PACKS = {
 	# v1.8.0: assemblers and factories — BOMs, work orders, shop floor, QC, plus serial numbers, HR and assets (prototype p19)
 	"Manufacturer": {"on": STANDARD_ON + ["manufacturing", "serial", "hr", "assets"], "doc_level": "Recommended", "form_mode": "Standard",
 		"desc": "Assemblers and factories — BOMs, work orders, shop floor, QC"},
-	"Enterprise": {"on": list(FEATURES), "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
+	# v1.9.0 (prototype C11): the three Construction (India) editions — later stages add their modules to Structure and Capstone
+	"Foundation": {"on": ["construction", "rfq", "multiwh", "advances", "recon", "approvals"], "doc_level": "Recommended", "form_mode": "Standard",
+		"desc": "Indian contractors starting out — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR"},
+	"Structure": {"on": ["construction", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
+		"form_mode": "Standard", "desc": "Growing contractors — Foundation plus HR, plant and assets, company compliance"},
+	"Capstone": {"on": ["construction", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
+		"form_mode": "Detailed", "desc": "Builders and EPC groups — Structure plus several companies and branches"},
+	"Enterprise": {"on": [k for k in FEATURES if k != "construction"],  # v1.9.0: Construction (India) has its own editions
+		 "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
 }
 
 

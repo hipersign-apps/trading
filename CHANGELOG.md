@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.9.0 — Construction (India), stage A1: the core (18 Nov 2026)
+Follows the Construction (India) prototype (C11). Built on GitHub main 1.8.4 — merge the 1.8.4 site patches (A1–A6 of
+16 Nov, release/1.8.4) before deploying.
+**New industry: Construction (India)** — feature switch `construction` (Hipersign Settings → Features → Industries) and three
+editions: Foundation, Structure, Capstone. Enterprise stays without it (India-only). New menu group "Construction (India)".
+- Pages: Construction Projects (portfolio, red flags, bank guarantees, how it works), Tenders & EMD, BOQ & Extra Items,
+  Measurement Book, RA Billing (bills, deductions by project, TDS & GST-TDS matching), DPR & Hindrances.
+- DocTypes: Tender, Measurement Book, RA Bill (+ RA Bill Item), Extra Item, Hindrance, Daily Progress Report. Project gets a
+  "Construction (India)" section: category, government client, engineer-in-charge, branch GST registration, TDS 194C %.
+  Project BOQ is shared with the Projects pages.
+- Rules (api/construction.py): tender bid / no-bid → submit → evaluation → award (makes the project) or lost (EMD refund);
+  measurement book dimensions → quantity, QS check → client check → BOQ measured %, beyond-BOQ warning; RA bill from the
+  checked measurements (this bill / up to date), client certification with cuts, GST tax invoice from the branch GSTIN
+  (India Compliance in-state / out-state templates, SAC by project category), receipt net of retention, mobilisation
+  advance recovery, TDS 194C, GST-TDS (sec. 51) and BOCW labour cess as Payment Entry deductions; extra items raise the
+  revised contract; hindrances with EOT; DPR submit / approve. Buttons on the pages and on the forms; role checks per step.
+- Indian amounts: ₹1.86 Cr / ₹45.2 L in cards, 12,34,567 grouping, whole rupees in the Construction tables.
+- Demo: Load demo data asks Trading group or Construction (India). Construction loads Hipersign Construction &
+  Infrastructure Pvt. Ltd. (Kochi HO, Bengaluru, Chennai, Pune GSTINs), seven clients, six projects, 93 RA bills with GST
+  invoices and receipts, tenders, bank guarantees, extra items, measurements, DPRs, hindrances and project costs, then
+  switches to Capstone.
+- The UAE Projects pages leave out Construction (India) projects.
+
 ## 1.8.4 — Fixes from the audit: every open issue, every menu entry in the Hipersign theme (7 Nov 2026)
 **Serious issues (#21–#27 and more)**
 - Transfer to WIP uses the warehouses picked (#21); the Nairobi USD invoice shows its AED outstanding as AED (#22).
