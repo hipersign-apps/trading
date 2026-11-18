@@ -75,6 +75,12 @@ NAV = [
 		("Project costing", "Page", "hipersign-costing", "chart-column", "projects", {}),
 		("Project Tracker", "Page", "project-tracker", "list-checks", "projects", {}),
 	]),
+	# v1.9.0 A2 (prototype C5): Indian contractors' business side — enquiries, quotations, contracts, claims, collections
+	("Business (India)", "briefcase", [
+		("CRM & Clients", "Page", "hipersign-cn-crm", "users", "cn_biz", {}),
+		("Quotations & Sales", "Page", "hipersign-cn-sales", "file-text", "cn_biz", {}),
+		("Contracts & Claims", "Page", "hipersign-cn-contracts", "signature", "cn_biz", {}),
+	]),
 	# v1.9.0 (prototype C11): Indian contractors — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR
 	("Construction (India)", "hard-hat", [
 		("Construction Projects", "Page", "hipersign-cn-projects", "chart-gantt", "construction", {}),
@@ -155,6 +161,10 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0 A2: Business (India)
+	"CRM & Clients": [("Enquiries", "DocType", "Opportunity", None), ("Client Visits", "DocType", "Client Visit", None), ("Clients", "DocType", "Customer", None)],
+	"Quotations & Sales": [("Quotations", "DocType", "Quotation", None), ("Collection Follow-ups", "DocType", "Collection Follow-up", None)],
+	"Contracts & Claims": [("Contracts", "DocType", "Construction Contract", None), ("Claims", "DocType", "Contract Claim", None)],
 	# v1.9.0: Construction (India)
 	"Construction Projects": [("Projects", "DocType", "Project", None), ("Bank Guarantees", "DocType", "Bank Guarantee", None)],
 	"Tenders & EMD": [("Tenders", "DocType", "Tender", None)],
@@ -219,6 +229,10 @@ SUB_TABS = {
 	("Workflows & Settings", "Document Rules"): ("hipersign-doccentre", "rules"), ("Workflows & Settings", "Editable Lists"): ("hipersign-settings-hub", None),
 	("Workflows & Settings", "Users"): ("hipersign-settings-hub", None), ("Workflows & Settings", "System Settings"): ("hipersign-settings-hub", None),
 	("Document Centre", "Missing Documents"): ("hipersign-doccentre", "missing"), ("Document Centre", "Document Waivers"): ("hipersign-doccentre", "waivers"),
+	("CRM & Clients", "Enquiries"): ("hipersign-cn-crm", "pipe"), ("CRM & Clients", "Client Visits"): ("hipersign-cn-crm", "visit"),
+	("CRM & Clients", "Clients"): ("hipersign-cn-crm", "cli"), ("Quotations & Sales", "Quotations"): ("hipersign-cn-sales", "qt"),
+	("Quotations & Sales", "Collection Follow-ups"): ("hipersign-cn-sales", "fup"), ("Contracts & Claims", "Contracts"): ("hipersign-cn-contracts", "reg"),
+	("Contracts & Claims", "Claims"): ("hipersign-cn-contracts", "clm"),
 	("Construction Projects", "Projects"): ("hipersign-cn-projects", "port"), ("Construction Projects", "Bank Guarantees"): ("hipersign-cn-projects", "bg"),
 	("Tenders & EMD", "Tenders"): ("hipersign-cn-tenders", "tnd"), ("BOQ & Extra Items", "Project BOQs"): ("hipersign-cn-boq", "boq"),
 	("BOQ & Extra Items", "Extra Items"): ("hipersign-cn-boq", "ei"), ("Measurement Book", "Measurement Book"): ("hipersign-cn-mb", "mb"),

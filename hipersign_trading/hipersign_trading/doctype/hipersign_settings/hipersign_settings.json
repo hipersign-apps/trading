@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-10-21 14:30:00.000000",
- "modified": "2026-11-18 12:00:00.000000",
+ "modified": "2026-11-18 16:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -125,6 +125,11 @@
   "feat_projects",
   "feat_manufacturing",
   "feat_construction",
+  "feat_cn_biz",
+  "sb_cn_limits",
+  "cn_quote_discount_limit",
+  "cn_quote_margin_floor",
+  "cn_ld_flag_days",
   "tab_look",
   "sb_look",
   "desk_theme",
@@ -817,6 +822,38 @@
    "label": "Construction (India)",
    "default": "0",
    "description": "Tenders and EMD, BOQ and extra items, measurement book, RA bills with GST, retention, TDS, GST-TDS and labour cess, DPR and hindrances"
+  },
+  {
+   "fieldname": "feat_cn_biz",
+   "fieldtype": "Check",
+   "label": "Construction — business & contracts",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder"
+  },
+  {
+   "fieldname": "sb_cn_limits",
+   "fieldtype": "Section Break",
+   "label": "Construction (India) — limits",
+   "depends_on": "eval:doc.feat_construction"
+  },
+  {
+   "fieldname": "cn_quote_discount_limit",
+   "fieldtype": "Percent",
+   "label": "Quotation discount above which the MD approves",
+   "default": "5"
+  },
+  {
+   "fieldname": "cn_quote_margin_floor",
+   "fieldtype": "Percent",
+   "label": "Quotation margin below which the MD approves",
+   "default": "10"
+  },
+  {
+   "fieldname": "cn_ld_flag_days",
+   "fieldtype": "Int",
+   "label": "Flag a project this many days behind (LD)",
+   "default": "21"
   },
   {
    "fieldname": "tab_forms",

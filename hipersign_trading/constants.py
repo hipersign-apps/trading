@@ -29,7 +29,9 @@ NEW_ROLES = ["Managing Director", "Logistics Coordinator", "HR Manager", "HR Use
 	# v1.8.0: the Projects module (prototype p19)
 	"Project Manager", "Quantity Surveyor", "Site Engineer",
 	# v1.8.0: the Manufacturing module (prototype p19)
-	"Production Manager", "QC Inspector"]
+	"Production Manager", "QC Inspector",
+	# v1.9.0: Construction (India) — business development (prototype C5)
+	"BD Manager"]
 
 # Roles without desk access (they only use the mobile web pages)
 WEB_ROLES = ["Driver"]

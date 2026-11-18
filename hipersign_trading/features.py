@@ -59,6 +59,10 @@ FEATURES = {
 		["Tender", "Measurement Book", "RA Bill", "Extra Item", "Daily Progress Report", "Hindrance"], [],
 		["hipersign-cn-projects", "hipersign-cn-tenders", "hipersign-cn-boq", "hipersign-cn-mb", "hipersign-cn-billing", "hipersign-cn-site"],
 		[], ["Projects"], []),
+	# v1.9.0 A2 (prototype C5): construction CRM, quotations with MD approval and revisions, contracts, claims, LD, collections
+	"cn_biz": ("Construction — business & contracts", "Industries", "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder",
+		["construction"], ["Client Visit", "Construction Contract", "Contract Claim", "Collection Follow-up"], [],
+		["hipersign-cn-crm", "hipersign-cn-sales", "hipersign-cn-contracts"], [], [], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]
 STANDARD_ON = ["crm", "tracker", "exports", "rfq", "imports", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc"]
@@ -76,9 +80,9 @@ PACKS = {
 		"desc": "Indian contractors starting out — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR"},
 	"Structure": {"on": ["construction", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
 		"form_mode": "Standard", "desc": "Growing contractors — Foundation plus HR, plant and assets, company compliance"},
-	"Capstone": {"on": ["construction", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
+	"Capstone": {"on": ["construction", "cn_biz", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
 		"form_mode": "Detailed", "desc": "Builders and EPC groups — Structure plus several companies and branches"},
-	"Enterprise": {"on": [k for k in FEATURES if k != "construction"],  # v1.9.0: Construction (India) has its own editions
+	"Enterprise": {"on": [k for k in FEATURES if k not in ("construction", "cn_biz")],  # v1.9.0: Construction (India) has its own editions
 		 "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
 }
 

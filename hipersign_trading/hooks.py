@@ -178,7 +178,9 @@ doc_events = {
 		"validate": "hipersign_trading.overrides.purchase_receipt.validate",
 		"on_submit": "hipersign_trading.overrides.purchase_receipt.on_submit",
 	},
-	"Quotation": {"before_validate": "hipersign_trading.overrides.pricing.remember", "validate": "hipersign_trading.overrides.quotation.validate"},
+	"Quotation": {"before_validate": "hipersign_trading.overrides.pricing.remember",
+		"validate": ["hipersign_trading.overrides.quotation.validate", "hipersign_trading.api.construction_biz.quotation_validate"],  # v1.9.0 A2
+		"before_submit": "hipersign_trading.api.construction_biz.quotation_before_submit"},
 	"Lead": {"validate": "hipersign_trading.overrides.lead.validate"},
 	# v1.8.0: project purchase orders and material requests carry the project on the header (Projects pages, cost heads)
 	"Purchase Order": {"validate": "hipersign_trading.api.projects.po_project"},

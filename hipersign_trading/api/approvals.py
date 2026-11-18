@@ -118,9 +118,23 @@ def _hr(company=None):
 	return out
 
 
+def _construction(company=None):
+	"""v1.9.0 A2: construction quotations waiting for the MD (discount above the limit or margin below the floor)."""
+	if not frappe.get_meta("Quotation").has_field("hs_cn_approval"):
+		return []
+	f = {"hs_cn": 1, "hs_cn_approval": "Pending", "docstatus": 0}
+	if company:
+		f["company"] = company
+	return [{"kind": "cn_quote", "type": _("Construction quotation"), "doctype": "Quotation", "name": q.name,
+		"description": _("{0} — {1}").format(q.hs_subject or q.customer_name, q.customer_name),
+		"reason": _("Discount {0:.1f}% · margin {1:.1f}%").format(flt(q.hs_cn_discount_pct), flt(q.hs_estimated_margin)),
+		"value": flt(q.base_net_total), "waiting_for": ["Managing Director"], "actions": ["Approve", "Reject"], "by": q.owner, "since": str(q.modified)[:10]}
+		for q in frappe.get_all("Quotation", filters=f, fields=["name", "hs_subject", "customer_name", "hs_cn_discount_pct", "hs_estimated_margin", "base_net_total", "owner", "modified"])]
+
+
 def pending(company=None, mine=False):
 	items = []
-	for src in (_workflow_items, _tax_returns, _hr):
+	for src in (_workflow_items, _tax_returns, _hr, _construction):
 		try:
 			items.extend(src(company))
 		except Exception:
@@ -168,6 +182,11 @@ def act(kind, doctype, name, action, note=None):
 		doc.save()
 		doc.submit()
 		return {"state": doc.status}
+	if kind == "cn_quote":  # v1.9.0 A2
+		from hipersign_trading.api.construction import act as cn_act
+
+		cn_act("qt_approve" if approve else "qt_reject", name, frappe.as_json({"note": note}))
+		return {"state": frappe.db.get_value("Quotation", name, "hs_cn_approval")}
 	if kind == "expense":
 		doc.approval_status = "Approved" if approve else "Rejected"
 		doc.save()

@@ -161,6 +161,19 @@ def _tax_template(company, company_address=None, customer=None):
 	return out if cs and ps and cs != ps else inn
 
 
+def branch_address(company, customer=None):
+	"""The company's GST registration (company address) in the client's state, else its first one — where a quotation or
+	invoice to that client is issued from."""
+	rows = frappe.db.sql("""select a.name, a.gst_state from `tabAddress` a join `tabDynamic Link` l on l.parent = a.name and l.parenttype = 'Address'
+		where l.link_doctype = 'Company' and l.link_name = %s and a.is_your_company_address = 1 and a.disabled = 0 order by a.creation asc""", company, as_dict=True) \
+		if frappe.get_meta("Address").has_field("gst_state") else []
+	if not rows:
+		return None
+	ca = _customer_address(customer) if customer else None
+	st = frappe.db.get_value("Address", ca, "gst_state") if ca else None
+	return next((r.name for r in rows if st and r.gst_state == st), rows[0].name)
+
+
 def _customer_address(customer):
 	return frappe.db.get_value("Dynamic Link", {"link_doctype": "Customer", "link_name": customer, "parenttype": "Address"}, "parent")
 
@@ -221,8 +234,10 @@ def sync_boq(project, item_nos=None):
 
 # ---------------------------------------------------------------- validation (called from the doctypes)
 def validate_doc(doc):
+	from hipersign_trading.api import construction_biz as B
+
 	fn = {"Tender": _v_tender, "Measurement Book": _v_mb, "RA Bill": ra_compute, "Extra Item": _v_ei, "Hindrance": _v_hin,
-		"Daily Progress Report": _v_dpr}.get(doc.doctype)
+		"Daily Progress Report": _v_dpr, "Construction Contract": B.contract_validate, "Contract Claim": _v_claim}.get(doc.doctype)
 	if fn:
 		fn(doc)
 
@@ -267,6 +282,15 @@ def _v_hin(doc):
 	if getdate(end) < getdate(doc.from_date):
 		frappe.throw(_("The hindrance ends before it starts."))
 	doc.days = date_diff(end, doc.from_date) + 1
+
+
+def _v_claim(doc):
+	if cint(doc.claimed_days) < 0 or flt(doc.claimed_amount) < 0:
+		frappe.throw(_("Claimed days and amount cannot be negative."))
+	if not doc.contract:
+		doc.contract = frappe.db.get_value("Construction Contract", {"project": doc.project, "status": ["!=", "Terminated"]})
+	if doc.kind == "Extension of time" and not cint(doc.claimed_days):
+		frappe.throw(_("An extension-of-time claim needs the days claimed."))
 
 
 def _v_dpr(doc):
@@ -367,7 +391,10 @@ def fig(name):
 	contract = flt(p.get("hs_contract_value"))
 	E = eis(name)
 	ei_ok = sum(flt(e.amount) for e in E if e.status == "Approved")
-	revised = contract + ei_ok
+	from hipersign_trading.api import construction_biz as B
+
+	claims_ok = B.claims_awarded(name)
+	revised = contract + ei_ok + claims_ok
 	b = boq(name)
 	work_boq = sum(flt(r.amount) * flt(r.measured_pct) / 100 for r in (b.items if b else []))
 	B = _bills(name)
@@ -386,7 +413,7 @@ def fig(name):
 	adv_total = contract * flt(p.get("hs_advance_pct")) / 100
 	F = frappe._dict(
 		step=step, status=P.status_of(step), contract=contract, ei=ei_ok, ei_pending=sum(flt(e.amount) for e in E if e.status in ("Draft", "Pending client")),
-		revised=revised, work=work, pct=pct, billed=billed, gst=sum(flt(x.gst_amount) for x in cert), received=received, outstanding=outstanding, overdue=overdue,
+		claims=claims_ok, revised=revised, work=work, pct=pct, billed=billed, gst=sum(flt(x.gst_amount) for x in cert), received=received, outstanding=outstanding, overdue=overdue,
 		pending_cert=sum(flt(x.claimed_amount) for x in pending), retention=sum(flt(x.retention) for x in cert), tds=sum(flt(x.tds) for x in cert),
 		gst_tds=sum(flt(x.gst_tds) for x in cert), cess=sum(flt(x.labour_cess) for x in cert), adv_total=adv_total,
 		adv_recovered=sum(flt(x.advance_recovery) for x in cert), bills=len(cert), last_bill=(B[-1] if B else None),
@@ -440,6 +467,9 @@ def flags(name):
 				frappe.format(g.end_date, {"fieldtype": "Date"})), "Bank Guarantee", g.name)
 	if F.cost and F.budget and F.margin < F.bud_margin - 3 and F.step < 22:
 		add("Medium", _("Margin {0:.1f}% against {1:.1f}% in the estimate").format(F.margin, F.bud_margin), "Project", name)
+	from hipersign_trading.api import construction_biz as B
+
+	out += B.flags(name)
 	return out
 
 
@@ -455,15 +485,16 @@ def make_invoice(ra_name, posting_date=None):
 	p = frappe.get_cached_doc("Project", ra.project)
 	acc = accounts(p.company)
 	posting_date = posting_date or today()
-	tpl = _tax_template(p.company, p.get("hs_cn_address"), p.customer)
+	addr = p.get("hs_cn_address") or branch_address(p.company, p.customer)
+	tpl = _tax_template(p.company, addr, p.customer)
 	si = frappe.get_doc({"doctype": "Sales Invoice", "company": p.company, "customer": p.customer, "project": p.name, "posting_date": posting_date,
 		"set_posting_time": 1, "due_date": add_days(posting_date, 30), "cost_center": p.cost_center or frappe.get_cached_value("Company", p.company, "cost_center"),
 		"items": [{"item_code": works_item(p.get("hs_cn_category")), "qty": 1, "rate": flt(ra.certified_amount), "income_account": acc.revenue,
 			"description": _("RA bill no. {0}{1} — {2}: work certified up to {3}").format(ra.bill_no, _(" (final)") if cint(ra.is_final) else "", p.project_name,
 				frappe.format(ra.period_to or ra.certified_on or posting_date, {"fieldtype": "Date"})), "project": p.name}],
 		"taxes_and_charges": tpl, "remarks": _("RA bill {0} of {1}").format(ra.name, p.name)})
-	if p.get("hs_cn_address"):
-		si.company_address = p.hs_cn_address
+	if addr:
+		si.company_address = addr
 	ca = _customer_address(p.customer)
 	if ca:
 		si.customer_address = ca
@@ -522,6 +553,12 @@ def make_project(tender):
 		"estimated_costing": flt(t.our_bid) or flt(t.estimated_value)})
 	pj.flags.ignore_permissions = True
 	pj.insert()
+	if frappe.db.exists("DocType", "Construction Contract"):  # v1.9.0 A2: the contract (LOA) with the project
+		c = frappe.get_doc({"doctype": "Construction Contract", "project": pj.name, "tender": t.name, "loa_no": f"LOA/{pj.name}", "loa_date": today(),
+			"original_value": pj.hs_contract_value, "start_date": add_days(today(), 21), "completion_date": add_days(today(), 21 + 540),
+			"retention_pct": 5, "advance_pct": 10, "price_escalation": "Price variation clause (indices)" if pj.hs_cn_govt else "None — firm price"})
+		c.flags.ignore_permissions = True
+		c.insert()
 	return pj.name
 
 
@@ -529,7 +566,9 @@ def make_project(tender):
 @frappe.whitelist(methods=["POST"])
 def act(action, name, args=None):
 	args = frappe._dict(frappe.parse_json(args) if isinstance(args, str) else (args or {}))
-	fn = ACTIONS.get(action)
+	from hipersign_trading.api import construction_biz as B  # v1.9.0 A2: business actions
+
+	fn = ACTIONS.get(action) or B.ACTIONS.get(action)
 	if not fn:
 		frappe.throw(_("Unknown action"))
 	r = fn(name, args) or {}
@@ -768,9 +807,9 @@ def _a_ra_cancel(name, a):
 
 
 def _ei_update_project(project):
-	ok = sum(flt(e.amount) for e in eis(project) if e.status == "Approved")
-	cv = flt(frappe.db.get_value("Project", project, "hs_contract_value"))
-	frappe.db.set_value("Project", project, {"hs_variations": ok, "hs_revised_contract": cv + ok})
+	from hipersign_trading.api import construction_biz as B
+
+	B.sync_contract(project)  # v1.9.0 A2: the project and its contract follow extra items and awarded claims
 
 
 def _a_ei_send(name, a):

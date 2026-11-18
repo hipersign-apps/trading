@@ -310,6 +310,9 @@ def _boq_lines(p):
 	cert = _spread(out, 1 if step >= 22 else P0, 1 if step >= 22 else max(0, el - .04), contract)
 	for l, a, b in zip(out, now, cert):
 		l["now"], l["cert"] = a, min(a, b)
+	if pid == "P-2401":  # Block A excavation fully billed; the soft-strata excess is measured beyond the BOQ (deviation EI-03)
+		ex = next(l for l in out if l["item_no"] == "1.1")
+		ex["now"] = ex["cert"] = 100
 	return out
 
 
@@ -621,6 +624,156 @@ def cn_costs(c):
 		frappe.db.set_value("Project", p[0], "percent_complete", round(CN.fig(p[0]).pct), update_modified=False)
 
 
+# ---------------------------------------------------------------- 7. business: enquiries, visits, quotations, contracts, claims, collections (A2)
+PROSPECTS = [  # name, state, city, line 1, pincode, PAN
+	("Cochin Waterfront Developers Pvt. Ltd.", "Kerala", "Kochi", "Marine Drive", "682031", "AAKCC2210B"),
+	("Periyar Residency Builders LLP", "Kerala", "Aluva", "Bank Junction", "683101", "AAPFP7781R"),
+	("Malnad Agro Processing Ltd. (fictional)", "Karnataka", "Shivamogga", "KIADB Industrial Area", "577202", "AAHCM9012E"),
+	("Chettinad Heritage Resorts Pvt. Ltd. (fictional)", "Tamil Nadu", "Karaikudi", "Devakottai Road", "630001", "AAJCC5523D"),
+]
+OPPS = [  # title, party, category, location, value Cr, stage / status, probability, next (days), competition, source, visits
+	("Marine Drive Mixed-use Tower — civil & structure", "Cochin Waterfront Developers Pvt. Ltd.", "Commercial buildings", "Marine Drive, Kochi", 64.0, "Negotiation", 75, 2,
+		"Shapoorji Pallonji, Sobha", "Referral"),
+	("Aluva Riverside Villas — 18 units", "Periyar Residency Builders LLP", "Villas & individual houses", "Aluva", 22.4, "Proposal sent", 60, -3, "Local contractors (2)", "Existing client"),
+	("Shivamogga Food Processing Plant — PEB & civil", "Malnad Agro Processing Ltd. (fictional)", "Industrial buildings", "Shivamogga", 18.9, "Estimating", 45, 5,
+		"Pennar, Kirby (PEB only)", "Website"),
+	("Karaikudi Heritage Resort — 40 keys", "Chettinad Heritage Resorts Pvt. Ltd. (fictional)", "Interior fit-out", "Karaikudi", 11.5, "Site visit", 35, 0, "", "Architect"),
+	("Skyline Residency Phase 2 — Block C", "Malabar Habitat Developers Pvt. Ltd.", "Apartment complexes", "Kakkanad, Kochi", 21.0, "Qualified", 25, 9, "", "Existing client"),
+	("Technopark Phase IV — Food Court & Amenities", "Ananthapuri Tech Parks Ltd.", "Commercial buildings", "Kazhakoottam, Thiruvananthapuram", 6.2, "Lead", 10, 12, "", "Existing client"),
+	("OMR Business Hotel — Interior Fit-out", "Coromandel Hospitality Pvt. Ltd.", "Interior fit-out", "Thoraipakkam, Chennai", 9.75, "Converted", 100, None, "Two Chennai fit-out firms", "Architect"),
+	("Bommasandra Cold Store", "Deccan Warehousing LLP", "Industrial buildings", "Bommasandra, Bengaluru", 8.4, "Lost", 0, None, "Kirby Building Systems", "Existing client"),
+	("Kakkanad Co-working Hub — Interiors", "Malabar Habitat Developers Pvt. Ltd.", "Interior fit-out", "Kakkanad, Kochi", 3.6, "Lost", 0, None, "Design-build studio", "Existing client"),
+]
+
+
+def cn_business(c):
+	from hipersign_trading.api import construction as CN
+	from hipersign_trading.api import construction_biz as B
+
+	if not frappe.db.exists("DocType", "Construction Contract"):
+		return
+	for p in PROJECTS:
+		frappe.db.set_value("Project", p[0], "hs_cn_planned_pct", p[10][4], update_modified=False)
+	for st in B.STAGES:
+		B._sales_stage(st)
+	grp = "Commercial" if frappe.db.exists("Customer Group", "Commercial") else frappe.db.get_value("Customer Group", {"is_group": 0}, "name")
+	terr = "India" if frappe.db.exists("Territory", "India") else frappe.db.get_value("Territory", {"is_group": 0}, "name") or "All Territories"
+	for name, state, city, line1, pin, pan in PROSPECTS:
+		if not frappe.db.exists("Customer", name):
+			cu = frappe.get_doc({"doctype": "Customer", "customer_name": name, "customer_type": "Company", "customer_group": grp, "territory": terr})
+			if cu.meta.has_field("gstin"):
+				cu.gstin, cu.gst_category = gstin(STATE_CODE[state], pan), "Registered Regular"
+			cu.insert(ignore_permissions=True)
+		_address(name, "Customer", name, state, city, line1, pin, gstin(STATE_CODE[state], pan))
+	if frappe.db.exists("Opportunity", {"company": CO, "hs_cn": 1}):
+		return
+	for src in {o[9] for o in OPPS}:
+		if frappe.db.exists("DocType", "UTM Source") and not frappe.db.exists("UTM Source", src):
+			frappe.get_doc({"doctype": "UTM Source", "name": src, "__newname": src}).insert(ignore_permissions=True, set_name=src)
+	opp = {}
+	for i, (title, party, cat, loc, val, stage, prob, nxt, comp, src) in enumerate(OPPS):
+		o = frappe.get_doc({"doctype": "Opportunity", "opportunity_from": "Customer", "party_name": party, "title": title, "company": CO, "opportunity_type": "Sales",
+			"transaction_date": D(-200 + i * 18), "opportunity_amount": val * CR, "currency": "INR", "probability": prob, "expected_closing": D(30 + i * 10),
+			"sales_stage": stage if stage in B.STAGES else "Negotiation", "hs_cn": 1, "hs_cn_category": cat, "hs_cn_location": loc,
+			"hs_cn_next_date": D(nxt) if nxt is not None else None, "hs_cn_competition": comp})
+		if o.meta.has_field("utm_source") and frappe.db.exists("UTM Source", src):
+			o.utm_source = src
+		o.insert(ignore_permissions=True)
+		opp[title] = o.name
+	# visits & meetings
+	V = [(0, -40, "Site visit", "Arjun Menon, Rahul Nair", "Mr. Thomas Kurian (MD)", "Walked the plot; soil report shared; client wants podium + 22 floors", "Send budget estimate", 2),
+		(0, -12, "Office meeting", "Arjun Menon, Deepa Krishnan", "Client's PMC", "Negotiated rates for RCC and shuttering; asked for M30 in the podium", "Revised offer", -2),
+		(1, -26, "Site visit", "Arjun Menon", "Mr. Joy Varghese (partner)", "18 villa plots marked; access road pending from the panchayat", "Proposal", -10),
+		(1, -5, "Call", "Arjun Menon", "Mr. Joy Varghese", "Client comparing with two local contractors; wants 4% off", "Discuss with MD", -3),
+		(2, -9, "Presentation", "Arjun Menon, Karthik Rao", "Plant head and consultant", "Presented PEB + civil single-point responsibility", "Estimate by Friday", 5),
+		(3, -2, "Site visit", "Senthil Kumar", "Ar. Meenakshi (architect)", "Heritage façade to be kept; interiors and MEP in scope", "Visit report and BOQ", 6),
+		(4, -15, "Office meeting", "Arjun Menon", "Malabar Habitat — projects head", "Phase 2 planned after Block A handover", "Call in December", 9)]
+	for k, d, kind, us, them, notes, step, nd in V:
+		t = OPPS[k]
+		frappe.get_doc({"doctype": "Client Visit", "opportunity": opp[t[0]], "customer": t[1], "party_name": t[1], "company": CO, "visit_date": D(d), "kind": kind,
+			"visited_by": us, "met": them, "notes": notes, "next_step": step, "next_date": D(nd)}).insert(ignore_permissions=True)
+	# quotations: revised and approved (Marine Drive), waiting for the MD (Aluva), draft (Shivamogga), won (OMR hotel), lost (cold store)
+	def quote(t, value, cost, lst, docstatus, days, approval=None, outcome="Open", rev=0, rev_of=None, reason=None, project=None):
+		o = OPPS[[x[0] for x in OPPS].index(t)]
+		q = frappe.get_doc({"doctype": "Quotation", "quotation_to": "Customer", "party_name": o[1], "company": CO, "opportunity": opp[t], "transaction_date": D(days),
+			"valid_till": D(days + 45), "order_type": "Sales", "hs_subject": t, "hs_cn": 1, "hs_cn_cost": cost * CR, "hs_cn_list_value": lst * CR,
+			"hs_cn_revision": rev, "hs_cn_revision_of": rev_of, "hs_cn_revision_reason": reason,
+			"items": [{"item_code": CN.works_item(o[2]), "qty": 1, "rate": value * CR, "description": f"{t} — construction works as per the scope, drawings and specifications"}],
+			"tc_name": None, "terms": "Monthly RA bills on joint measurement, 30 days · 10% mobilisation advance against BG · 5% retention · GST extra as applicable · validity 45 days"})
+		st = next((x[1] for x in CUSTOMERS + PROSPECTS if x[0] == o[1]), "Kerala")
+		br = next((k for k, v in BRANCHES.items() if v[1] == st), "HO")
+		q.company_address = frappe.db.get_value("Address", {"address_title": f"{CO} — {BRANCHES[br][0]}"})
+		q.taxes_and_charges = CN._tax_template(CO, q.company_address, o[1])
+		q.run_method("set_missing_values")
+		if q.taxes_and_charges:
+			q.set("taxes", [])
+			for r in frappe.get_doc("Sales Taxes and Charges Template", q.taxes_and_charges).taxes:
+				q.append("taxes", {"charge_type": r.charge_type, "account_head": r.account_head, "rate": r.rate, "description": r.description})
+		q.insert(ignore_permissions=True)
+		if approval == "Approved":
+			q.db_set({"hs_cn_approval": "Approved", "hs_cn_approved_by": "Arjun Menon", "hs_cn_approved_value": q.base_net_total})
+			q.reload()
+		if docstatus:
+			q.submit()
+		if outcome != "Open":
+			frappe.db.set_value("Quotation", q.name, {"hs_cn_outcome": outcome, "hs_cn_project": project})
+		return q
+	q0 = quote(OPPS[0][0], 66.5, 57.2, 66.5, 1, -30)
+	q0.cancel()
+	frappe.db.set_value("Quotation", q0.name, "hs_cn_outcome", "Revised")
+	q1 = quote(OPPS[0][0], 62.6, 56.1, 66.5, 1, -8, approval="Approved", rev=1, rev_of=q0.name, reason="Client asked for M30 in the podium; rates negotiated on 12 Nov — 5.9% off")
+	quote(OPPS[1][0], 21.5, 19.7, 22.4, 0, -4)  # margin 8.4% → waiting for the MD
+	quote(OPPS[2][0], 18.9, 16.4, 18.9, 0, -1)
+	qw = quote(OPPS[6][0], 9.75, 8.3, 9.75, 1, -280, outcome="Accepted", project="P-2406")
+	frappe.db.set_value("Opportunity", opp[OPPS[6][0]], {"status": "Converted", "hs_cn_project": "P-2406"})
+	ql = quote(OPPS[7][0], 8.4, 7.5, 8.4, 1, -120)
+	r = B._lost_reason("Lost to competitor")
+	ql.reload()
+	ql.declare_enquiry_lost([{"lost_reason": r}], [], "Kirby quoted a PEB-only price 9% lower")
+	frappe.db.set_value("Quotation", ql.name, "hs_cn_outcome", "Lost")
+	for k, reason in ((7, "Lost to competitor"), (8, "Client chose design-build")):
+		o = frappe.get_doc("Opportunity", opp[OPPS[k][0]])
+		if o.status != "Lost":
+			o.declare_enquiry_lost([{"lost_reason": B._lost_reason(reason)}], [], None)
+	frappe.db.set_value("Opportunity", opp[OPPS[0][0]], "status", "Quotation")
+	# contracts (LOA) for every project, then claims and the collections log
+	for p in PROJECTS:
+		pid, name, cat, tpl, client, br, loc, pm, se, qs, f, step, govt, eic, adv = p
+		if frappe.db.exists("Construction Contract", {"project": pid}):
+			continue
+		tnd = frappe.db.get_value("Tender", {"project": pid})
+		frappe.get_doc({"doctype": "Construction Contract", "project": pid, "status": "In DLP" if step >= 22 else "Active", "tender": tnd,
+			"quotation": qw.name if pid == "P-2406" else None, "loa_no": f"{'WO' if govt else 'LOA'}/{pid[2:]}/{getdate(R(f[6])).year}", "loa_date": add_days(R(f[6]), -60),
+			"agreement_no": f"AGR/{pid[2:]}", "agreement_date": add_days(R(f[6]), -45), "original_value": f[0] * CR, "retention_pct": 5, "advance_pct": adv,
+			"price_escalation": "Price variation clause (indices)" if govt else "Steel & cement only" if tpl == "bld" else "None — firm price",
+			"start_date": R(f[6]), "completion_date": R(f[7]), "ld_rate_pct": .5, "ld_cap_pct": 10, "dlp_months": 12,
+			"payment_terms": frappe.db.get_value("Project", pid, "hs_payment_terms")}).insert(ignore_permissions=True)
+	hin = {h.cause[:20]: h.name for h in frappe.get_all("Hindrance", fields=["name", "cause"])}
+	CL = [("P-2403", "EOT — monsoon suspension of bituminous work", "Extension of time", "Monsoon — continuous", 29, 0, "Awarded", 21, 0, -60),
+		("P-2403", "Prolongation cost — monsoon and utility shifting", "Prolongation cost", None, 0, 3800000, "Submitted", 0, 0, -20),
+		("P-2401", "EOT — Block B transfer-beam drawings late", "Extension of time", "Revised structural d", 21, 0, "Under negotiation", 0, 0, -14),
+		("P-2401", "Additional excavation in soft strata — rate for excess", "Cost claim", None, 0, 412000, "Draft", 0, 0, -10),
+		("P-2406", "Steel & cement escalation — Q2 to Q3", "Price escalation", None, 0, 1260000, "Submitted", 0, 0, -9)]
+	for pid, title, kind, hkey, days, amt, status, adays, aamt, d in CL:
+		k = frappe.get_doc({"doctype": "Contract Claim", "project": pid, "title": title, "kind": kind, "hindrance": hin.get(hkey) if hkey else None,
+			"claimed_days": days, "claimed_amount": amt, "basis": "As per the hindrance register, site instructions and correspondence on file"})
+		k.insert(ignore_permissions=True)
+		if status != "Draft":
+			k.db_set({"status": status, "submitted_on": D(d)})
+		if status == "Awarded":
+			k.db_set({"awarded_days": adays, "awarded_amount": aamt, "decided_on": D(d + 30)})
+			if k.hindrance:
+				frappe.db.set_value("Hindrance", k.hindrance, {"eot_status": "Granted", "eot_days": adays})
+	for p in PROJECTS:
+		B.sync_contract(p[0])
+	late = frappe.get_all("RA Bill", filters={"project": "P-2403", "status": "Invoiced"}, pluck="name", order_by="bill_no desc", limit=1)
+	if late:
+		for lvl, d, note, pd in (("L1 — e-mail reminder", -16, "Reminder e-mailed to the Executive Engineer with the invoice and certificate copy", None),
+				("L2 — PM call", -6, "Rahul Nair called the EE's office — bill with the treasury, payment expected next week", 5)):
+			frappe.get_doc({"doctype": "Collection Follow-up", "ra_bill": late[0], "level": lvl, "followed_on": D(d), "by": "Rahul Nair" if "PM" in lvl else "Accounts",
+				"note": note, "promised_date": D(pd) if pd else None}).insert(ignore_permissions=True)
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -635,4 +788,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_costs, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_costs, cn_business, cn_finish]

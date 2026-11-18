@@ -159,6 +159,7 @@ def v13_defaults(new_site):
 	stock_can_log_warranty_claims()
 	projects_roles_can_work()
 	manufacturing_roles_can_work()
+	construction_roles_can_work()
 
 
 # v1.5.6: ERPNext 16 reads the customer's invoices when the Customer form opens (the dashboard totals) with the user's own
@@ -316,6 +317,29 @@ def manufacturing_roles_can_work():
 
 def projects_roles_can_work():
 	_grant(PROJECT_PERMS)
+
+
+# v1.9.0: Construction (India) — the BD manager runs enquiries and quotations; MD approves; project staff read the client side
+CN_PERMS = {
+	"Opportunity": {"BD Manager": "rwc", "Managing Director": "rwc", "Project Manager": "r", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Quotation": {"BD Manager": "rwcs", "Managing Director": "rwcs", "Project Manager": "rwcs", "Quantity Surveyor": "rwc", "Demo Viewer": "r"},
+	"Customer": {"BD Manager": "rwc", "Managing Director": "rwc", "Demo Viewer": "r"},
+	"Lead": {"BD Manager": "rwc", "Managing Director": "r"},
+	"Prospect": {"BD Manager": "rwc", "Managing Director": "r"},
+	"Address": {"BD Manager": "rwc"}, "Contact": {"BD Manager": "rwc"},
+	"Item": {"BD Manager": "r"}, "Project": {"BD Manager": "r"}, "Sales Invoice": {"BD Manager": "r", "Managing Director": "r"},
+	"Sales Stage": {"BD Manager": "r", "Managing Director": "r"}, "Company": {"BD Manager": "r"},
+	# the BD manager follows the contracts and collections of the jobs won
+	**{dt: {"BD Manager": "r"} for dt in ("Project BOQ", "Bank Guarantee", "Payment Entry")},
+	# what a quotation reads while it is made (taxes, prices, terms, masters)
+	**{dt: {"BD Manager": "r", "Managing Director": "r"} for dt in ("Sales Taxes and Charges Template", "Price List", "Item Price", "Customer Group", "Territory",
+		"Terms and Conditions", "UOM", "Item Group", "Currency", "Sales Person", "Payment Terms Template", "Opportunity Lost Reason", "Quotation Lost Reason",
+		"Competitor", "UTM Source", "Cost Center", "Account", "Address Template", "GST HSN Code", "Item Tax Template", "Opportunity Type")},
+}
+
+
+def construction_roles_can_work():
+	_grant(CN_PERMS)
 
 
 def _grant(table):

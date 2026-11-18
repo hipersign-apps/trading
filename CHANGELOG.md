@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.9.0 — Construction (India), stage A2: business & contracts (18 Nov 2026)
+Follows prototype C5. New feature `cn_biz` "Construction — business & contracts" (Capstone edition) and menu group
+"Business (India)" with three pages; new role BD Manager.
+- **CRM & Clients:** construction enquiries are ERPNext Opportunities marked "Construction enquiry" (category, site,
+  competition, next follow-up) on construction sales stages (Lead → Qualified → Site visit → Estimating → Proposal sent →
+  Negotiation); pipeline with follow-ups due, client master (GSTIN, PAN, contracts, certified, outstanding, pipeline),
+  Client Visit (site visits, meetings, calls and next steps), lost analysis by reason. Buttons: Quote, Next stage,
+  Follow-up…, Lost….
+- **Quotations & Sales:** ERPNext Quotations marked "Construction quotation" with estimated cost, value before discount,
+  discount and margin. The MD approves when the discount is above / the margin below the limits in Hipersign Settings
+  (5% / 10% by default) — a quotation waiting cannot be sent, and it shows in the Approvals inbox. A sent quotation is
+  revised, never changed: a new revision with the reason, the old one withdrawn. Won → project (branch GSTIN of the
+  client's state), its BOQ from the quotation lines and the contract (LOA); lost → reason and competitor. Tabs for LOAs
+  & work orders (billed / to bill), the collections ladder on overdue RA bills (L1 e-mail, L2 PM call, L3 MD letter,
+  L4 legal notice) and the Collection Follow-up log with promises to pay.
+- **Contracts & Claims:** Construction Contract (LOA, agreement, original / revised value, retention, advance, escalation,
+  start, completion, EOT, LD rate and cap, DLP) kept in step with approved extra items, awarded claims and granted EOT;
+  Contract Claim (EOT, cost, prolongation, escalation: submit → negotiate → award / reject; an EOT claim on a hindrance
+  grants its EOT). LD exposure = programme slip (planned % vs done) beyond the completion extended by EOT, per week at
+  the LD rate up to the cap, with the hindrance days still claimable. Project gets "Planned % (baseline programme)".
+- New red flags: LD exposure when a project is more than N days late (setting, 21), overdue RA bills with no follow-up
+  for two weeks. A tender award now also creates the contract.
+- Quotations and invoices are issued from the company GST registration in the client's state.
+- Demo: four new prospects, nine enquiries, seven visits, six quotations (revised, waiting for the MD, draft, won, lost),
+  contracts for all six projects, five claims, collection follow-ups.
+
 ## 1.9.0 — Construction (India), stage A1: the core (18 Nov 2026)
 Follows the Construction (India) prototype (C11). Built on GitHub main 1.8.4 — merge the 1.8.4 site patches (A1–A6 of
 16 Nov, release/1.8.4) before deploying.

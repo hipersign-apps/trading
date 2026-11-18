@@ -624,3 +624,11 @@ def cn_site_rows(tab, chip, q=None):
 
 for _k in KEYS:
 	globals()[_k + "_rows"] = _whole(globals()[_k + "_rows"])
+
+# v1.9.0 A2: the business pages (CRM & Clients, Quotations & Sales, Contracts & Claims) live in module_cn_biz
+from hipersign_trading.api import module_cn_biz as _biz  # noqa: E402
+
+KEYS = KEYS + _biz.KEYS
+for _k in _biz.KEYS:
+	globals()[_k + "_module"] = getattr(_biz, _k + "_module")
+	globals()[_k + "_rows"] = _whole(getattr(_biz, _k + "_rows"))

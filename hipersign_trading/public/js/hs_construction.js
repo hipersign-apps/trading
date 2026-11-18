@@ -85,3 +85,97 @@ frappe.ui.form.on("Project", {
 		frm.add_custom_button(__("Construction page"), () => frappe.set_route("hipersign-cn-projects"), __("Construction"));
 	},
 });
+
+// ---------------------------------------------------------------- v1.9.0 A2: business windows (CRM, quotations, claims, collections)
+const hs_cn_dialog = (title, fields, label, action, name, done) => {
+	const d = new frappe.ui.Dialog({ title, fields, primary_action_label: label, primary_action(v) { d.hide(); hipersign.cn.act(action, name, v, done); } });
+	d.show();
+	return d;
+};
+hipersign.projects.cn_opp_followed = (name, done) => hs_cn_dialog(__("Follow-up done"), [
+	{ fieldtype: "Small Text", fieldname: "note", label: __("What was discussed") },
+	{ fieldtype: "Date", fieldname: "date", label: __("Next follow-up"), reqd: 1, default: frappe.datetime.add_days(frappe.datetime.get_today(), 7) },
+], __("Save"), "opp_followed", name, done);
+hipersign.projects.cn_opp_lost = (name, done) => hs_cn_dialog(__("Enquiry lost"), [
+	{ fieldtype: "Select", fieldname: "reason", label: __("Reason"), reqd: 1, options: ["Price too high", "Lost to competitor", "Project shelved by client", "Client chose design-build", "Scope or terms not acceptable", "Other"].join("\n") },
+	{ fieldtype: "Data", fieldname: "competitor", label: __("Won by (competitor)") },
+	{ fieldtype: "Small Text", fieldname: "note", label: __("Detail") },
+], __("Record lost"), "opp_lost", name, done);
+hipersign.projects.cn_qt_lost = (name, done) => hs_cn_dialog(__("Quotation lost"), [
+	{ fieldtype: "Select", fieldname: "reason", label: __("Reason"), reqd: 1, options: ["Price too high", "Lost to competitor", "Project shelved by client", "Scope or terms not acceptable", "Other"].join("\n") },
+	{ fieldtype: "Small Text", fieldname: "note", label: __("Detail") },
+], __("Record lost"), "qt_lost", name, done);
+hipersign.projects.cn_qt_revise = (name, done) => hs_cn_dialog(__("Revise {0}", [name]), [
+	{ fieldtype: "HTML", options: `<p class="text-muted">${__("A sent quotation is never changed: a new revision is drafted with your reason, and this one is withdrawn.")}</p>` },
+	{ fieldtype: "Small Text", fieldname: "reason", label: __("Reason for the revision"), reqd: 1 },
+], __("Draft revision"), "qt_revise", name, (r) => { if (r && r.open) frappe.set_route("Form", r.open[0], r.open[1]); else if (done) done(r); });
+hipersign.projects.cn_qt_accept = (name, done) => hs_cn_dialog(__("Client accepted {0}", [name]), [
+	{ fieldtype: "HTML", options: `<p class="text-muted">${__("Creates the project (Construction India), its BOQ from the quotation lines and the contract with the LOA.")}</p>` },
+	{ fieldtype: "Data", fieldname: "loa_no", label: __("LOA / work order no."), reqd: 1 },
+	{ fieldtype: "Date", fieldname: "loa_date", label: __("LOA date"), reqd: 1, default: frappe.datetime.get_today() },
+	{ fieldtype: "Date", fieldname: "start", label: __("Site handover / start"), reqd: 1, default: frappe.datetime.add_days(frappe.datetime.get_today(), 21) },
+	{ fieldtype: "Int", fieldname: "months", label: __("Duration (months)"), reqd: 1, default: 18 },
+], __("Create project & contract"), "qt_accept", name, done);
+hipersign.projects.cn_clm_award = (name, done) => frappe.db.get_value("Contract Claim", name, ["claimed_days", "claimed_amount", "title"]).then(({ message: c }) => hs_cn_dialog(__("Award — {0}", [c.title]), [
+	{ fieldtype: "Int", fieldname: "days", label: __("Days awarded (of {0})", [c.claimed_days || 0]), default: c.claimed_days || 0 },
+	{ fieldtype: "Currency", fieldname: "amount", options: "INR", label: __("Amount awarded (of {0})", [hipersign.ui.money(c.claimed_amount, "INR")]), default: c.claimed_amount || 0 },
+], __("Record award"), "clm_award", name, done));
+hipersign.projects.cn_fup_log = (name, done) => frappe.db.get_value("RA Bill", name, ["bill_no", "due_date", "net_receivable", "received_amount"]).then(({ message: r }) => {
+	const days = frappe.datetime.get_day_diff(frappe.datetime.get_today(), r.due_date);
+	const lv = ["L1 — e-mail reminder", "L2 — PM call", "L3 — MD letter", "L4 — legal notice"];
+	const due = days <= 15 ? lv[0] : days <= 30 ? lv[1] : days <= 60 ? lv[2] : lv[3];
+	hs_cn_dialog(__("RA bill {0} — {1} days overdue", [r.bill_no, Math.max(0, days)]), [
+		{ fieldtype: "Select", fieldname: "level", label: __("Level"), options: lv.join("\n"), default: due, reqd: 1 },
+		{ fieldtype: "Small Text", fieldname: "note", label: __("What was said / sent"), reqd: 1 },
+		{ fieldtype: "Date", fieldname: "promised_date", label: __("Client promised to pay by") },
+		{ fieldtype: "Currency", fieldname: "promised_amount", options: "INR", label: __("Amount promised"), default: flt(r.net_receivable) - flt(r.received_amount) },
+	], __("Log"), "fup_log", name, done);
+});
+
+Object.assign(hipersign.cn.FORM_ACTS, {
+	"Contract Claim": { Draft: [["Submit to client", "clm_submit", 1]], Submitted: [["Under negotiation", "clm_negotiate"], ["Awarded…", "js:cn_clm_award", 1]],
+		"Under negotiation": [["Awarded…", "js:cn_clm_award", 1], ["Rejected", "clm_reject"]] },
+});
+frappe.ui.form.on("Contract Claim", {
+	refresh(frm) {
+		if (frm.is_new()) return;
+		(hipersign.cn.FORM_ACTS["Contract Claim"][frm.doc.status] || []).forEach(([label, act, primary]) => {
+			const b = frm.add_custom_button(__(label), () => (act.startsWith("js:") ? hipersign.projects[act.slice(3)](frm.doc.name, () => frm.reload_doc())
+				: hipersign.cn.act(act, frm.doc.name, {}, () => frm.reload_doc())));
+			if (primary) b.removeClass("btn-default").addClass("btn-primary");
+		});
+	},
+});
+// a construction quotation: MD approval, revise, won, lost — what its state allows
+frappe.ui.form.on("Quotation", {
+	refresh(frm) {
+		if (frm.is_new() || !frm.doc.hs_cn || !hipersign.feature("cn_biz")) return;
+		const add = (label, fn, primary) => { const b = frm.add_custom_button(label, fn, __("Construction")); if (primary) b.addClass("btn-primary"); };
+		const reload = () => frm.reload_doc();
+		if (frm.doc.hs_cn_approval === "Pending") {
+			add(__("Approve (MD)"), () => hipersign.cn.act("qt_approve", frm.doc.name, {}, reload));
+			add(__("Send back (MD)"), () => hipersign.cn.act("qt_reject", frm.doc.name, {}, reload));
+			frm.dashboard.set_headline_alert(__("Needs the Managing Director's approval before it is sent — discount {0}%, margin {1}%.",
+				[flt(frm.doc.hs_cn_discount_pct, 1), flt(frm.doc.hs_estimated_margin, 1)]), "orange");
+		}
+		if (frm.doc.docstatus === 1 && (frm.doc.hs_cn_outcome || "Open") === "Open") {
+			add(__("Client accepted…"), () => hipersign.projects.cn_qt_accept(frm.doc.name, reload));
+			add(__("Revise…"), () => hipersign.projects.cn_qt_revise(frm.doc.name, reload));
+			add(__("Lost…"), () => hipersign.projects.cn_qt_lost(frm.doc.name, reload));
+		}
+	},
+});
+frappe.ui.form.on("Opportunity", {
+	refresh(frm) {
+		if (frm.is_new() || !frm.doc.hs_cn || !hipersign.feature("cn_biz") || !["Open", "Quotation", "Replied"].includes(frm.doc.status)) return;
+		frm.add_custom_button(__("Construction quotation"), () => hipersign.cn.act("opp_quote", frm.doc.name, {}, (r) => r && r.open && frappe.set_route("Form", r.open[0], r.open[1])), __("Construction"));
+		frm.add_custom_button(__("Followed up…"), () => hipersign.projects.cn_opp_followed(frm.doc.name, () => frm.reload_doc()), __("Construction"));
+	},
+});
+// the business lists open their pages
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (!L || !hipersign.feature("cn_biz")) return;
+	Object.assign(L, { "Client Visit": ["hipersign-cn-crm", "visit"], "Construction Contract": ["hipersign-cn-contracts", "reg"], "Contract Claim": ["hipersign-cn-contracts", "clm"],
+		"Collection Follow-up": ["hipersign-cn-sales", "fup"] });
+});
