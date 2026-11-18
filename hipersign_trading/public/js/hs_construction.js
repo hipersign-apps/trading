@@ -215,3 +215,61 @@ $(document).on("app_ready", () => {
 		"Site Worker": ["hipersign-cn-labour", "wkr"], "Weekly Muster": ["hipersign-cn-labour", "mus"], "Worker Advance": ["hipersign-cn-labour", "adv"], "Minimum Wage": ["hipersign-cn-labour", "mw"],
 		"Construction Equipment": ["hipersign-cn-equipment", "reg"], "Equipment Log": ["hipersign-cn-equipment", "log"], "Equipment Maintenance": ["hipersign-cn-equipment", "mnt"] });
 });
+
+// ---------------------------------------------------------------- v1.9.0 A4: quality, safety, drawings, handover — windows and form buttons
+hipersign.projects.cn_ir_reject = (name, done) => hs_cn_dialog(__("Inspection not accepted"), [
+	{ fieldtype: "Small Text", fieldname: "note", label: __("Inspector's remarks — what to correct"), reqd: 1 },
+	{ fieldtype: "HTML", options: `<p class="text-muted">${__("A re-inspection request is raised for two days from today.")}</p>` },
+], __("Reject"), "ir_reject", name, done);
+hipersign.projects.cn_ncr_close = (name, done) => frappe.db.get_value("NCR", name, ["root_cause", "corrective_action", "rework_cost"]).then(({ message: n }) => hs_cn_dialog(__("Close {0}", [name]), [
+	{ fieldtype: "Small Text", fieldname: "root_cause", label: __("Root cause"), reqd: 1, default: n.root_cause },
+	{ fieldtype: "Small Text", fieldname: "corrective_action", label: __("Corrective & preventive action"), reqd: 1, default: n.corrective_action },
+	{ fieldtype: "Currency", fieldname: "rework_cost", options: "INR", label: __("Rework cost"), default: n.rework_cost },
+], __("Close NCR"), "ncr_close", name, done));
+hipersign.projects.cn_inc_close = (name, done) => frappe.db.get_value("Safety Incident", name, ["root_cause", "action"]).then(({ message: n }) => hs_cn_dialog(__("Close {0}", [name]), [
+	{ fieldtype: "Small Text", fieldname: "root_cause", label: __("Root cause"), default: n.root_cause },
+	{ fieldtype: "Small Text", fieldname: "action", label: __("Corrective action"), default: n.action },
+], __("Close incident"), "inc_close", name, done));
+hipersign.projects.cn_rfi_answer = (name, done) => hs_cn_dialog(__("Answer to {0}", [name]), [
+	{ fieldtype: "Small Text", fieldname: "answer", label: __("Consultant's answer"), reqd: 1 },
+	{ fieldtype: "Date", fieldname: "date", label: __("Answered on"), default: frappe.datetime.get_today(), reqd: 1 },
+], __("Save answer"), "rfi_answer", name, done);
+hipersign.projects.cn_def_rectify = (name, done) => hs_cn_dialog(__("Defect rectified"), [
+	{ fieldtype: "Currency", fieldname: "cost", options: "INR", label: __("Cost to rectify") },
+], __("Rectified"), "def_rectify", name, done);
+hipersign.projects.cn_ret_release = (name, done) => frappe.xcall("frappe.client.get_value", { doctype: "Project", filters: name, fieldname: ["project_name"] }).then((p) => hs_cn_dialog(
+	__("Retention received — {0}", [p.project_name]), [
+	{ fieldtype: "Currency", fieldname: "amount", options: "INR", label: __("Amount received (blank: half at completion)") },
+	{ fieldtype: "Date", fieldname: "date", label: __("Received on"), default: frappe.datetime.get_today(), reqd: 1 },
+], __("Record receipt"), "ret_release", name, done));
+
+Object.assign(hipersign.cn.FORM_ACTS, {
+	"Inspection Request": { Requested: [["Approved", "ir_approve", 1], ["Rejected…", "js:cn_ir_reject"]] },
+	NCR: { Open: [["Close NCR…", "js:cn_ncr_close", 1]] },
+	"Safety Incident": { Open: [["Close…", "js:cn_inc_close", 1]] },
+	"Work Permit": { Requested: [["Issue (safety officer)", "ptw_issue", 1], ["Refuse", "ptw_reject"]], Issued: [["Close permit", "ptw_close", 1]] },
+	"Construction Drawing": { "For approval": [["Issue GFC", "drg_gfc", 1]] },
+	RFI: { Open: [["Answered…", "js:cn_rfi_answer", 1]], Answered: [["Close", "rfi_close", 1]] },
+	Transmittal: { Sent: [["Acknowledged", "trn_ack", 1]] },
+	Snag: { Open: [["Fixed", "snag_fixed", 1]], Fixed: [["Client verified", "snag_verify", 1]] },
+	"Handover Document": { "Not started": [["Applied", "hdoc", 1]], Applied: [["Received", "hdoc", 1]] },
+	"DLP Defect": { Reported: [["Responded", "def_respond", 1]], Responded: [["Rectified…", "js:cn_def_rectify", 1]] },
+});
+["Inspection Request", "NCR", "Safety Incident", "Work Permit", "Construction Drawing", "RFI", "Transmittal", "Snag", "Handover Document", "DLP Defect"].forEach((dt) => frappe.ui.form.on(dt, {
+	refresh(frm) {
+		if (frm.is_new()) return;
+		(hipersign.cn.FORM_ACTS[dt][frm.doc.status] || []).forEach(([label, act, primary]) => {
+			const b = frm.add_custom_button(__(label), () => (act.startsWith("js:") ? hipersign.projects[act.slice(3)](frm.doc.name, () => frm.reload_doc())
+				: (frm.is_dirty() ? frm.save() : Promise.resolve()).then(() => hipersign.cn.act(act, frm.doc.name, {}, (r) => (r && r.open && r.open[0] !== dt ? frappe.set_route("Form", r.open[0], r.open[1]) : frm.reload_doc())))));
+			if (primary) b.removeClass("btn-default").addClass("btn-primary");
+		});
+	},
+}));
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (!L || !hipersign.feature("cn_qhse")) return;
+	Object.assign(L, { "Inspection Request": ["hipersign-cn-quality", "ir"], "Cube Test": ["hipersign-cn-quality", "cube"], NCR: ["hipersign-cn-quality", "ncr"], "ITP Item": ["hipersign-cn-quality", "itp"],
+		"Safety Incident": ["hipersign-cn-safety", "inc"], "Work Permit": ["hipersign-cn-safety", "ptw"], "Toolbox Talk": ["hipersign-cn-safety", "tbt"], "Safety Audit": ["hipersign-cn-safety", "site"],
+		"Construction Drawing": ["hipersign-cn-drawings", "dwg"], RFI: ["hipersign-cn-drawings", "rfi"], Transmittal: ["hipersign-cn-drawings", "trn"], Snag: ["hipersign-cn-handover", "snag"],
+		"Handover Document": ["hipersign-cn-handover", "docs"], "DLP Defect": ["hipersign-cn-handover", "def"], "Construction Warranty": ["hipersign-cn-handover", "wty"] });
+});

@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-10-21 14:30:00.000000",
- "modified": "2026-11-18 20:00:00.000000",
+ "modified": "2026-11-18 22:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -127,6 +127,7 @@
   "feat_construction",
   "feat_cn_biz",
   "feat_cn_site",
+  "feat_cn_qhse",
   "sb_cn_limits",
   "cn_quote_discount_limit",
   "cn_quote_margin_floor",
@@ -840,6 +841,14 @@
    "default": "0",
    "depends_on": "eval:doc.feat_construction",
    "description": "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment"
+  },
+  {
+   "fieldname": "feat_cn_qhse",
+   "fieldtype": "Check",
+   "label": "Construction — quality, safety & handover",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Inspection & test plans, inspections, cube tests and NCRs; incidents, permits, toolbox talks and audits; drawings, RFIs and transmittals; snags, handover documents, DLP defects, warranties and retention release"
   },
   {
    "fieldname": "sb_cn_limits",

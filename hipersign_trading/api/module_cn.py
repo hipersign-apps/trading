@@ -640,3 +640,11 @@ KEYS = KEYS + _site.KEYS
 for _k in _site.KEYS:
 	globals()[_k + "_module"] = getattr(_site, _k + "_module")
 	globals()[_k + "_rows"] = _whole(getattr(_site, _k + "_rows"))
+
+# v1.9.0 A4: Quality, Safety, Drawings & RFIs, Handover & DLP
+from hipersign_trading.api import module_cn_qhse as _qhse  # noqa: E402
+
+KEYS = KEYS + _qhse.KEYS
+for _k in _qhse.KEYS:
+	globals()[_k + "_module"] = getattr(_qhse, _k + "_module")
+	globals()[_k + "_rows"] = _whole(getattr(_qhse, _k + "_rows"))

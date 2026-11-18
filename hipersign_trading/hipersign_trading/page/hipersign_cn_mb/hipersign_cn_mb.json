@@ -37,9 +37,18 @@
   },
   {
    "role": "BD Manager"
+  },
+  {
+   "role": "QA/QC Engineer"
+  },
+  {
+   "role": "Safety Officer"
+  },
+  {
+   "role": "Document Controller"
   }
  ],
  "owner": "Administrator",
  "creation": "2026-11-18 12:00:00",
- "modified": "2026-11-18 16:00:00"
+ "modified": "2026-11-18 22:00:00"
 }

@@ -1153,6 +1153,195 @@ def cn_resources(c):
 			"downtime_hours": down, "cost": cost, "done_by": by, "description": desc}).insert(ignore_permissions=True)
 
 
+# ---------------------------------------------------------------- 9. quality, safety, drawings, handover (A4)
+ITP = {  # template: (activity, test, standard, point, frequency, BOQ item, one test per)
+	"bld": [("Excavation & foundation bed", "Bearing strata and levels", "IS 1200 / soil report", "Hold", "Each footing", "1.1", 2500),
+		("Reinforcement", "Pre-pour check — bars, cover, laps", "IS 456 cl. 26", "Hold", "Each pour", "2.3", 20),
+		("RCC M25 concrete", "Slump and cubes", "IS 1199, IS 516", "Witness", "Each pour (cubes per 50 m³)", "2.2", 150),
+		("Centering & shuttering", "Line, level, props", "IS 14687", "Hold", "Each pour", "2.4", 1500),
+		("AAC block masonry", "Line, plumb, joints", "IS 2185-3", "Review", "Each floor", "3.1", 120),
+		("Internal plaster", "Thickness, plumb, finish", "IS 1661", "Review", "Per 1,000 m²", "4.1", 2500),
+		("Vitrified tiling", "Level, hollowness, joints", "IS 15622", "Witness", "Per 500 m²", "4.2", 1200)],
+	"road": [("Embankment", "Compaction — field density", "MoRTH 305, IS 2720-28", "Hold", "Per 1,000 m² per layer", "1.2", 5000),
+		("Granular sub-base", "Gradation, density", "MoRTH 401", "Hold", "Per 1,500 m³", "2.1", 1500),
+		("Wet mix macadam", "Gradation, density, thickness", "MoRTH 406", "Hold", "Per 1,500 m³", "2.2", 1500),
+		("Dense bituminous macadam", "Binder content, density, thickness", "MoRTH 505", "Witness", "Per 400 t mix", "2.3", 350),
+		("Bituminous concrete", "Binder content, density, surface", "MoRTH 507", "Witness", "Per 400 t mix", "2.4", 300),
+		("Box culverts", "Pre-pour and cubes", "IRC 112", "Hold", "Each pour", "3.1", 150)],
+	"peb": [("Anchor bolts", "Alignment and level", "IS 800", "Hold", "Each bay", "2.3", 60), ("PEB erection", "Plumb, bolt torque", "IS 800 / MBMA", "Witness", "Per 100 t", "3.1", 120),
+		("FM2 floor", "Flatness FF/FL, thickness", "ACI 117", "Witness", "Per 2,000 m²", "4.1", 2500)],
+	"fit": [("Gypsum ceiling", "Grid level, board fixing", "IS 2095", "Review", "Per floor", "1.1", 900), ("Partitions", "Line, plumb, acoustic seal", "Specification", "Review", "Per floor", "1.2", 900),
+		("Joinery", "Shop drawing, finish, fittings", "Approved samples", "Witness", "Per 20 sets", "3.1", 20)],
+}
+DRAWINGS = {  # project: (no, title, discipline, revisions (last is current), current status)
+	"P-2401": [("STR-B-101", "Block B — transfer beams level 2", "Structural", ["R0", "R1"], "GFC"), ("STR-B-102", "Block B — slab at level 3", "Structural", ["R0"], "For approval"),
+		("ARC-A-201", "Block A — typical floor plan", "Architectural", ["R0", "R1", "R2"], "GFC"), ("MEP-P-301", "Plumbing risers — Block A", "MEP", ["R0"], "GFC")],
+	"P-2402": [("STR-201", "Basement raft & retaining walls", "Structural", ["R0", "R1"], "GFC"), ("ARC-110", "Ground floor & entrance lobby", "Architectural", ["R0"], "GFC"),
+		("STR-215", "Podium slab — level 1", "Structural", ["R0"], "For approval")],
+	"P-2403": [("RD-PP-03", "Plan & profile Ch. 2+000 to 4+000", "Civil / roads", ["R0", "R1"], "GFC"), ("CUL-C9", "Box culvert C-9 at Ch. 3+950", "Civil / roads", ["R0"], "For approval"),
+		("CUL-C7", "Box culvert C-7 at Ch. 3+820", "Civil / roads", ["R0"], "GFC")],
+	"P-2405": [("PEB-GA-01", "PEB general arrangement", "Structural", ["R0", "R1"], "GFC"), ("FLR-01", "FM2 floor joint layout", "Civil / roads", ["R0"], "GFC")],
+	"P-2406": [("INT-GR-05", "Guest room — typical joinery", "Interior", ["R0", "R1", "R2"], "GFC"), ("INT-LB-01", "Lobby ceiling & lighting", "Interior", ["R0"], "For approval")],
+}
+
+
+def cn_quality(c):
+	from hipersign_trading.api import construction as CN
+	from hipersign_trading.api import construction_qhse as Q
+
+	if not frappe.db.exists("DocType", "ITP Item") or frappe.db.exists("ITP Item", {"project": "P-2401"}):
+		return
+	live = [p for p in PROJECTS if p[11] < 22]
+	who = {p[0]: p for p in PROJECTS}
+	# inspection & test plan, with the inspections behind it (two lines behind on purpose)
+	behind = {("P-2401", "2.3"): 2, ("P-2403", "2.3"): 1, ("P-2406", "1.2"): 1}
+	for p in live:
+		pid, tpl, eic = p[0], p[3], p[13]
+		for act, test, std, point, freq, boq_item, per in ITP[tpl]:
+			i = frappe.get_doc({"doctype": "ITP Item", "project": pid, "activity": act, "test": test, "standard": std, "point": point, "frequency": freq, "boq_item": boq_item,
+				"per_qty": per, "acceptance": "As per the standard and the approved specification"})
+			i.insert(ignore_permissions=True)
+			due = Q.itp_due(i)
+			for k in range(max(0, due - behind.get((pid, boq_item), 0))):
+				frappe.get_doc({"doctype": "Inspection Request", "project": pid, "itp_item": i.name, "activity": act, "location": LOC[tpl][k % len(LOC[tpl])], "boq_item": boq_item,
+					"requested_on": D(-6 - k * 9), "wanted_on": D(-5 - k * 9), "inspected_on": D(-5 - k * 9), "inspector": eic, "requested_by": p[8], "status": "Approved",
+					"result_note": "Accepted — proceed"}).insert(ignore_permissions=True)
+			i.save(ignore_permissions=True)
+	waiting = [("P-2401", "Reinforcement", "Block B — 4th floor slab", 0), ("P-2401", "Centering & shuttering", "Block B — 4th floor slab", -1),
+		("P-2402", "RCC M25 concrete", "Podium — grid C/4–C/9", 1), ("P-2403", "Dense bituminous macadam", "Ch. 2+650 to 2+900 RHS", -2), ("P-2406", "Partitions", "Guest floor 7", 1)]
+	for pid, act, loc, d in waiting:
+		it = frappe.db.get_value("ITP Item", {"project": pid, "activity": act})
+		frappe.get_doc({"doctype": "Inspection Request", "project": pid, "itp_item": it, "activity": act, "location": loc, "requested_on": D(d - 1), "wanted_on": D(d),
+			"inspector": who[pid][13], "requested_by": who[pid][8]}).insert(ignore_permissions=True)
+	r = frappe.get_doc({"doctype": "Inspection Request", "project": "P-2402", "itp_item": frappe.db.get_value("ITP Item", {"project": "P-2402", "activity": "Reinforcement"}),
+		"activity": "Reinforcement", "location": "Block A — 5th floor columns", "requested_on": D(-4), "wanted_on": D(-3), "inspector": who["P-2402"][13], "requested_by": who["P-2402"][8]})
+	r.insert(ignore_permissions=True)
+	Q._a_ir_reject(r.name, frappe._dict(note="Cover blocks missing at column C-6; lap length short on two bars"))
+	# cube tests: passes, one failure at 28 days, results awaited
+	cubes = [("P-2401", "Block A — 4th floor slab", "M25", -40, (21.4, 22.0, 20.9), (33.8, 34.6, 32.9)), ("P-2401", "Block B — 3rd floor slab", "M25", -32, (20.6, 21.8, 22.2), (32.4, 33.1, 34.0)),
+		("P-2401", "Block B — staircase core", "M25", -12, (19.8, 20.4, 21.1), None), ("P-2401", "Block B — 4th floor columns", "M25", -4, None, None),
+		("P-2402", "Basement raft — pour 3", "M30", -55, (24.8, 25.6, 24.1), (39.2, 38.4, 40.1)), ("P-2402", "Podium slab — pour 2", "M25", -36, (15.2, 14.6, 15.9), (26.4, 22.6, 25.1)),
+		("P-2402", "Retaining wall RW-2", "M30", -10, (25.1, 24.4, 26.0), None),
+		("P-2403", "Culvert C-7 raft", "M30", -45, (24.2, 25.0, 23.8), (37.6, 38.8, 36.9)), ("P-2403", "Culvert C-7 walls", "M30", -9, (23.9, 24.6, 24.1), None),
+		("P-2405", "Pedestals bay 5–8", "M25", -60, (20.9, 21.5, 22.0), (33.0, 32.2, 34.4))]
+	for pid, pour, grade, d, s7, s28 in cubes:
+		frappe.get_doc(dict({"doctype": "Cube Test", "project": pid, "pour": pour, "grade": grade, "cast_on": D(d), "lab": "Site laboratory" if pid != "P-2403" else "NABL lab, Kannur"},
+			**({"s7_1": s7[0], "s7_2": s7[1], "s7_3": s7[2]} if s7 else {}), **({"s28_1": s28[0], "s28_2": s28[1], "s28_3": s28[2]} if s28 else {}))).insert(ignore_permissions=True)
+	ncrs = [("P-2402", "Podium slab pour 2 — 28-day cubes below M25", "Major", "Own team", None, -8, 6, "Cube results 22.6–26.4 N/mm² against 28 required", None, None, 0),
+		("P-2402", "Honeycombing at retaining wall RW-1", "Major", "Subcontractor", None, -15, -2, "Honeycombing over 1.2 m² at the wall base", None, None, 0),
+		("P-2401", "Cover blocks missing in slab reinforcement", "Minor", "Subcontractor", "Thrissur Labour Contractors", -30, -20, "Bottom cover not maintained at grid B/3",
+			"Cover blocks not stocked at the work front", "Cover blocks issued with steel; checked in the pre-pour list", 18500),
+		("P-2403", "DBM thickness short Ch. 2+650 to 2+780", "Major", "Own team", None, -11, -1, "Cores show 48–52 mm against 60 mm", None, None, 0),
+		("P-2405", "Anchor bolts out of position — bay 7", "Major", "Subcontractor", "Karnataka Labour Services", -70, -50, "Four bolts 25 mm off grid",
+			"Template not fixed before the pour", "Chemical anchors after the structural engineer's approval; templates checked by QA", 64000),
+		("P-2406", "Partition alignment — guest floor 6", "Minor", "Own team", None, -6, 8, "Partition 12 mm out of plumb at rooms 612–614", None, None, 0)]
+	for pid, title, sev, resp, sup, raised, close_by, desc, rc, ca, cost in ncrs:
+		n = frappe.get_doc({"doctype": "NCR", "project": pid, "title": title, "severity": sev, "responsible": resp, "supplier": sup, "raised_on": D(raised), "close_by": D(close_by),
+			"description": desc, "root_cause": rc, "corrective_action": ca, "rework_cost": cost})
+		n.insert(ignore_permissions=True)
+		if rc:
+			n.db_set({"status": "Closed", "closed_on": D(close_by - 3)})
+	# safety
+	incs = [("P-2402", -38, "Lost time injury (LTI)", "Basement — grid D/2", "Dilip Munda", 21, "Fell from a scaffold platform without a toe board; fractured wrist",
+			"Toe board missing after the scaffold was shifted", "Scaffold tags and daily inspection by the supervisor; refresher on scaffolds", 1),
+		("P-2401", -9, "First aid", "Block B — 4th floor", "Subhash Mondal", 0, "Cut on the hand while handling binding wire", "Gloves not worn", "Gloves enforced at the bar-bending yard", 1),
+		("P-2401", -3, "Near miss", "Block A — hoist", "", 0, "Bucket of debris slipped from the material hoist", None, None, 0),
+		("P-2403", -5, "Property damage", "Ch. 3+100", "", 0, "Tipper reversed into the KSEB pole guard", None, None, 0),
+		("P-2406", -2, "Near miss", "Guest floor 7", "", 0, "Unsecured ladder slipped on a polished floor", None, None, 0),
+		("P-2405", -16, "Near miss", "Bay 6", "", 0, "Wind lifted a roof sheet during fixing", "Sheets not tied down at end of shift", "Wind speed check before sheeting; tie-down at every break", 1)]
+	for pid, d, kind, loc, person, lost, desc, rc, act, closed in incs:
+		i = frappe.get_doc({"doctype": "Safety Incident", "project": pid, "incident_date": D(d), "kind": kind, "location": loc, "person": person, "days_lost": lost, "description": desc,
+			"root_cause": rc, "action": act, "reported_by": "Sajith Kumar"})
+		i.insert(ignore_permissions=True)
+		if closed:
+			i.db_set("status", "Closed")
+	for pid, kind, loc, work, frm, to, status in (("P-2401", "Work at height", "Block B — 5th floor edge", "Edge shuttering and safety net fixing", 0, 3, "Requested"),
+			("P-2402", "Hot work", "Basement — pump room", "Welding of pipe supports", 0, 1, "Requested"), ("P-2401", "Lifting operation", "Tower crane TC-01", "Lifting the lift-machine room steel", -1, 2, "Issued"),
+			("P-2403", "Excavation", "Ch. 3+950 culvert C-9", "Excavation 2.4 m deep with shoring", -2, 4, "Issued"), ("P-2406", "Electrical isolation", "Guest floor 6 DB", "Shifting the sub-main", -6, -5, "Closed")):
+		w = frappe.get_doc({"doctype": "Work Permit", "project": pid, "kind": kind, "location": loc, "work": work, "valid_from": D(frm), "valid_to": D(to), "requested_by": who[pid][8],
+			"precautions": "Barricading, trained crew, supervisor present, PPE checked"})
+		w.insert(ignore_permissions=True)
+		if status != "Requested":
+			w.db_set({"status": status, "issued_by": "Sajith Kumar"})
+	topics = ["Working at height — harness and anchor points", "Scaffold inspection tags", "Housekeeping and stacking", "Handling of cement and PPE", "Monsoon — slips and electrical safety",
+		"Traffic management on live roads", "Hot work and fire watch"]
+	lang = {"P-2401": "Malayalam", "P-2402": "Malayalam", "P-2403": "Malayalam", "P-2405": "Kannada", "P-2406": "Tamil"}
+	for p in live:
+		for k in range(3):
+			frappe.get_doc({"doctype": "Toolbox Talk", "project": p[0], "talk_date": D(-2 - k * 5), "topic": topics[(k + len(p[0]) + int(p[0][-1])) % len(topics)], "conducted_by": p[8],
+				"attendees": 18 + (k * 7 + int(p[0][-1])) % 20, "language": lang[p[0]]}).insert(ignore_permissions=True)
+		scores = {"P-2406": (86, 81, 74), "P-2403": (84, 88, 82)}.get(p[0], (88, 90, 92))
+		for k, sc in enumerate(scores):
+			frappe.get_doc({"doctype": "Safety Audit", "project": p[0], "audit_date": D(-15 + k * 7), "auditor": "Sajith Kumar", "score": sc, "observations": max(1, (100 - sc) // 3),
+				"findings": "Ladders without stoppers, guard rails missing at slab edges, extension boards on wet floors" if sc < 80 else "Minor housekeeping points"}).insert(ignore_permissions=True)
+	# drawings, RFIs, transmittals
+	dw = {}
+	for pid, rows in DRAWINGS.items():
+		for no, title, disc, revs, status in rows:
+			for k, rev in enumerate(revs):
+				last = k == len(revs) - 1
+				d = frappe.get_doc({"doctype": "Construction Drawing", "project": pid, "drawing_no": no, "revision": rev, "title": title, "discipline": disc, "issued_on": D(-150 + k * 40)})
+				d.insert(ignore_permissions=True)
+				if last:
+					if status == "GFC":
+						Q._a_drg_gfc(d.name, frappe._dict())
+						frappe.db.set_value("Construction Drawing", d.name, "gfc_on", D(-145 + k * 40))
+					dw[(pid, no)] = d.name
+				else:
+					d.db_set({"status": "GFC", "gfc_on": D(-145 + k * 40)})
+	rfis = [("P-2401", "Transfer beam TB-3 — rebar congestion at column C-4", "STR-B-101", "Holds work", -14, -6, None),
+		("P-2401", "Waterproofing detail at the terrace upstand", "ARC-A-201", "Cost", -10, 4, None),
+		("P-2403", "Culvert C-9 — invert level clash with the existing drain", "CUL-C9", "Holds work", -9, -3, None),
+		("P-2402", "Raft construction joint location", "STR-201", "None", -40, -33, "Joint at 1/3 span as per sketch SK-14 — answered by CBRE structures"),
+		("P-2406", "Wallcovering substitute for guest corridors", "INT-GR-05", "Cost and time", -55, -48, "Approved the imported alternative — see EI")]
+	for pid, subj, dno, impact, raised, due, ans in rfis:
+		r = frappe.get_doc({"doctype": "RFI", "project": pid, "subject": subj, "drawing": dw.get((pid, dno)), "impact": impact, "raised_on": D(raised), "reply_due": D(due),
+			"raised_by": who[pid][8], "question": subj + " — please confirm the detail to follow."})
+		r.insert(ignore_permissions=True)
+		if ans:
+			r.db_set({"answer": ans, "status": "Closed", "answered_on": D(due - 2)})
+	for pid, to, purpose, d, ack, nos in (("P-2401", "Thrissur Labour Contractors (site)", "For construction", -20, -18, ["STR-B-101", "ARC-A-201"]),
+			("P-2402", "CBRE Project Management", "For approval", -10, None, ["STR-215"]), ("P-2403", "Executive Engineer, Roads Division", "For approval", -6, None, ["CUL-C9"])):
+		t = frappe.get_doc({"doctype": "Transmittal", "project": pid, "sent_to": to, "purpose": purpose, "sent_on": D(d), "items": [{"drawing": dw[(pid, n)], "copies": 2} for n in nos]})
+		t.insert(ignore_permissions=True)
+		if ack:
+			t.db_set({"status": "Acknowledged", "acknowledged_on": D(ack)})
+	# handover: P-2405 snags and documents; P-2408 in DLP (completion, documents, defects, warranties)
+	sn = [("Bay 2 — dock leveller 3", "External works", "Leveller lip does not seat fully", "Open", 3), ("Office block — toilets", "Plumbing", "Wash basin waste leaking", "Fixed", -2),
+		("Bay 5 — roof", "Civil", "Two roof sheets with dents near the ridge", "Open", -1), ("Office block — mezzanine", "Painting", "Paint touch-up on the stair railing", "Verified", -6),
+		("Dock area — north", "External works", "Kerb paint missing", "Open", 5), ("Bay 1–4", "Electrical", "Three high-bay lights not working", "Fixed", -3),
+		("Office block — reception", "Doors & windows", "Glass door closer noisy", "Open", 2), ("Bay 8", "Fire", "Hydrant valve hand wheel missing", "Open", -2),
+		("FM2 floor — bay 3", "Civil", "Joint sealant missing in two panels", "Open", 4), ("Office block — AC", "HVAC", "Condensate drain slope wrong", "Verified", -8)]
+	for loc, trade, desc, st, tgt in sn:
+		x = frappe.get_doc({"doctype": "Snag", "project": "P-2405", "location": loc, "trade": trade, "description": desc, "raised_on": D(-12), "target": D(tgt),
+			"supplier": "Karnataka Labour Services" if trade in ("Civil", "External works") else None})
+		x.insert(ignore_permissions=True)
+		if st != "Open":
+			x.db_set({"status": st, "fixed_on": D(-4), "verified_on": D(-2) if st == "Verified" else None})
+	for pid, docs in (("P-2405", [("Fire NOC", "Karnataka Fire & Emergency Services", "Applied", -20), ("Occupancy certificate", "BBMP / KIADB", "Not started", None),
+			("Electrical inspectorate (CEIG) approval", "Electrical Inspectorate, Karnataka", "Applied", -9), ("As-built drawings", "Client", "Not started", None),
+			("O&M manuals", "Client", "Received", -5), ("Test certificates — FM2 floor, bolts", "Client", "Received", -7)]),
+			("P-2408", [("Completion certificate", "Executive Engineer, PWD", "Received", -18), ("Fire NOC", "Kerala Fire & Rescue Services", "Received", -40),
+			("As-built drawings", "PWD Buildings", "Received", -15), ("O&M manuals", "PWD Buildings", "Received", -15)])):
+		for doc, auth, st, d in docs:
+			h = frappe.get_doc({"doctype": "Handover Document", "project": pid, "document": doc, "authority": auth})
+			h.insert(ignore_permissions=True)
+			if st != "Not started":
+				h.db_set({"status": st, "applied_on": D(d - 10) if d else None, "received_on": D(d) if st == "Received" else None,
+					"reference": f"{auth.split(',')[0][:12].upper().replace(' ', '')}/{abs(d or 0) * 37}" if st == "Received" else None})
+	frappe.db.set_value("Project", "P-2408", "hs_cn_completed_on", R(who["P-2408"][10][7]))
+	for loc, desc, d, st in (("Hostel block — 2nd floor toilets", "Seepage below the shower area", -40, "Rectified"), ("Terrace", "Ponding near the water tank", -28, "Rectified"),
+			("Room 214", "Window handle broken", -12, "Responded"), ("Mess hall", "Ceiling fan wobbling", -10, "Reported"), ("Corridor 1st floor", "Floor tile hollow sound", -3, "Reported")):
+		x = frappe.get_doc({"doctype": "DLP Defect", "project": "P-2408", "location": loc, "description": desc, "reported_on": D(d), "reported_by": "Assistant Engineer, PWD"})
+		x.insert(ignore_permissions=True)
+		if st != "Reported":
+			x.db_set({"status": st, "responded_on": D(d + 2), "rectified_on": D(d + 9) if st == "Rectified" else None, "cost": 14500 if st == "Rectified" else 0})
+	for pid, item, sup, months, frm, ho in (("P-2408", "Terrace waterproofing (APP membrane)", None, 120, R(who["P-2408"][10][7]), 1),
+			("P-2408", "uPVC windows", None, 60, R(who["P-2408"][10][7]), 1), ("P-2408", "Water pumps & pressure system", "Precision MEP Services Pvt. Ltd.", 24, R(who["P-2408"][10][7]), 1),
+			("P-2405", "PEB roof & wall sheeting", None, 120, D(-10), 0), ("P-2405", "Dock levellers (4 nos)", None, 24, D(-10), 0)):
+		frappe.get_doc({"doctype": "Construction Warranty", "project": pid, "item": item, "supplier": sup, "months": months, "valid_from": frm, "handed_over": ho}).insert(ignore_permissions=True)
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -1167,4 +1356,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finish]

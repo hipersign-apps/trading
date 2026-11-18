@@ -349,16 +349,19 @@ CN_SITE_PERMS = {
 	"Stock Entry": {"Storekeeper": "rwcs", "Demo Viewer": "r"},
 	"Stock Reconciliation": {"Storekeeper": "rwc", "Project Manager": "rwcs"},
 	"Blanket Order": {"Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "r", "Demo Viewer": "r"},
-	"Supplier": {"Storekeeper": "r", "Plant Manager": "r", "Demo Viewer": "r"},
+	"Supplier": {"Storekeeper": "r", "Plant Manager": "r", "Demo Viewer": "r", "QA/QC Engineer": "r", "Safety Officer": "r"},
 	"Item": {"Storekeeper": "r", "Plant Manager": "r", "HR & Admin": "r"},
 	"Warehouse": {"Storekeeper": "r", "Quantity Surveyor": "r"},
 	"Bin": {"Storekeeper": "r", "Project Manager": "r", "Site Engineer": "r", "Quantity Surveyor": "r", "Demo Viewer": "r"},
-	"Project": {"Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r"}, "Company": {"Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r"},
+	"Company": {"Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r", "QA/QC Engineer": "r", "Safety Officer": "r", "Document Controller": "r"},
 	"Purchase Invoice": {"Demo Viewer": "r"}, "Journal Entry": {"Project Manager": "r", "HR & Admin": "r"},
 	"UOM": {"Storekeeper": "r", "Site Engineer": "r"},
 	"Address": {"Project Manager": "r", "Quantity Surveyor": "r", "Site Engineer": "r", "Storekeeper": "r"},
 	"Contact": {"Project Manager": "r", "Storekeeper": "r"},
 	"Purchase Taxes and Charges Template": {"Project Manager": "r", "Quantity Surveyor": "r", "Storekeeper": "r"},
+	# v1.9.0 A4: quality, safety and document control read the projects they work on
+	"Project": {"QA/QC Engineer": "r", "Safety Officer": "r", "Document Controller": "r", "Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r"},
+	"Project BOQ": {"QA/QC Engineer": "r"},
 }
 
 

@@ -90,6 +90,13 @@ NAV = [
 		("RA Billing", "Page", "hipersign-cn-billing", "receipt", "construction", {}),
 		("DPR & Hindrances", "Page", "hipersign-cn-site", "hard-hat", "construction", {}),
 	]),
+	# v1.9.0 A4 (prototypes C4, C7): quality, safety, drawings and handover
+	("Quality & Handover", "shield-check", [
+		("Quality (QA/QC)", "Page", "hipersign-cn-quality", "clipboard-check", "cn_qhse", {}),
+		("Safety (HSE)", "Page", "hipersign-cn-safety", "hard-hat", "cn_qhse", {}),
+		("Drawings & RFIs", "Page", "hipersign-cn-drawings", "drafting-compass", "cn_qhse", {}),
+		("Handover & DLP", "Page", "hipersign-cn-handover", "folder-check", "cn_qhse", {}),
+	]),
 	# v1.9.0 A3 (prototypes C3, C6, C7): the resources behind the sites
 	("Site Resources (India)", "package", [
 		("Procurement & Stores", "Page", "hipersign-cn-proc", "shopping-cart", "cn_site", {}),
@@ -170,6 +177,14 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0 A4: Quality & Handover (India)
+	"Quality (QA/QC)": [("Inspection Requests", "DocType", "Inspection Request", None), ("Cube Tests", "DocType", "Cube Test", None), ("NCRs", "DocType", "NCR", None),
+		("Inspection & Test Plan", "DocType", "ITP Item", None)],
+	"Safety (HSE)": [("Incidents", "DocType", "Safety Incident", None), ("Permits to Work", "DocType", "Work Permit", None), ("Toolbox Talks", "DocType", "Toolbox Talk", None),
+		("Safety Audits", "DocType", "Safety Audit", None)],
+	"Drawings & RFIs": [("Drawings", "DocType", "Construction Drawing", None), ("RFIs", "DocType", "RFI", None), ("Transmittals", "DocType", "Transmittal", None)],
+	"Handover & DLP": [("Snags", "DocType", "Snag", None), ("Handover Documents", "DocType", "Handover Document", None), ("DLP Defects", "DocType", "DLP Defect", None),
+		("Warranties", "DocType", "Construction Warranty", None)],
 	# v1.9.0 A3: Site Resources (India)
 	"Procurement & Stores": [("Indents", "DocType", "Material Request", None), ("Supplier Quotations", "DocType", "Supplier Quotation", None),
 		("Purchase Orders", "DocType", "Purchase Order", None), ("Receipts", "DocType", "Purchase Receipt", None), ("Material Norms", "DocType", "Material Norm", None)],
@@ -248,6 +263,14 @@ SUB_TABS = {
 	("Workflows & Settings", "Document Rules"): ("hipersign-doccentre", "rules"), ("Workflows & Settings", "Editable Lists"): ("hipersign-settings-hub", None),
 	("Workflows & Settings", "Users"): ("hipersign-settings-hub", None), ("Workflows & Settings", "System Settings"): ("hipersign-settings-hub", None),
 	("Document Centre", "Missing Documents"): ("hipersign-doccentre", "missing"), ("Document Centre", "Document Waivers"): ("hipersign-doccentre", "waivers"),
+	("Quality (QA/QC)", "Inspection Requests"): ("hipersign-cn-quality", "ir"), ("Quality (QA/QC)", "Cube Tests"): ("hipersign-cn-quality", "cube"),
+	("Quality (QA/QC)", "NCRs"): ("hipersign-cn-quality", "ncr"), ("Quality (QA/QC)", "Inspection & Test Plan"): ("hipersign-cn-quality", "itp"),
+	("Safety (HSE)", "Incidents"): ("hipersign-cn-safety", "inc"), ("Safety (HSE)", "Permits to Work"): ("hipersign-cn-safety", "ptw"),
+	("Safety (HSE)", "Toolbox Talks"): ("hipersign-cn-safety", "tbt"), ("Safety (HSE)", "Safety Audits"): ("hipersign-cn-safety", "site"),
+	("Drawings & RFIs", "Drawings"): ("hipersign-cn-drawings", "dwg"), ("Drawings & RFIs", "RFIs"): ("hipersign-cn-drawings", "rfi"),
+	("Drawings & RFIs", "Transmittals"): ("hipersign-cn-drawings", "trn"), ("Handover & DLP", "Snags"): ("hipersign-cn-handover", "snag"),
+	("Handover & DLP", "Handover Documents"): ("hipersign-cn-handover", "docs"), ("Handover & DLP", "DLP Defects"): ("hipersign-cn-handover", "def"),
+	("Handover & DLP", "Warranties"): ("hipersign-cn-handover", "wty"),
 	("Procurement & Stores", "Indents"): ("hipersign-cn-proc", "ind"), ("Procurement & Stores", "Supplier Quotations"): ("hipersign-cn-proc", "cmp"),
 	("Procurement & Stores", "Purchase Orders"): ("hipersign-cn-proc", "po"), ("Procurement & Stores", "Receipts"): ("hipersign-cn-proc", "grn"),
 	("Vendors", "Suppliers"): ("hipersign-cn-vendors", "ven"), ("Vendors", "Rate Contracts"): ("hipersign-cn-vendors", "rc"),

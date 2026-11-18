@@ -2938,5 +2938,17 @@
   "insert_after": "hs_subcontract_claim",
   "options": "Subcontractor Bill",
   "read_only": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Project-hs_cn_completed_on",
+  "dt": "Project",
+  "fieldname": "hs_cn_completed_on",
+  "fieldtype": "Date",
+  "module": "Hipersign Trading",
+  "is_system_generated": 0,
+  "label": "Completion certificate date",
+  "insert_after": "hs_cn_planned_pct",
+  "description": "Starts the defects liability period"
  }
 ]

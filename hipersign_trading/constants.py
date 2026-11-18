@@ -33,7 +33,9 @@ NEW_ROLES = ["Managing Director", "Logistics Coordinator", "HR Manager", "HR Use
 	# v1.9.0: Construction (India) — business development (prototype C5)
 	"BD Manager",
 	# v1.9.0 A3: Construction (India) — stores, HR & admin, plant (prototypes C3, C6, C7)
-	"Storekeeper", "HR & Admin", "Plant Manager"]
+	"Storekeeper", "HR & Admin", "Plant Manager",
+	# v1.9.0 A4: quality, safety and document control (prototypes C4, C7)
+	"QA/QC Engineer", "Safety Officer", "Document Controller"]
 
 # Roles without desk access (they only use the mobile web pages)
 WEB_ROLES = ["Driver"]
