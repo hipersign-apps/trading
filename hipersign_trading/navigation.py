@@ -89,6 +89,13 @@ NAV = [
 		("Measurement Book", "Page", "hipersign-cn-mb", "ruler", "construction", {}),
 		("RA Billing", "Page", "hipersign-cn-billing", "receipt", "construction", {}),
 		("DPR & Hindrances", "Page", "hipersign-cn-site", "hard-hat", "construction", {}),
+		("Project Controls", "Page", "hipersign-cn-controls", "traffic-cone", "cn_ctl", {}),  # v1.9.0 A6
+	]),
+	# v1.9.0 A6 (prototype C9): what clients, partners, site engineers and workers see
+	("Portals & Apps (India)", "smartphone", [
+		("Client Portal (India)", "Page", "hipersign-cn-client-portal", "building-2", "cn_portal", {}),
+		("Subcontractor Portal", "Page", "hipersign-cn-partner-portal", "briefcase", "cn_portal", {}),
+		("Site & Worker App", "Page", "hipersign-cn-apps", "smartphone", "cn_portal", {}),
 	]),
 	# v1.9.0 A4 (prototypes C4, C7): quality, safety, drawings and handover
 	("Quality & Handover", "shield-check", [
@@ -184,6 +191,9 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0 A6
+	"Project Controls": [("Constraints", "DocType", "Project Constraint", None), ("Milestones", "DocType", "Construction Milestone", None), ("Reviews", "DocType", "Project Review", None)],
+	"Site & Worker App": [("Site Photos", "DocType", "Site Photo", None), ("Site Attendance", "DocType", "Site Attendance", None), ("Site Cash", "DocType", "Site Expense", None)],
 	# v1.9.0 A5: Finance (India)
 	"Accounts & Cash (India)": [("Journal Entries", "DocType", "Journal Entry", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Purchase Invoices", "DocType", "Purchase Invoice", None)],
 	"GST & TDS": [("Statutory Payments", "DocType", "Statutory Deposit", None), ("GSTR-3B", "Report", "GSTR-3B Details", None)],
@@ -282,6 +292,9 @@ SUB_TABS = {
 	("Drawings & RFIs", "Transmittals"): ("hipersign-cn-drawings", "trn"), ("Handover & DLP", "Snags"): ("hipersign-cn-handover", "snag"),
 	("Handover & DLP", "Handover Documents"): ("hipersign-cn-handover", "docs"), ("Handover & DLP", "DLP Defects"): ("hipersign-cn-handover", "def"),
 	("Handover & DLP", "Warranties"): ("hipersign-cn-handover", "wty"),
+	("Project Controls", "Constraints"): ("hipersign-cn-controls", "con"), ("Project Controls", "Milestones"): ("hipersign-cn-controls", "ms"),
+	("Project Controls", "Reviews"): ("hipersign-cn-controls", "rev"), ("Site & Worker App", "Site Photos"): ("hipersign-cn-apps", "pho"),
+	("Site & Worker App", "Site Cash"): ("hipersign-cn-apps", "cash"),
 	("GST & TDS", "Statutory Payments"): ("hipersign-cn-tax", "cal"), ("Payroll & Statutory", "Staff Payroll"): ("hipersign-cn-payroll", "run"),
 	("Payroll & Statutory", "Employees"): ("hipersign-cn-payroll", "emp"), ("Payroll & Statutory", "Statutory Payments"): ("hipersign-cn-payroll", "dep"),
 	("Procurement & Stores", "Indents"): ("hipersign-cn-proc", "ind"), ("Procurement & Stores", "Supplier Quotations"): ("hipersign-cn-proc", "cmp"),

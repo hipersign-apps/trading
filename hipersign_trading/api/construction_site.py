@@ -380,6 +380,10 @@ def muster_validate(doc):
 		if w.contractor:
 			frappe.throw(_("{0} is a worker of {1} — contractors pay their own workers.").format(w.worker_name, w.contractor))
 		r.rate = r.rate or w.daily_rate
+		if not flt(r.days) and doc.status == "Draft" and frappe.db.exists("DocType", "Site Attendance"):  # v1.9.0 A6: from the check-ins
+			from hipersign_trading.api.construction_portal import attendance_days
+
+			r.days = attendance_days(r.worker, doc.week_start, doc.week_end)
 		if flt(r.days) > 7:
 			frappe.throw(_("{0}: at most 7 days in a pay week.").format(w.worker_name))
 		r.earned = flt(flt(r.rate) * flt(r.days) + flt(r.rate) / 8 * 2 * flt(r.ot_hours), 2)  # OT at double the hourly rate

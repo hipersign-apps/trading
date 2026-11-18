@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-18 22:00:00.000000",
- "modified": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-20 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -43,6 +43,11 @@
   "ppe_issued",
   "police_verified",
   "medical_fit",
+  "sb_app",
+  "app_language",
+  "app_pin",
+  "cb_app",
+  "app_last_login",
   "currency"
  ],
  "fields": [
@@ -219,6 +224,34 @@
    "fieldname": "medical_fit",
    "fieldtype": "Check",
    "label": "Medically fit"
+  },
+  {
+   "fieldname": "sb_app",
+   "fieldtype": "Section Break",
+   "label": "Worker app"
+  },
+  {
+   "fieldname": "app_language",
+   "fieldtype": "Select",
+   "label": "App language",
+   "options": "English\nമലയാളം\nதமிழ்\nहिन्दी",
+   "default": "English"
+  },
+  {
+   "fieldname": "app_pin",
+   "fieldtype": "Password",
+   "label": "App PIN (4 digits)",
+   "length": 4
+  },
+  {
+   "fieldname": "cb_app",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "app_last_login",
+   "fieldtype": "Datetime",
+   "label": "Last app login",
+   "read_only": 1
   },
   {
    "fieldname": "currency",

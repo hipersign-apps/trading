@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-10-21 14:30:00.000000",
- "modified": "2026-11-19 00:00:00.000000",
+ "modified": "2026-11-20 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -129,12 +129,15 @@
   "feat_cn_site",
   "feat_cn_qhse",
   "feat_cn_fin",
+  "feat_cn_ctl",
+  "feat_cn_portal",
   "sb_cn_limits",
   "cn_quote_discount_limit",
   "cn_quote_margin_floor",
   "cn_ld_flag_days",
   "cn_worker_advance_limit",
   "cn_jv_md_limit",
+  "cn_site_cash_limit",
   "tab_look",
   "sb_look",
   "desk_theme",
@@ -861,6 +864,22 @@
    "description": "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals"
   },
   {
+   "fieldname": "feat_cn_ctl",
+   "fieldtype": "Check",
+   "label": "Construction — project controls",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline and the weekly review"
+  },
+  {
+   "fieldname": "feat_cn_portal",
+   "fieldtype": "Check",
+   "label": "Construction — portals & apps",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Client portal, subcontractor portal, site app, worker app and site deliveries for the driver app"
+  },
+  {
    "fieldname": "sb_cn_limits",
    "fieldtype": "Section Break",
    "label": "Construction (India) — limits",
@@ -896,6 +915,13 @@
    "fieldtype": "Currency",
    "label": "Manual journal above which the MD approves",
    "default": "1000000",
+   "options": "INR"
+  },
+  {
+   "fieldname": "cn_site_cash_limit",
+   "fieldtype": "Currency",
+   "label": "Site cash a site engineer books without approval",
+   "default": "5000",
    "options": "INR"
   },
   {

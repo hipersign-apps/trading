@@ -90,6 +90,8 @@ def _has(*roles):
 
 
 def _need(roles, what):
+	if frappe.flags.get("hs_cn_skip_role"):  # v1.9.0 A6: a portal action already checked who may do it (the client, the partner)
+		return
 	if not _has(*roles):
 		frappe.throw(_("{0} needs the {1}.").format(what, " / ".join(_(r) for r in roles)), frappe.PermissionError)
 

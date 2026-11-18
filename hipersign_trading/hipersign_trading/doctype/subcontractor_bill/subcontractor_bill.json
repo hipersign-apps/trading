@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-18 22:00:00.000000",
- "modified": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-20 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -26,6 +26,9 @@
   "period_to",
   "status",
   "compliance_hold",
+  "partner_submitted",
+  "partner_verified",
+  "verified_by",
   "sb_i",
   "items",
   "sb_v",
@@ -134,6 +137,24 @@
    "fieldname": "compliance_hold",
    "fieldtype": "Check",
    "label": "On hold — labour compliance missing",
+   "read_only": 1
+  },
+  {
+   "fieldname": "partner_submitted",
+   "fieldtype": "Check",
+   "label": "Submitted on the portal",
+   "read_only": 1
+  },
+  {
+   "fieldname": "partner_verified",
+   "fieldtype": "Check",
+   "label": "Verified for the QS",
+   "read_only": 1
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Data",
+   "label": "Verified by",
    "read_only": 1
   },
   {

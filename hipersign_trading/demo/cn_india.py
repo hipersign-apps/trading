@@ -1441,6 +1441,189 @@ def cn_finance(c):
 				{"account": prov, "credit_in_account_currency": 175000, "cost_center": frappe.get_cached_value("Company", CO, "cost_center")}]}).insert(ignore_permissions=True)
 
 
+def _demo_photo(text, sub, hue):
+	"""A drawn stand-in for a site photo (sky, structure, ground and a caption band) — the demo has no real photographs."""
+	import io
+
+	from PIL import Image, ImageDraw
+
+	W, H = 960, 640
+	im = Image.new("RGB", (W, H))
+	d = ImageDraw.Draw(im)
+	for y in range(H):
+		k = y / H
+		d.line([(0, y), (W, y)], fill=(int(150 + 70 * k), int(185 + 40 * k), int(225 - 20 * k)) if y < H * .55 else (int(150 - 40 * k), int(130 - 30 * k), int(100 - 20 * k)))
+	base = (hue * 37) % 80
+	for i in range(5):  # a frame of columns and slabs
+		x = 120 + i * 170
+		d.rectangle([x, 150, x + 22, H * .62], fill=(150 + base // 2, 150 + base // 2, 155))
+	for j in range(4):
+		y = 150 + j * 70
+		d.rectangle([110, y, 830, y + 14], fill=(170, 170, 172))
+	d.rectangle([0, H - 90, W, H], fill=(19, 35, 91))
+	d.text((24, H - 76), text, fill=(255, 255, 255))
+	d.text((24, H - 46), sub, fill=(200, 210, 240))
+	b = io.BytesIO()
+	im.save(b, "JPEG", quality=78)
+	return b.getvalue()
+
+
+def cn_portal(c):
+	"""Project controls (constraints, milestones, last week's review) and the portals and apps: geo-tagged site photos and
+	the publishing queue, client and partner logins with what they did, today's check-ins, site cash, worker app PINs, a
+	danger reported by a worker and a driver for the transfer on the road."""
+	from hipersign_trading.api import construction_portal as PT
+
+	if not frappe.db.exists("DocType", "Project Constraint") or frappe.db.exists("Project Constraint", {"project": "P-2401"}):
+		return
+	t = getdate(today())
+	cons = [("P-2401", "Transfer beam TB-3 reinforcement detail (RFI) — holds the 5th floor slab", "Design / drawings", "Block B 5th floor slab", "Arch. Suresh Menon (PMC)", -3),
+		("P-2401", "Lift machine-room steel delivery", "Material", "Lift MR roof", "Purchase — Ramesh", 6),
+		("P-2402", "Tower crane TC-02 load test certificate", "Authority / permit", "Podium level 2 lifting", "Plant Manager", 2),
+		("P-2403", "Shifting of KSEB pole at Ch. 3+100", "Authority / permit", "Service road widening Ch. 3+050–3+200", "KSEB Kanhangad (via EE)", -9),
+		("P-2405", "Fire NOC inspection date", "Authority / permit", "Handover", "Karthik Rao", 10),
+		("P-2406", "Client decision on lobby ceiling finish", "Client decision", "Lobby ceiling", "Coromandel Hospitality", 4)]
+	for pid, desc, cat, actv, owner, d in cons:
+		frappe.get_doc({"doctype": "Project Constraint", "project": pid, "description": desc, "category": cat, "activity": actv, "owner_name": owner, "need_by": add_days(t, d),
+			"raised_by": "Rahul Nair"}).insert(ignore_permissions=True)
+	x = frappe.get_doc({"doctype": "Project Constraint", "project": "P-2402", "description": "Basement dewatering pump spares", "category": "Equipment", "owner_name": "Plant Manager",
+		"need_by": add_days(t, -12)})
+	x.insert(ignore_permissions=True)
+	x.db_set({"status": "Removed", "removed_on": add_days(t, -14), "notes": "Spares air-freighted from Coimbatore"})
+	ms = {"P-2401": [("Block A structure complete", "Contract milestone", -60, -52, -50), ("Block B 5th floor slab", "Contract milestone", 8, 24, None),
+			("Lift installation start", "Deliverable", 40, 46, None), ("Handover of Block A flats", "Handover", 120, 120, None)],
+		"P-2402": [("Raft complete", "Contract milestone", -150, -150, -146), ("Podium slab complete", "Contract milestone", 20, 34, None), ("Structure top-out", "Contract milestone", 260, 275, None)],
+		"P-2403": [("Culvert C-7 complete", "Contract milestone", -30, -30, -26), ("DBM Ch. 2+000–3+000", "Payment milestone", -5, 18, None), ("Culvert C-9 complete", "Contract milestone", 45, 60, None)],
+		"P-2405": [("Roof sheeting complete", "Contract milestone", -40, -40, -38), ("FM2 floor complete", "Contract milestone", -10, -10, -9), ("Handover to the client", "Handover", 30, 36, None)],
+		"P-2406": [("Guest floors 5–6 complete", "Contract milestone", -20, -8, -6), ("Mock-up room approved", "Deliverable", -60, -60, -62), ("Guest floors 7–8 complete", "Contract milestone", 35, 48, None)]}
+	for pid, rows in ms.items():
+		for title, kind, pl, fc, ac in rows:
+			frappe.get_doc({"doctype": "Construction Milestone", "project": pid, "title": title, "kind": kind, "planned": add_days(t, pl), "forecast": add_days(t, fc),
+				"actual": add_days(t, ac) if ac is not None else None, "client_visible": 1}).insert(ignore_permissions=True)
+	# last week's review (what moved since: cost and schedule were better on P-2401 and P-2403)
+	import json
+
+	lastmon = add_days(PT.week_monday(), -7)
+	for pid, better, note in (("P-2401", ("cost", "schedule"), "TB-3 RFI escalated to the PMC; steel reconciliation to be closed by Friday"),
+			("P-2402", ("quality",), "Podium cube failure — core tests ordered; NCR open"), ("P-2403", ("schedule",), "KSEB pole shifting chased through the EE; night work on DBM")):
+		R = PT.rag(pid)
+		snap = {d.key: [("Green" if d.key in better and d.state != "Green" else d.state), d.why[:2]] for d in R}
+		o = PT.overall([frappe._dict(state=v[0]) for v in snap.values()])
+		frappe.get_doc({"doctype": "Project Review", "project": pid, "week_start": lastmon, "rag_json": json.dumps(snap), "overall": o[0], "reds": o[1], "ambers": o[2],
+			"notes": note, "decisions": "Owners named in the constraints log", "reviewed_by": "Shihab Musthafa"}).insert(ignore_permissions=True)
+	# site photos (drawn stand-ins), geo-tagged
+	geo = {"P-2401": (10.0159, 76.3419), "P-2402": (8.5587, 76.8814), "P-2403": (12.3069, 75.0898), "P-2405": (12.8167, 77.6944), "P-2406": (12.9327, 80.2317)}
+	shots = [("P-2401", "Block B — 4th floor slab reinforcement", "Grid B/1–B/6", -2), ("P-2401", "Block A — blockwork 5th floor", "Block A east", -1),
+		("P-2401", "Material yard — steel stacked on sleepers", "Yard", -4), ("P-2402", "Podium slab pour 3 — curing", "Grid C/4–C/9", -3),
+		("P-2402", "Retaining wall RW-2 shuttering", "North boundary", -1), ("P-2403", "Culvert C-9 excavation with shoring", "Ch. 3+950", -2),
+		("P-2403", "DBM laying Ch. 2+650", "RHS", -6), ("P-2405", "FM2 floor — bay 6 finished", "Bay 6", -5), ("P-2405", "Dock levellers installed", "Dock area", -3),
+		("P-2406", "Guest room mock-up — joinery fixed", "Floor 7, room 712", -1), ("P-2406", "Corridor ceiling grid", "Floor 6", -2), ("P-2401", "Scaffold at Block B east face", "Block B east", 0)]
+	from frappe.utils import add_to_date, now_datetime
+
+	for i, (pid, cap, loc, d) in enumerate(shots):
+		la, lo = geo[pid]
+		ph = frappe.get_doc({"doctype": "Site Photo", "project": pid, "image": "/files/placeholder.png", "caption": cap, "location": loc, "source": "Site app",
+			"taken_on": add_to_date(now_datetime(), days=d, hours=-(i % 5)), "latitude": la + i * .0001, "longitude": lo + i * .0001,
+			"taken_by": {"P-2401": "Vishnu Prasad", "P-2402": "Aswin Raj", "P-2403": "Nikhil Varghese", "P-2405": "Manjunath S", "P-2406": "Divya R"}[pid]})
+		ph.insert(ignore_permissions=True)
+		f = frappe.get_doc({"doctype": "File", "file_name": f"{ph.name}.jpg", "attached_to_doctype": "Site Photo", "attached_to_name": ph.name, "attached_to_field": "image", "is_private": 1,
+			"content": _demo_photo(cap, f"{pid} · {loc} · demo image", i)})
+		f.flags.ignore_permissions = True
+		f.insert()
+		ph.db_set("image", f.file_url)
+	PT.sync_publications(["P-2401", "P-2402", "P-2403", "P-2405", "P-2406"])
+	# the PM published most of it; the newest photos and a drawing still wait
+	waiting = set(frappe.get_all("Client Publication", filters={"kind": "Photo"}, fields=["name", "creation"], order_by="creation desc", limit=3, pluck="name"))
+	waiting |= set(frappe.get_all("Client Publication", filters={"kind": "Drawing", "project": "P-2401"}, pluck="name", limit=1))
+	for p in frappe.get_all("Client Publication", filters={"status": "Waiting"}, fields=["name", "project", "kind"]):
+		if p.name in waiting:
+			continue
+		if p.kind == "Drawing" and p.project == "P-2402":
+			frappe.db.set_value("Client Publication", p.name, {"status": "Kept internal", "published_by": "Meera Pillai"})
+			continue
+		frappe.db.set_value("Client Publication", p.name, {"status": "Published", "published_on": add_to_date(now_datetime(), days=-1), "published_by": "Rahul Nair"})
+	# portal logins: two clients and a labour contractor — and what they did
+	inv = [("Customer", "Malabar Habitat Developers Pvt. Ltd.", "anil.varghese@malabarhabitat.example", "Anil Varghese"),
+		("Customer", "Deccan Warehousing LLP", "priya.shetty@deccanwarehousing.example", "Priya Shetty"),
+		("Customer", "Coromandel Hospitality Pvt. Ltd.", "ravi.chandran@coromandel.example", "Ravi Chandran"),
+		("Supplier", "Thrissur Labour Contractors", "office@thrissurlabour.example", "Joy Thomas")]
+	frappe.flags.hs_demo_loading = True
+	for kind, party, email, name in inv:
+		PT._a_invite(f"{kind}::{party}", frappe._dict(email=email, first_name=name))
+	frappe.db.set_value("Customer", "Coromandel Hospitality Pvt. Ltd.", {"hs_cnp_certify": 0, "hs_cnp_whatsapp": 1})
+	me = frappe.session.user
+	try:
+		frappe.set_user("anil.varghese@malabarhabitat.example")
+		frappe.form_dict.party = None
+		PT.cp_snag("P-2401", "Show flat 3B — kitchen", "Granite counter edge chipped near the sink", "Finishes")
+		frappe.set_user("office@thrissurlabour.example")
+		w = frappe.get_doc("Subcontractor Work Order", "SWO-26-001")
+		q = {w.items[0].item_no: round(flt(w.items[0].qty) * .08, 1)}
+		if len(w.items) > 1:
+			q[w.items[1].item_no] = round(flt(w.items[1].qty) * .06, 1)
+		PT.sp_bill("SWO-26-001", q, "TLC/RB/26-118", today())
+		m = add_days(get_first_day_(t), -1)
+		import base64
+		import io
+
+		from pypdf import PdfWriter
+
+		pw, buf = PdfWriter(), io.BytesIO()
+		pw.add_blank_page(width=595, height=842)
+		pw.add_metadata({"/Title": "Demo labour document"})
+		pw.write(buf)
+		pdf = "data:application/pdf;base64," + base64.b64encode(buf.getvalue()).decode()
+		PT.sp_compliance("P-2401", str(m), 34, pdf, pdf, None)
+		img = "data:image/jpeg;base64," + base64.b64encode(_demo_photo("Plastering — Block A 3rd floor", "Thrissur Labour Contractors · demo image", 7)).decode()
+		PT.sp_photo("P-2401", img, "Plastering — Block A 3rd floor", "Block A")
+	finally:
+		frappe.set_user(me)
+		frappe.form_dict.party = None
+	# today's check-ins at P-2401 (all but one own worker), a site engineer's check-in record and site cash
+	own = frappe.get_all("Site Worker", filters={"project": "P-2401", "status": "Active", "contractor": ["is", "not set"]}, pluck="name", order_by="worker_name")
+	for wk in own[:-1]:
+		frappe.get_doc({"doctype": "Site Attendance", "project": "P-2401", "worker": wk, "attendance_date": t, "method": "Gang check-in", "time_in": "07:52:00",
+			"latitude": geo["P-2401"][0], "longitude": geo["P-2401"][1], "marked_by": "Vishnu Prasad"}).insert(ignore_permissions=True)
+	imp = PT.imprest_account(CO)
+	from hipersign_trading.api import construction as CN
+
+	je = frappe.get_doc({"doctype": "Journal Entry", "voucher_type": "Bank Entry", "company": CO, "posting_date": D(-20), "cheque_no": "IMP/26-11", "cheque_date": D(-20),
+		"user_remark": "Site imprest top-up for the site engineers", "accounts": [{"account": imp, "debit_in_account_currency": 150000},
+			{"account": CN.bank_account(CO), "credit_in_account_currency": 150000}]})
+	je.flags.ignore_permissions = True
+	je.flags.hs_system_entry = True
+	je.insert()
+	je.submit()
+	for pid, d, head, desc, to, amt in (("P-2401", -6, "Site overheads", "Drinking water cans — 40 nos", "Aqua Fresh, Kakkanad", 1600), ("P-2401", -3, "Materials", "Binding wire 25 kg (urgent)", "Local hardware", 2350),
+			("P-2402", -4, "Plant & equipment", "Vibrator needle repair", "Sree Motors", 3800), ("P-2403", -2, "Site overheads", "Night-work lighting — diesel 40 L", "HP pump, Kanhangad", 4120),
+			("P-2406", -1, "Site overheads", "Housekeeping consumables", "Saravana Stores", 2780)):
+		x = frappe.get_doc({"doctype": "Site Expense", "project": pid, "expense_date": D(d), "head": head, "description": desc, "paid_to": to, "amount": amt,
+			"requested_by": {"P-2401": "Vishnu Prasad", "P-2402": "Aswin Raj", "P-2403": "Nikhil Varghese", "P-2406": "Divya R"}[pid]})
+		x.insert(ignore_permissions=True)
+		PT.book_expense(x.name)
+	frappe.get_doc({"doctype": "Site Expense", "project": "P-2405", "expense_date": D(-1), "head": "Plant & equipment", "description": "Crane hire — 4 hours for dock leveller fixing",
+		"paid_to": "Hosur Crane Services", "amount": 14500, "requested_by": "Manjunath S"}).insert(ignore_permissions=True)
+	# worker app: three workers with PINs (demo PIN 1234) and their languages; one asked for an advance, one reported a danger
+	langs = ["മലയാളം", "हिन्दी", "தமிழ்"]
+	for i, wk in enumerate(own[:3]):
+		w = frappe.get_doc("Site Worker", wk)
+		w.app_pin, w.app_language = "1234", langs[i]
+		w.flags.ignore_permissions = True
+		w.save()
+	if own:
+		w = frappe.get_doc("Site Worker", own[1])
+		frappe.get_doc({"doctype": "Safety Incident", "project": "P-2401", "incident_date": t, "kind": "Near miss", "location": "Block B — 4th floor east edge",
+			"description": "Danger reported on the worker app: guard rail missing at the slab edge near the hoist", "reported_by": w.worker_name}).insert(ignore_permissions=True)
+		PT.log("Site Worker", w.name, "Reported a danger", "P-2401")
+	# the driver of the transfer on the road
+	if not frappe.db.exists("Driver", {"full_name": "Sathyan K"}):
+		frappe.get_doc({"doctype": "Driver", "full_name": "Sathyan K", "cell_number": "98470 12345", "status": "Active"}).insert(ignore_permissions=True)
+
+
+def get_first_day_(d):
+	return getdate(d).replace(day=1)
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -1455,4 +1638,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_finish]

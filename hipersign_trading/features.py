@@ -76,6 +76,12 @@ FEATURES = {
 	# v1.9.0 A5 (prototype C8): finance, tax and payroll for Indian contractors on ERPNext + India Compliance
 	"cn_fin": ("Construction — finance, tax & payroll", "Industries", "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals",
 		["construction"], ["Staff Payroll", "Statutory Deposit"], [], ["hipersign-cn-accounts", "hipersign-cn-tax", "hipersign-cn-cost", "hipersign-cn-payroll"], [], [], []),
+	# v1.9.0 A6 (prototype C9): project controls; the client and subcontractor portals, site app and worker app
+	"cn_ctl": ("Construction — project controls", "Industries", "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline and the weekly review",
+		["construction"], ["Project Constraint", "Construction Milestone", "Project Review"], [], ["hipersign-cn-controls"], [], [], []),
+	"cn_portal": ("Construction — portals & apps", "Industries", "Client portal, subcontractor portal, site app, worker app and site deliveries for the driver app",
+		["construction"], ["Site Photo", "Client Publication", "Site Attendance", "Site Expense", "Portal Activity"], [],
+		["hipersign-cn-client-portal", "hipersign-cn-partner-portal", "hipersign-cn-apps"], [], [], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]
 STANDARD_ON = ["crm", "tracker", "exports", "rfq", "imports", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc"]
@@ -91,9 +97,9 @@ PACKS = {
 	# v1.9.0 (prototype C11): the three Construction (India) editions — later stages add their modules to Structure and Capstone
 	"Foundation": {"on": ["construction", "rfq", "multiwh", "advances", "recon", "approvals"], "doc_level": "Recommended", "form_mode": "Standard",
 		"desc": "Indian contractors starting out — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR"},
-	"Structure": {"on": ["construction", "cn_site", "cn_qhse", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
+	"Structure": {"on": ["construction", "cn_site", "cn_qhse", "cn_ctl", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
 		"form_mode": "Standard", "desc": "Growing contractors — Foundation plus HR, plant and assets, company compliance"},
-	"Capstone": {"on": ["construction", "cn_biz", "cn_site", "cn_qhse", "cn_fin", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
+	"Capstone": {"on": ["construction", "cn_biz", "cn_site", "cn_qhse", "cn_fin", "cn_ctl", "cn_portal", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
 		"form_mode": "Detailed", "desc": "Builders and EPC groups — Structure plus several companies and branches"},
 	"Enterprise": {"on": [k for k in FEATURES if not k.startswith("cn_") and k != "construction"],  # v1.9.0: Construction (India) has its own editions
 		 "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},

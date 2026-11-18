@@ -306,3 +306,61 @@ Object.assign(hipersign.projects, {
 			{ fieldname: "amount", fieldtype: "Currency", label: __("Amount"), options: "INR", default: flt(amount), reqd: 1 }], done);
 	},
 });
+
+// v1.9.0 A6 (prototype C9): project controls, portals and apps
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (!L) return;
+	if (hipersign.feature("cn_ctl")) Object.assign(L, { "Project Constraint": ["hipersign-cn-controls", "con"], "Construction Milestone": ["hipersign-cn-controls", "ms"],
+		"Project Review": ["hipersign-cn-controls", "rev"] });
+	if (hipersign.feature("cn_portal")) Object.assign(L, { "Client Publication": ["hipersign-cn-client-portal", "pub"], "Site Expense": ["hipersign-cn-apps", "cash"],
+		"Site Photo": ["hipersign-cn-apps", "pho"], "Site Attendance": ["hipersign-cn-apps", "att"] });
+});
+Object.assign(hipersign.cn.FORM_ACTS, {
+	"Project Constraint": { Open: [["Remove…", "js:cn_con_remove", 1]] },
+	"Site Expense": { "Waiting for approval": [["Approve", "exp_approve", 1], ["Reject", "exp_reject"]] },
+	"Construction Milestone": { "On track": [["Done", "ms_done", 1]], "At risk": [["Done", "ms_done", 1]], Late: [["Done", "ms_done", 1]] },
+});
+Object.assign(hipersign.projects, {
+	_cn_ask(title, fields, label, fn) {
+		const d = new frappe.ui.Dialog({ title, fields, primary_action_label: label, primary_action(v) { d.hide(); fn(v); } });
+		d.show();
+		return d;
+	},
+	cn_con_remove(name, done) {
+		hipersign.projects._cn_ask(__("Remove the constraint"), [{ fieldname: "notes", fieldtype: "Small Text", label: __("How it was removed"), reqd: 1 }], __("Remove"),
+			(v) => hipersign.cn.act("con_remove", name, v, done));
+	},
+	cn_ms_forecast(name, done) {
+		hipersign.projects._cn_ask(__("Re-forecast the milestone"), [{ fieldname: "date", fieldtype: "Date", label: __("New forecast"), reqd: 1 }], __("Save"),
+			(v) => hipersign.cn.act("ms_forecast", name, v, done));
+	},
+	cn_review(project, done) {
+		hipersign.projects._cn_ask(__("Weekly review — {0}", [project]), [
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("The RAG as it stands now is kept with the review, so next week shows what moved.")}</p>` },
+			{ fieldname: "notes", fieldtype: "Small Text", label: __("Review notes"), reqd: 1 },
+			{ fieldname: "decisions", fieldtype: "Small Text", label: __("Decisions / actions") }], __("Record review"), (v) => hipersign.cn.act("review", project, v, done));
+	},
+	cn_cp_features(customer, done) {
+		const F = { progress: "Progress & milestones", photos: "Published photos", bills: "RA bills & invoices", documents: "Documents & weekly reports",
+			certify: "Certify RA bills online (private clients)", vo: "Approve variations online", snags: "Raise snags", whatsapp: "WhatsApp updates", cost: "Cost & margin" };
+		frappe.db.get_value("Customer", customer, Object.keys(F).map((k) => "hs_cnp_" + k)).then(({ message: m }) => {
+			hipersign.projects._cn_ask(__("What {0} sees", [customer]), Object.entries(F).map(([k, l]) => ({ fieldname: k, fieldtype: "Check", label: __(l), default: m["hs_cnp_" + k] })),
+				__("Save"), (v) => hipersign.cn.act("cp_features", customer, v, done));
+		});
+	},
+	cn_invite(code, done) {
+		const [kind, party] = code.split("::");
+		hipersign.projects._cn_ask(__("Invite to the {0} portal — {1}", [kind === "Customer" ? __("client") : __("subcontractor"), party]), [
+			{ fieldname: "first_name", fieldtype: "Data", label: __("Name"), reqd: 1 }, { fieldname: "email", fieldtype: "Data", options: "Email", label: __("E-mail"), reqd: 1 },
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("They get an e-mail to set a password. The portal shows only their own projects.")}</p>` }],
+			__("Invite"), (v) => hipersign.cn.act("invite", code, v, done));
+	},
+	cn_wpin(worker, done) {
+		hipersign.projects._cn_ask(__("Worker app PIN"), [
+			{ fieldname: "pin", fieldtype: "Data", label: __("Four-digit PIN"), reqd: 1, length: 4 },
+			{ fieldname: "language", fieldtype: "Select", label: __("Language"), options: ["English", "മലയാളം", "தமிழ்", "हिन्दी"].join("\n"), default: "English" },
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("Tell the worker the PIN in person. They log in at {0} with their mobile number.", [location.origin + "/cn-worker"])}</p>` }],
+			__("Save PIN"), (v) => hipersign.cn.act("wpin", worker, v, done));
+	},
+});

@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.9.0 — Construction (India), stage A6: project controls, portals & apps (20 Nov 2026)
+Follows prototype C9. Two features: `cn_ctl` "Construction — project controls" (Structure and Capstone) and `cn_portal`
+"Construction — portals & apps" (Capstone). Project Controls joins the Construction (India) menu; a new group "Portals &
+Apps (India)" has Client Portal, Subcontractor Portal and Site & Worker App. Settings limit "Site cash a site engineer
+books without approval" (default ₹5,000).
+- **Project Controls:** RAG on eleven dimensions (schedule, cost, cash, billing, quality, safety, labour, materials, design &
+  RFIs, client, compliance) from every module's red flags plus SPI / CPI, overdue and unbilled work, constraints and
+  milestones — each with its reasons. Project Constraint (look-ahead: need-by, owner, remove), Construction Milestone
+  (planned / forecast / actual, slip, On track / At risk / Late / Done, shown to the client), the portfolio timeline
+  (finish forecast from the SPI) and Project Review (the week's RAG kept with the notes; next week shows what moved).
+- **Publishing:** Client Publication — site photos, GFC drawings and last week's progress report (built from the DPRs)
+  wait for the PM: publish, keep internal, publish all.
+- **Client portal** (`/cn-client`, staff preview from the desk): contract, work done, certified, paid and due; milestones
+  and published photos; RA bills — private clients certify online (a cut needs a note), government works stay on the MB;
+  GFC drawings and weekly reports; variations approved or rejected online (the contract value follows); snags raised.
+  Switches per client on the Customer (cost & margin and WhatsApp off by default). Published files are served only to
+  the client of the project. Invite, disable, resend from the desk; activity log.
+- **Subcontractor portal** (`/cn-partner`): work orders, running bills submitted online (the work order + 10% rule still
+  applies), payments with TDS and retention, labour documents uploaded (wage register, PF ECR, ESI), progress photos.
+  Verification queue: bills verified for the QS, documents verified (releases the held bill), photos added to the
+  project log.
+- **Site app** (`/cn-site`, site engineers, PMs, storekeepers): check-in with GPS and selfie (HRMS Employee Checkin), gang
+  check-in of workers (Site Attendance — fills the weekly muster's days), DPR with own labour from today's check-ins,
+  geo-tagged photos, site cash (Site Expense — booked from the site imprest within the limit, above it the PM approves
+  in Approvals), deliveries with the OTP for the driver, expected purchase orders, site chat (comments on the project,
+  now in Messages).
+- **Worker app** (`/cn-worker`): mobile number + four-digit PIN set by the site engineer (five tries, then a 15-minute
+  lock), in English, Malayalam, Tamil and Hindi — this week's attendance, mark present, the last pay slip, ask for an
+  advance, report a danger (a near-miss for the Safety Officer). The translations need checking by native speakers.
+- **Driver app:** construction transfers on the driver's trips, navigate to the site, delivered with the site's OTP.
+- Client and partner logins open their portal after login. New red flags: constraints past need-by, late milestones.
+- Demo: constraints, milestones and last week's reviews, 12 geo-tagged site photos (drawn stand-ins) with the publishing
+  queue, three client logins and a labour-contractor login with a snag, a running bill, labour documents and a photo,
+  today's check-ins at P-2401, site imprest and cash, worker app PINs (demo PIN 1234), a danger reported by a worker,
+  the driver of the transfer on the road. Demo logins have no password — set one to try the portals.
+
 ## 1.9.0 — Construction (India), stage A5: finance & tax (19 Nov 2026)
 Follows prototype C8. New feature `cn_fin` "Construction — finance, tax & payroll" (Capstone edition), menu group
 "Finance (India)" with four pages; settings limit "Manual journal above which the MD approves" (default ₹10 lakh).

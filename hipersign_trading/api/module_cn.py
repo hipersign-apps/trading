@@ -656,3 +656,11 @@ KEYS = KEYS + _fin.KEYS
 for _k in _fin.KEYS:
 	globals()[_k + "_module"] = getattr(_fin, _k + "_module")
 	globals()[_k + "_rows"] = _whole(getattr(_fin, _k + "_rows"))
+
+# v1.9.0 A6: Project Controls, Client Portal, Subcontractor Portal, Site & Worker App
+from hipersign_trading.api import module_cn_portal as _ptl  # noqa: E402
+
+KEYS = KEYS + _ptl.KEYS
+for _k in _ptl.KEYS:
+	globals()[_k + "_module"] = getattr(_ptl, _k + "_module")
+	globals()[_k + "_rows"] = _whole(getattr(_ptl, _k + "_rows"))

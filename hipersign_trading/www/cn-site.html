@@ -1,0 +1,128 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "templates/includes/cn_portal_style.html" %}
+<style>
+.ap{max-width:520px;width:100%;box-sizing:border-box;margin:0 auto;padding:0 0 30px}.ap .sel{width:100%}
+.ap .hd{border-radius:0 0 18px 18px;margin-bottom:10px}
+.ap .bd{padding:0 10px;display:flex;flex-direction:column;gap:10px}
+.ap .card{margin:0}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;font-weight:600;font-size:12.5px;cursor:pointer}
+.tile i{display:block;font-style:normal;font-size:22px;margin-bottom:4px}.tile b{display:block;font-size:11px;color:var(--mut);font-weight:500}
+.wk{display:flex;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid #f1f5f9;font-size:14px}.wk input{width:22px;height:22px}.wk small{color:var(--mut);margin-left:auto}
+.big{display:block;width:100%;padding:13px;border-radius:12px;font-size:15px;margin-top:8px;text-align:center}
+.chat{max-height:260px;overflow:auto;display:flex;flex-direction:column-reverse;gap:6px}.chat div{background:#f1f5f9;border-radius:10px;padding:7px 10px;font-size:13px}.chat b{font-size:12px;color:var(--blue)}
+.back{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;width:34px;height:34px;font-size:18px}
+.otp{font-size:26px;letter-spacing:6px;font-weight:700;color:var(--blue)}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.thumbs img{width:100%;height:90px;object-fit:cover;border-radius:8px}
+</style>{% endblock %}
+{% block content %}
+<div class="ap" id="ap"><div class="hd"><b>Hipersign Site</b></div><div class="bd"><p class="mut">{{ _("Loading…") }}</p></div></div>
+<script>
+(() => {
+	const M = "hipersign_trading.api.construction_portal.";
+	const root = document.getElementById("ap");
+	let D = null, view = "home", gps = { lat: null, lng: null };
+	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+	const inr = (v) => "₹" + Math.round(+v || 0).toLocaleString("en-IN");
+	const call = (m, args) => new Promise((ok, no) => frappe.call({ method: M + m, args: args || {}, freeze: true, callback: (r) => ok(r.message), error: no }));
+	const toast = (r) => frappe.show_alert({ message: (r && r.message) || "{{ _('Done') }}", indicator: "green" }, 6);
+	const locate = () => navigator.geolocation && navigator.geolocation.getCurrentPosition((p) => { gps = { lat: p.coords.latitude, lng: p.coords.longitude }; }, () => {}, { enableHighAccuracy: true });
+	const pic = (el, max) => new Promise((ok) => { const f = el && el.files[0]; if (!f) return ok(null); const rd = new FileReader();
+		rd.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
+			c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .8)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
+	const load = (p) => call("sa_home", { project: p || (D && D.project) }).then((d) => { D = d; render(); });
+	const bar = (title) => `<div class="hd">${view !== "home" ? `<button class="back" id="back">‹</button>` : ""}<div><small>${esc(D.me)}</small><b>${esc(title)}</b></div>
+		<div class="r"><a class="out" href="/app">{{ _("Desk") }}</a></div></div>`;
+	function render() {
+		if (!D.projects || !D.projects.length) { root.innerHTML = `<div class="hd"><b>Hipersign Site</b></div><div class="bd"><div class="card">{{ _("No live projects for you.") }}</div></div>`; return; }
+		const v = VIEWS[view] || VIEWS.home;
+		root.innerHTML = bar(view === "home" ? D.project_name : v.title) + `<div class="bd">${v.html()}</div>`;
+		const b = root.querySelector("#back"); if (b) b.onclick = () => { view = "home"; render(); };
+		v.bind && v.bind();
+	}
+	const VIEWS = {
+		home: { html: () => `
+			<select class="sel" id="proj">${D.projects.map((p) => `<option value="${esc(p.name)}" ${p.name === D.project ? "selected" : ""}>${esc(p.label)}</option>`).join("")}</select>
+			<div class="card"><div style="display:flex;align-items:center;gap:10px"><div><b>${D.checked_in ? "{{ _('Checked in at') }} " + esc(D.checked_in) : "{{ _('Not checked in') }}"}</b>
+				<div class="mut">${D.present} / ${D.workers.length} {{ _("workers present") }}</div></div>
+				${D.checked_in ? "" : `<label class="btn p" style="margin-left:auto">{{ _("Check in") }}<input type="file" accept="image/*" capture="user" id="selfie" hidden></label>`}</div></div>
+			<div class="grid">
+				<div class="tile" data-v="gang"><i>👷</i>{{ _("Gang check-in") }}<b>${D.present} {{ _("in") }}</b></div>
+				<div class="tile" data-v="dpr"><i>📋</i>{{ _("DPR") }}<b>${D.dpr.length ? "{{ _('sent') }}" : "{{ _('not yet') }}"}</b></div>
+				<div class="tile" data-v="photo"><i>📷</i>{{ _("Photo") }}<b>${D.photos.length} {{ _("recent") }}</b></div>
+				<div class="tile" data-v="cash"><i>💵</i>{{ _("Site cash") }}<b>${inr(D.imprest)}</b></div>
+				<div class="tile" data-v="del"><i>🚚</i>{{ _("Deliveries") }}<b>${D.trips.length} {{ _("on the way") }}</b></div>
+				<div class="tile" data-v="chat"><i>💬</i>{{ _("Site chat") }}<b>${D.chat.length} {{ _("messages") }}</b></div></div>
+			${D.permits.length ? `<div class="card"><b>{{ _("Permits in force") }}</b>${D.permits.map((p) => `<div class="mut">${esc(p.kind)} — ${esc(p.location)} · {{ _("to") }} ${esc(frappe.datetime.str_to_user(p.valid_to))}</div>`).join("")}</div>` : ""}
+			${D.photos.length ? `<div class="card"><b>{{ _("Recent photos") }}</b><div class="thumbs" style="margin-top:8px">${D.photos.map((p) => `<img src="${esc(p.image)}" title="${esc(p.caption)}">`).join("")}</div></div>` : ""}`,
+			bind() {
+				root.querySelector("#proj").onchange = (e) => load(e.target.value);
+				root.querySelectorAll(".tile").forEach((t) => (t.onclick = () => { view = t.dataset.v; render(); }));
+				const s = root.querySelector("#selfie");
+				if (s) s.onchange = async () => { const img = await pic(s, 800); call("sa_checkin", { project: D.project, latitude: gps.lat, longitude: gps.lng, selfie: img }).then((r) => { toast(r); load(); }); };
+			} },
+		gang: { title: "{{ _('Gang check-in') }}", html: () => `<div class="card"><div class="mut">{{ _("Tick the workers at work today.") }} ${gps.lat ? "📍 " + gps.lat.toFixed(4) + ", " + gps.lng.toFixed(4) : ""}</div>
+			<label class="wk"><input type="checkbox" id="all"> <b>{{ _("All") }}</b></label>
+			${D.workers.map((w) => `<label class="wk"><input type="checkbox" class="w" value="${esc(w.name)}" ${w.present ? "checked disabled" : ""}> ${esc(w.worker_name)}<small>${esc(w.trade)}${w.contractor ? " · " + esc(w.contractor) : ""}</small></label>`).join("")}
+			<button class="btn g big" id="go">{{ _("Check in ticked workers") }}</button></div>`,
+			bind() {
+				root.querySelector("#all").onchange = (e) => root.querySelectorAll(".w:not(:disabled)").forEach((c) => (c.checked = e.target.checked));
+				root.querySelector("#go").onclick = () => { const W = [...root.querySelectorAll(".w:checked:not(:disabled)")].map((c) => c.value);
+					if (!W.length) return frappe.msgprint("{{ _('Tick at least one worker.') }}");
+					call("sa_gang", { project: D.project, workers: JSON.stringify(W), latitude: gps.lat, longitude: gps.lng }).then((r) => { toast(r); view = "home"; load(); }); };
+			} },
+		dpr: { title: "{{ _('Daily progress report') }}", html: () => `<div class="card">
+			${D.dpr.map((d) => `<div class="ok">✓ ${esc(d.activity)} — ${esc(d.actual_qty)} ${esc(d.unit || "")}</div>`).join("")}
+			<small class="mut">{{ _("BOQ item") }}</small><select class="in" id="boq"><option value="">—</option>${D.boq.map((b) => `<option value="${esc(b[0])}" data-u="${esc(b[2])}" data-d="${esc(b[1])}">${esc(b[0])} ${esc(b[1])}</option>`).join("")}</select>
+			<small class="mut">{{ _("Activity") }}</small><input class="in" id="act">
+			<div class="row"><div><small class="mut">{{ _("Quantity today") }}</small><input class="in" type="number" step="any" id="qty"></div><div><small class="mut">{{ _("Unit") }}</small><input class="in" id="unit"></div></div>
+			<div class="row"><div><small class="mut">{{ _("Weather") }}</small><select class="in" id="wx"><option>Fair</option><option>Light rain</option><option>Heavy rain</option><option>Extreme heat</option></select></div>
+				<div><small class="mut">{{ _("Hours lost") }}</small><input class="in" type="number" id="lost" value="0"></div></div>
+			<small class="mut">{{ _("Subcontractor labour") }}</small><input class="in" type="number" id="sub" value="0">
+			<small class="mut">{{ _("Remarks") }}</small><textarea class="in" id="rem" rows="2"></textarea>
+			<div class="mut">{{ _("Own labour from today's check-ins:") }} <b>${D.present}</b></div>
+			<button class="btn p big" id="go">{{ _("Send DPR") }}</button></div>`,
+			bind() {
+				const boq = root.querySelector("#boq");
+				boq.onchange = () => { const o = boq.selectedOptions[0]; if (o && o.value) { root.querySelector("#act").value = o.dataset.d; root.querySelector("#unit").value = o.dataset.u; } };
+				root.querySelector("#go").onclick = () => { const a = root.querySelector("#act").value; if (!a) return frappe.msgprint("{{ _('Enter the activity.') }}");
+					call("sa_dpr", { project: D.project, activity: a, boq_item: boq.value, qty: root.querySelector("#qty").value, unit: root.querySelector("#unit").value, weather: root.querySelector("#wx").value,
+						hours_lost: root.querySelector("#lost").value, sub_labour: root.querySelector("#sub").value, remarks: root.querySelector("#rem").value }).then((r) => { toast(r); view = "home"; load(); }); };
+			} },
+		photo: { title: "{{ _('Site photo') }}", html: () => `<div class="card"><label class="btn p big">📷 {{ _("Take photo") }}<input type="file" accept="image/*" capture="environment" id="f" hidden></label>
+			<img id="pv" style="width:100%;border-radius:10px;margin-top:8px;display:none">
+			<small class="mut">{{ _("Caption") }}</small><input class="in" id="cap"><small class="mut">{{ _("Where on site") }}</small><input class="in" id="loc">
+			<div class="mut">${gps.lat ? "📍 " + gps.lat.toFixed(5) + ", " + gps.lng.toFixed(5) : "{{ _('No GPS — allow location for geo-tagged photos') }}"}</div>
+			<button class="btn g big" id="go">{{ _("Save photo") }}</button><p class="mut">{{ _("The client sees it only after the PM publishes it.") }}</p></div>`,
+			bind() { let img = null; const f = root.querySelector("#f");
+				f.onchange = async () => { img = await pic(f, 1600); const p = root.querySelector("#pv"); p.src = img; p.style.display = "block"; };
+				root.querySelector("#go").onclick = () => { if (!img) return frappe.msgprint("{{ _('Take a photo first.') }}");
+					call("sa_photo", { project: D.project, image: img, caption: root.querySelector("#cap").value, location: root.querySelector("#loc").value, latitude: gps.lat, longitude: gps.lng })
+						.then((r) => { toast(r); view = "home"; load(); }); }; } },
+		cash: { title: "{{ _('Site cash') }}", html: () => `<div class="card"><div class="mut">{{ _("Imprest balance") }} <b>${inr(D.imprest)}</b> · {{ _("you book up to") }} <b>${inr(D.cash_limit)}</b> {{ _("at once; above it the PM approves") }}</div>
+			<small class="mut">{{ _("For") }}</small><input class="in" id="desc"><div class="row"><div><small class="mut">{{ _("Amount") }}</small><input class="in" type="number" id="amt"></div>
+			<div><small class="mut">{{ _("Head") }}</small><select class="in" id="head"><option>Site overheads</option><option>Materials</option><option>Labour</option><option>Plant & equipment</option></select></div></div>
+			<small class="mut">{{ _("Paid to") }}</small><input class="in" id="to"><label class="btn big">🧾 {{ _("Photo of the bill") }}<input type="file" accept="image/*" capture="environment" id="rc" hidden></label>
+			<button class="btn p big" id="go">{{ _("Book") }}</button></div>
+			<div class="card"><b>{{ _("Last two weeks") }}</b>${D.expenses.map((x) => `<div class="wk">${esc(x.description)}<small>${inr(x.amount)} · ${esc(x.status)}</small></div>`).join("") || `<p class="mut">—</p>`}</div>`,
+			bind() { let rc = null; root.querySelector("#rc").onchange = async (e) => { rc = await pic(e.target, 1400); frappe.show_alert("{{ _('Bill photo added') }}"); };
+				root.querySelector("#go").onclick = () => { const a = +root.querySelector("#amt").value, d = root.querySelector("#desc").value; if (!a || !d) return frappe.msgprint("{{ _('Enter what it was for and the amount.') }}");
+					call("sa_expense", { project: D.project, description: d, amount: a, head: root.querySelector("#head").value, paid_to: root.querySelector("#to").value, receipt: rc }).then((r) => { toast(r); load(); }); }; } },
+		del: { title: "{{ _('Deliveries') }}", html: () => `${D.trips.map((t) => `<div class="card"><b>${esc(t.name)}</b> · ${esc(t.hs_vehicle || "")}<div class="mut">{{ _("Driver") }} ${esc(t.hs_driver || "—")} ${t.hs_driver_mobile ? `· <a href="tel:${esc(t.hs_driver_mobile)}">${esc(t.hs_driver_mobile)}</a>` : ""} · {{ _("e-way bill") }} ${esc(t.hs_eway_bill || "—")}</div>
+				${t.items.map((i) => `<div class="wk">${esc(i.item_name)}<small>${esc(i.qty)} ${esc(i.uom)}</small></div>`).join("")}
+				<div style="margin-top:8px">{{ _("Give the driver this OTP when the load is checked:") }}<div class="otp">${esc(t.otp)}</div></div></div>`).join("") || `<div class="card mut">{{ _("Nothing on the way.") }}</div>`}
+			${D.pos.length ? `<div class="card"><b>{{ _("Expected from suppliers") }}</b>${D.pos.map((p) => `<div class="wk">${esc(p.supplier)}<small>${esc(p.name)} · ${esc(frappe.datetime.str_to_user(p.schedule_date))} · ${Math.round(p.per_received)}%</small></div>`).join("")}
+				<p class="mut">{{ _("The storekeeper books the receipt (GRN) in the desk.") }}</p></div>` : ""}` },
+		chat: { title: "{{ _('Site chat') }}", html: () => `<div class="card"><div class="chat">${D.chat.map((c) => `<div><b>${esc(c.who)}</b> <span class="mut">${esc(frappe.datetime.comment_when ? frappe.datetime.comment_when(c.creation) : c.creation)}</span><br>${esc(c.content)}</div>`).join("") || `<p class="mut">{{ _("No messages yet.") }}</p>`}</div>
+			<textarea class="in" id="t" rows="2" placeholder="{{ _('Message the project team (@name to mention)') }}"></textarea><button class="btn p big" id="go">{{ _("Send") }}</button></div>`,
+			bind() { root.querySelector("#go").onclick = () => { const t = root.querySelector("#t").value; if (!t.trim()) return; call("sa_chat", { project: D.project, text: t }).then(() => load()); }; } },
+	};
+	locate();
+	frappe.ready ? frappe.ready(() => load()) : document.addEventListener("DOMContentLoaded", () => load());
+})();
+</script>
+{% endblock %}

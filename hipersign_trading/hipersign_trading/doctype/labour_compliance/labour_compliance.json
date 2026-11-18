@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-18 22:00:00.000000",
- "modified": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-20 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -30,6 +30,13 @@
   "cb2",
   "status",
   "notes",
+  "sb_files",
+  "wage_register_file",
+  "pf_ecr_file",
+  "esi_file",
+  "cb_files",
+  "partner_submitted",
+  "verified_by",
   "currency"
  ],
  "fields": [
@@ -128,6 +135,42 @@
    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "sb_files",
+   "fieldtype": "Section Break",
+   "label": "Documents"
+  },
+  {
+   "fieldname": "wage_register_file",
+   "fieldtype": "Attach",
+   "label": "Wage register"
+  },
+  {
+   "fieldname": "pf_ecr_file",
+   "fieldtype": "Attach",
+   "label": "PF ECR"
+  },
+  {
+   "fieldname": "esi_file",
+   "fieldtype": "Attach",
+   "label": "ESI challan"
+  },
+  {
+   "fieldname": "cb_files",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "partner_submitted",
+   "fieldtype": "Check",
+   "label": "Uploaded on the portal",
+   "read_only": 1
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Data",
+   "label": "Verified by",
+   "read_only": 1
   },
   {
    "fieldname": "currency",

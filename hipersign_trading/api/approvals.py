@@ -161,9 +161,23 @@ def _journals(company=None):
 		for j in frappe.get_all("Journal Entry", filters=f, fields=["name", "user_remark", "title", "total_debit", "owner", "creation"])]
 
 
+def _site_cash(company=None):
+	"""v1.9.0 A6: site cash above the site engineer's limit, waiting for the PM."""
+	if not frappe.db.exists("DocType", "Site Expense"):
+		return []
+	from hipersign_trading.api.construction import project_names
+
+	names = project_names([company] if company else None)
+	return [{"kind": "cn_exp", "type": _("Site cash"), "doctype": "Site Expense", "name": x.name, "description": f"{x.project} — {x.description}"[:120],
+		"reason": _("{0} spent by {1} — above the site limit").format(frappe.format(x.amount, {"fieldtype": "Currency", "options": "INR"}), x.requested_by or x.owner),
+		"value": flt(x.amount), "waiting_for": ["Project Manager", "Managing Director"], "actions": ["Approve", "Reject"], "by": x.owner, "since": str(x.creation)[:10]}
+		for x in frappe.get_all("Site Expense", filters={"status": "Waiting for approval", "project": ["in", names or [""]]},
+			fields=["name", "project", "description", "amount", "requested_by", "owner", "creation"])]
+
+
 def pending(company=None, mine=False):
 	items = []
-	for src in (_workflow_items, _tax_returns, _hr, _construction, _permits, _journals):
+	for src in (_workflow_items, _tax_returns, _hr, _construction, _permits, _journals, _site_cash):
 		try:
 			items.extend(src(company))
 		except Exception:
@@ -221,6 +235,11 @@ def act(kind, doctype, name, action, note=None):
 
 		cn_act("ptw_issue" if approve else "ptw_reject", name, frappe.as_json({"note": note}))
 		return {"state": frappe.db.get_value("Work Permit", name, "status")}
+	if kind == "cn_exp":  # v1.9.0 A6
+		from hipersign_trading.api.construction import act as cn_act
+
+		cn_act("exp_approve" if approve else "exp_reject", name, "{}")
+		return {"state": "Booked" if approve else "Rejected"}
 	if kind == "cn_jv":  # v1.9.0 A5
 		from hipersign_trading.api.construction import act as cn_act
 
