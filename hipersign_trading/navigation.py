@@ -90,6 +90,15 @@ NAV = [
 		("RA Billing", "Page", "hipersign-cn-billing", "receipt", "construction", {}),
 		("DPR & Hindrances", "Page", "hipersign-cn-site", "hard-hat", "construction", {}),
 	]),
+	# v1.9.0 A3 (prototypes C3, C6, C7): the resources behind the sites
+	("Site Resources (India)", "package", [
+		("Procurement & Stores", "Page", "hipersign-cn-proc", "shopping-cart", "cn_site", {}),
+		("Vendors", "Page", "hipersign-cn-vendors", "users", "cn_site", {}),
+		("Central Store & Logistics", "Page", "hipersign-cn-store", "warehouse", "cn_site", {}),
+		("Subcontractors (India)", "Page", "hipersign-cn-subcon", "briefcase", "cn_site", {}),
+		("Labour & Workers", "Page", "hipersign-cn-labour", "hard-hat", "cn_site", {}),
+		("Equipment", "Page", "hipersign-cn-equipment", "tractor", "cn_site", {}),
+	]),
 	# v1.8.0 (prototype p19): assemblers and factories — after Projects, before Finance & Tax, as on the prototype
 	("Manufacturing", "factory", [
 		("Production", "Page", "hipersign-production", "wrench", "manufacturing", {}),
@@ -161,6 +170,16 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0 A3: Site Resources (India)
+	"Procurement & Stores": [("Indents", "DocType", "Material Request", None), ("Supplier Quotations", "DocType", "Supplier Quotation", None),
+		("Purchase Orders", "DocType", "Purchase Order", None), ("Receipts", "DocType", "Purchase Receipt", None), ("Material Norms", "DocType", "Material Norm", None)],
+	"Vendors": [("Suppliers", "DocType", "Supplier", None), ("Rate Contracts", "DocType", "Blanket Order", None)],
+	"Central Store & Logistics": [("Transfers & issues", "DocType", "Stock Entry", None)],
+	"Subcontractors (India)": [("Work Orders", "DocType", "Subcontractor Work Order", None), ("Running Bills", "DocType", "Subcontractor Bill", None),
+		("Labour Compliance", "DocType", "Labour Compliance", None)],
+	"Labour & Workers": [("Workers", "DocType", "Site Worker", None), ("Weekly Musters", "DocType", "Weekly Muster", None), ("Advances", "DocType", "Worker Advance", None),
+		("Minimum Wages", "DocType", "Minimum Wage", None)],
+	"Equipment": [("Equipment", "DocType", "Construction Equipment", None), ("Log Sheets", "DocType", "Equipment Log", None), ("Maintenance", "DocType", "Equipment Maintenance", None)],
 	# v1.9.0 A2: Business (India)
 	"CRM & Clients": [("Enquiries", "DocType", "Opportunity", None), ("Client Visits", "DocType", "Client Visit", None), ("Clients", "DocType", "Customer", None)],
 	"Quotations & Sales": [("Quotations", "DocType", "Quotation", None), ("Collection Follow-ups", "DocType", "Collection Follow-up", None)],
@@ -229,6 +248,15 @@ SUB_TABS = {
 	("Workflows & Settings", "Document Rules"): ("hipersign-doccentre", "rules"), ("Workflows & Settings", "Editable Lists"): ("hipersign-settings-hub", None),
 	("Workflows & Settings", "Users"): ("hipersign-settings-hub", None), ("Workflows & Settings", "System Settings"): ("hipersign-settings-hub", None),
 	("Document Centre", "Missing Documents"): ("hipersign-doccentre", "missing"), ("Document Centre", "Document Waivers"): ("hipersign-doccentre", "waivers"),
+	("Procurement & Stores", "Indents"): ("hipersign-cn-proc", "ind"), ("Procurement & Stores", "Supplier Quotations"): ("hipersign-cn-proc", "cmp"),
+	("Procurement & Stores", "Purchase Orders"): ("hipersign-cn-proc", "po"), ("Procurement & Stores", "Receipts"): ("hipersign-cn-proc", "grn"),
+	("Vendors", "Suppliers"): ("hipersign-cn-vendors", "ven"), ("Vendors", "Rate Contracts"): ("hipersign-cn-vendors", "rc"),
+	("Central Store & Logistics", "Transfers & issues"): ("hipersign-cn-store", "trf"), ("Subcontractors (India)", "Work Orders"): ("hipersign-cn-subcon", "wo"),
+	("Subcontractors (India)", "Running Bills"): ("hipersign-cn-subcon", "bill"), ("Subcontractors (India)", "Labour Compliance"): ("hipersign-cn-subcon", "lc"),
+	("Labour & Workers", "Workers"): ("hipersign-cn-labour", "wkr"), ("Labour & Workers", "Weekly Musters"): ("hipersign-cn-labour", "mus"),
+	("Labour & Workers", "Advances"): ("hipersign-cn-labour", "adv"), ("Labour & Workers", "Minimum Wages"): ("hipersign-cn-labour", "mw"),
+	("Equipment", "Equipment"): ("hipersign-cn-equipment", "reg"), ("Equipment", "Log Sheets"): ("hipersign-cn-equipment", "log"),
+	("Equipment", "Maintenance"): ("hipersign-cn-equipment", "mnt"),
 	("CRM & Clients", "Enquiries"): ("hipersign-cn-crm", "pipe"), ("CRM & Clients", "Client Visits"): ("hipersign-cn-crm", "visit"),
 	("CRM & Clients", "Clients"): ("hipersign-cn-crm", "cli"), ("Quotations & Sales", "Quotations"): ("hipersign-cn-sales", "qt"),
 	("Quotations & Sales", "Collection Follow-ups"): ("hipersign-cn-sales", "fup"), ("Contracts & Claims", "Contracts"): ("hipersign-cn-contracts", "reg"),

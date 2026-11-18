@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.9.0 — Construction (India), stage A3: site resources (18 Nov 2026)
+Follows prototypes C3, C6 and C7. New feature `cn_site` "Construction — site resources" (Structure and Capstone editions),
+menu group "Site Resources (India)" with six pages; new roles Storekeeper, HR & Admin and Plant Manager.
+- **Procurement & Stores:** indents (Material Request with the project) checked against what the BOQ still needs — Material
+  Norm (material per BOQ unit + allowed wastage) less issued, in the site store and on order; above it only the PM / MD can
+  approve. Supplier quotations carry freight, unloading, landed cost and "technically compliant"; the comparison ranks on
+  landed cost and "PO to L1" drafts the order to the site store. Receipts at the site stores with rejected quantities
+  (rejected material store), "Book bill" (drafts the bill when a document rule needs the supplier's invoice first), site
+  stock, material issues, and the reconciliation: theoretical use of the work measured vs issued, excess valued and the
+  recovery (× 1.5).
+- **Vendors:** GSTIN, PAN, MSME (Udyam), TDS category, KYC, outstanding; scorecard from receipts (quality accepted) and POs
+  (on time); rate contracts on ERPNext Blanket Order (cap, drawn, expiry).
+- **Central Store & Logistics:** central store, transfers to sites through Goods In Transit with vehicle, driver and e-way
+  bill (Requested → In transit → Delivered when the site confirms), stock ledger, dead stock (no issue for 90 days).
+- **Subcontractors:** Subcontractor Work Order (labour only with free-issue material, or item rate); Subcontractor Bill
+  (this bill / up to date, ≤ WO qty + 10%) — QS certifies, PM approves (purchase invoice: GST, TDS 194C 1% / 2%, retention,
+  material and other recoveries, advance recovery), accounts pay; Labour Compliance (wage register, PF ECR, ESI) — a
+  labour contractor's bill is held while last month's documents are missing.
+- **Labour & Workers:** Site Worker register (state minimum wage check, UPI for own workers, BOCW, induction, PPE, ID expiry,
+  police verification); Minimum Wage by state and skill; Weekly Muster (Wednesday → Tuesday, OT at double rate, PF 12% to
+  the ₹15,000 ceiling, ESI 0.75% to ₹21,000, advance recovery up to half the pay) — PM approves, accounts pay by UPI (wage
+  journal with employer PF 13% and ESI 3.25%); Worker Advance (up to four weeks' wages; above ₹5,000 the PM approves).
+- **Equipment:** Construction Equipment (own / hired, hire rate, site, service interval, insurance, fitness), Equipment Log
+  (hour meter never goes back, idle, diesel vs norm), Equipment Maintenance (downtime, cost); utilisation and hire cost.
+- New red flags: material over theory, contractor bills on hold, indents above need, equipment insurance / fitness /
+  service due.
+- Demo: 8 materials with HSN, 13 norms, 11 vendors, purchases and issues for every live project (P-2401 cement +6.6%,
+  P-2403 bitumen +5.1%, P-2406 gypsum), indents (one above need), three quotations (L1 is not the lowest basic), an open PO,
+  three rate contracts, central stock with transfers, four work orders with ten running bills, labour documents (Karnataka
+  Labour Services missing October), 32 workers, 16 minimum wages, 5 advances, 12 weekly musters, 10 machines with log
+  sheets and maintenance. Project costs brought forward now exclude what these documents booked.
+
 ## 1.9.0 — Construction (India), stage A2: business & contracts (18 Nov 2026)
 Follows prototype C5. New feature `cn_biz` "Construction — business & contracts" (Capstone edition) and menu group
 "Business (India)" with three pages; new role BD Manager.

@@ -63,6 +63,11 @@ FEATURES = {
 	"cn_biz": ("Construction — business & contracts", "Industries", "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder",
 		["construction"], ["Client Visit", "Construction Contract", "Contract Claim", "Collection Follow-up"], [],
 		["hipersign-cn-crm", "hipersign-cn-sales", "hipersign-cn-contracts"], [], [], []),
+	# v1.9.0 A3 (prototypes C3, C6, C7): procurement & stores, vendors, central store, subcontractors, workers & wages, equipment
+	"cn_site": ("Construction — site resources", "Industries", "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment",
+		["construction"], ["Material Norm", "Subcontractor Work Order", "Subcontractor Bill", "Labour Compliance", "Minimum Wage", "Site Worker", "Weekly Muster",
+			"Worker Advance", "Construction Equipment", "Equipment Log", "Equipment Maintenance"], [],
+		["hipersign-cn-proc", "hipersign-cn-vendors", "hipersign-cn-store", "hipersign-cn-subcon", "hipersign-cn-labour", "hipersign-cn-equipment"], [], [], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]
 STANDARD_ON = ["crm", "tracker", "exports", "rfq", "imports", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc"]
@@ -78,11 +83,11 @@ PACKS = {
 	# v1.9.0 (prototype C11): the three Construction (India) editions — later stages add their modules to Structure and Capstone
 	"Foundation": {"on": ["construction", "rfq", "multiwh", "advances", "recon", "approvals"], "doc_level": "Recommended", "form_mode": "Standard",
 		"desc": "Indian contractors starting out — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR"},
-	"Structure": {"on": ["construction", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
+	"Structure": {"on": ["construction", "cn_site", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
 		"form_mode": "Standard", "desc": "Growing contractors — Foundation plus HR, plant and assets, company compliance"},
-	"Capstone": {"on": ["construction", "cn_biz", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
+	"Capstone": {"on": ["construction", "cn_biz", "cn_site", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
 		"form_mode": "Detailed", "desc": "Builders and EPC groups — Structure plus several companies and branches"},
-	"Enterprise": {"on": [k for k in FEATURES if k not in ("construction", "cn_biz")],  # v1.9.0: Construction (India) has its own editions
+	"Enterprise": {"on": [k for k in FEATURES if k not in ("construction", "cn_biz", "cn_site")],  # v1.9.0: Construction (India) has its own editions
 		 "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
 }
 

@@ -1,0 +1,120 @@
+{
+ "doctype": "DocType",
+ "name": "Weekly Muster Row",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-18 20:00:00.000000",
+ "modified": "2026-11-18 20:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0,
+ "field_order": [
+  "worker",
+  "worker_name",
+  "trade",
+  "rate",
+  "days",
+  "ot_hours",
+  "earned",
+  "pf",
+  "esi",
+  "advance_recovery",
+  "net"
+ ],
+ "fields": [
+  {
+   "fieldname": "worker",
+   "fieldtype": "Link",
+   "label": "Worker",
+   "options": "Site Worker",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "worker_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "fetch_from": "worker.worker_name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "trade",
+   "fieldtype": "Data",
+   "label": "Trade",
+   "fetch_from": "worker.trade",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Daily wage",
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "days",
+   "fieldtype": "Float",
+   "label": "Days present",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "ot_hours",
+   "fieldtype": "Float",
+   "label": "OT hours",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "earned",
+   "fieldtype": "Currency",
+   "label": "Earned",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "pf",
+   "fieldtype": "Currency",
+   "label": "PF 12%",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "esi",
+   "fieldtype": "Currency",
+   "label": "ESI 0.75%",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "advance_recovery",
+   "fieldtype": "Currency",
+   "label": "Advance recovered",
+   "options": "currency"
+  },
+  {
+   "fieldname": "net",
+   "fieldtype": "Currency",
+   "label": "Net pay",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  }
+ ],
+ "permissions": [],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "editable_grid": 1
+}

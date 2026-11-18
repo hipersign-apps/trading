@@ -179,3 +179,39 @@ $(document).on("app_ready", () => {
 	Object.assign(L, { "Client Visit": ["hipersign-cn-crm", "visit"], "Construction Contract": ["hipersign-cn-contracts", "reg"], "Contract Claim": ["hipersign-cn-contracts", "clm"],
 		"Collection Follow-up": ["hipersign-cn-sales", "fup"] });
 });
+
+// ---------------------------------------------------------------- v1.9.0 A3: site resources — the same actions on the forms
+Object.assign(hipersign.cn.FORM_ACTS, {
+	"Subcontractor Work Order": { Draft: [["Issue work order", "swo_activate", 1]] },
+	"Subcontractor Bill": { Draft: [["Certify (QS)", "sub_certify", 1]], Certified: [["Approve & book (PM)", "sub_approve", 1]], Approved: [["Pay", "sub_pay", 1]] },
+	"Weekly Muster": { Draft: [["Approve wages (PM)", "mus_approve", 1]], Approved: [["Pay by UPI", "mus_pay", 1]] },
+	"Worker Advance": { Requested: [["Approve", "adv_approve", 1], ["Reject", "adv_reject"]], Approved: [["Pay by UPI", "adv_pay", 1]] },
+});
+["Subcontractor Work Order", "Subcontractor Bill", "Weekly Muster", "Worker Advance"].forEach((dt) => frappe.ui.form.on(dt, {
+	refresh(frm) {
+		if (frm.is_new()) return;
+		(hipersign.cn.FORM_ACTS[dt][frm.doc.status] || []).forEach(([label, act, primary]) => {
+			const b = frm.add_custom_button(__(label), () => (frm.is_dirty() ? frm.save() : Promise.resolve()).then(() =>
+				hipersign.cn.act(act, frm.doc.name, {}, (r) => (r && r.open && r.open[0] !== dt ? frappe.set_route("Form", r.open[0], r.open[1]) : frm.reload_doc()))));
+			if (primary) b.removeClass("btn-default").addClass("btn-primary");
+		});
+		if (dt === "Subcontractor Bill" && frm.doc.compliance_hold) frm.dashboard.set_headline_alert(__("On hold: the contractor's wage register, PF ECR or ESI challan for last month is missing."), "red");
+	},
+}));
+// a weekly muster fills its workers: every own worker of the project
+frappe.ui.form.on("Weekly Muster", {
+	project(frm) {
+		if (!frm.doc.project || (frm.doc.rows || []).length) return;
+		frappe.db.get_list("Site Worker", { filters: { project: frm.doc.project, status: "Active", contractor: ["is", "not set"] }, fields: ["name", "daily_rate"], limit: 500 }).then((ws) => {
+			ws.forEach((w) => frm.add_child("rows", { worker: w.name, rate: w.daily_rate, days: 6 }));
+			frm.refresh_field("rows");
+		});
+	},
+});
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (!L || !hipersign.feature("cn_site")) return;
+	Object.assign(L, { "Subcontractor Work Order": ["hipersign-cn-subcon", "wo"], "Subcontractor Bill": ["hipersign-cn-subcon", "bill"], "Labour Compliance": ["hipersign-cn-subcon", "lc"],
+		"Site Worker": ["hipersign-cn-labour", "wkr"], "Weekly Muster": ["hipersign-cn-labour", "mus"], "Worker Advance": ["hipersign-cn-labour", "adv"], "Minimum Wage": ["hipersign-cn-labour", "mw"],
+		"Construction Equipment": ["hipersign-cn-equipment", "reg"], "Equipment Log": ["hipersign-cn-equipment", "log"], "Equipment Maintenance": ["hipersign-cn-equipment", "mnt"] });
+});

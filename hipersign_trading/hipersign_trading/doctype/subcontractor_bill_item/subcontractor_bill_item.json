@@ -1,0 +1,97 @@
+{
+ "doctype": "DocType",
+ "name": "Subcontractor Bill Item",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-18 20:00:00.000000",
+ "modified": "2026-11-18 20:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0,
+ "field_order": [
+  "item_no",
+  "description",
+  "unit",
+  "rate",
+  "wo_qty",
+  "prev_qty",
+  "this_qty",
+  "cum_qty",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_no",
+   "fieldtype": "Data",
+   "label": "Item",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Data",
+   "label": "Unit",
+   "columns": 1
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "label": "Rate",
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "wo_qty",
+   "fieldtype": "Float",
+   "label": "WO qty"
+  },
+  {
+   "fieldname": "prev_qty",
+   "fieldtype": "Float",
+   "label": "Previous",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "this_qty",
+   "fieldtype": "Float",
+   "label": "This bill",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "cum_qty",
+   "fieldtype": "Float",
+   "label": "Up to date",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  }
+ ],
+ "permissions": [],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "editable_grid": 1
+}

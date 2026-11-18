@@ -37,9 +37,18 @@
   },
   {
    "role": "BD Manager"
+  },
+  {
+   "role": "Storekeeper"
+  },
+  {
+   "role": "HR & Admin"
+  },
+  {
+   "role": "Plant Manager"
   }
  ],
  "owner": "Administrator",
  "creation": "2026-11-18 12:00:00",
- "modified": "2026-11-18 16:00:00"
+ "modified": "2026-11-18 20:00:00"
 }

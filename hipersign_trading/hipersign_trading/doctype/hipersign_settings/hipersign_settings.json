@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-10-21 14:30:00.000000",
- "modified": "2026-11-18 16:00:00.000000",
+ "modified": "2026-11-18 20:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -126,10 +126,12 @@
   "feat_manufacturing",
   "feat_construction",
   "feat_cn_biz",
+  "feat_cn_site",
   "sb_cn_limits",
   "cn_quote_discount_limit",
   "cn_quote_margin_floor",
   "cn_ld_flag_days",
+  "cn_worker_advance_limit",
   "tab_look",
   "sb_look",
   "desk_theme",
@@ -832,6 +834,14 @@
    "description": "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder"
   },
   {
+   "fieldname": "feat_cn_site",
+   "fieldtype": "Check",
+   "label": "Construction — site resources",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment"
+  },
+  {
    "fieldname": "sb_cn_limits",
    "fieldtype": "Section Break",
    "label": "Construction (India) — limits",
@@ -854,6 +864,13 @@
    "fieldtype": "Int",
    "label": "Flag a project this many days behind (LD)",
    "default": "21"
+  },
+  {
+   "fieldname": "cn_worker_advance_limit",
+   "fieldtype": "Currency",
+   "label": "Worker advance above which the PM approves",
+   "default": "5000",
+   "options": "INR"
   },
   {
    "fieldname": "tab_forms",

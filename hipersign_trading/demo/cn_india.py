@@ -598,6 +598,10 @@ def cn_costs(c):
 			for k, fld in SHARE.items():
 				target[k] += flt(r.amount) * flt(r.get(fld)) / 100 * pct * factor
 		target["plant"] += f[0] * CR * P.PLANT_PCT / 100 * (f[5] / 100)
+		P.clear_cache()
+		have = P._gl_by_head(pid, CO)  # materials issued, wages, subcontract bills booked by the documents above
+		for k, h in HEAD.items():
+			target[k] = max(0, target[k] - flt(have.get(h)))
 		start = getdate(R(f[6]))
 		end = min(getdate(today()), getdate(R(f[7])))
 		months = max(1, date_diff(end, start) // 30)
@@ -774,6 +778,381 @@ def cn_business(c):
 				"note": note, "promised_date": D(pd) if pd else None}).insert(ignore_permissions=True)
 
 
+# ---------------------------------------------------------------- 8. site resources: materials, vendors, stores, subcontractors, workers, equipment (A3)
+MATERIALS = [  # code, name, uom, HSN, GST %, rate, group
+	("CEM-OPC53", "Cement OPC 53 grade (50 kg bag)", "Bag", "2523", 18, 395, "Raw Material"),
+	("TMT-FE500D", "TMT bars Fe500D", "Tonne", "7214", 18, 58500, "Raw Material"),
+	("MSAND", "M-sand (manufactured sand)", "Cubic Meter", "2505", 5, 2350, "Raw Material"),
+	("AGG-20", "Coarse aggregate 20 mm", "Cubic Meter", "2517", 5, 1650, "Raw Material"),
+	("AAC-BLOCK", "AAC blocks 600 × 200 × 200", "Cubic Meter", "6810", 18, 4150, "Raw Material"),
+	("BIT-VG30", "Bitumen VG-30", "Tonne", "2713", 18, 48500, "Raw Material"),
+	("GYP-BOARD", "Gypsum board 12.5 mm (2.97 m²)", "Nos", "6809", 18, 395, "Raw Material"),
+	("PLY-SHUT", "Shuttering plywood 12 mm", "Nos", "4412", 18, 1650, "Consumable"),
+]
+NORMS = [  # material, BOQ text, BOQ unit, per unit, wastage %
+	("CEM-OPC53", "RCC M25", "Cum", 8.06, 2), ("CEM-OPC53", "PCC M10", "Cum", 4.4, 2), ("CEM-OPC53", "plaster", "Sqm", .1, 3),
+	("CEM-OPC53", "PCC M15 & RCC M25", "Cum", 7.5, 2), ("CEM-OPC53", "RCC M30", "Cum", 8.6, 2),
+	("TMT-FE500D", "Reinforcement", "MT", 1.0, 2.5), ("MSAND", "RCC M25", "Cum", .45, 3), ("AGG-20", "RCC M25", "Cum", .86, 3),
+	("AAC-BLOCK", "AAC block", "Cum", 1.0, 3), ("BIT-VG30", "Dense bituminous", "Cum", .105, 2), ("BIT-VG30", "Bituminous concrete", "Cum", .13, 2),
+	("GYP-BOARD", "Gypsum false ceiling", "Sqm", .36, 5), ("GYP-BOARD", "Gypsum & glass partitions", "Sqm", .7, 5),
+]
+VENDORS = [  # name, state, city, line 1, pin, PAN, group, MSME, KYC, type
+	("Malabar Cements Distributors (fictional)", "Kerala", "Kochi", "Edappally Bypass", "682024", "AAFFM3311K", "Raw Material", "Small", "Verified", "Company"),
+	("Kerala Steel Traders Pvt. Ltd. (fictional)", "Kerala", "Kochi", "Kalamassery Industrial Estate", "683104", "AAKCK8820L", "Raw Material", "Medium", "Verified", "Company"),
+	("Periyar Aggregates & Sand LLP", "Kerala", "Aluva", "Desom Road", "683101", "AAPFP4410M", "Raw Material", "Micro", "Verified", "Company"),
+	("Bengaluru TMT Mart (fictional)", "Karnataka", "Bengaluru", "Peenya Industrial Area", "560058", "AAJCB2290N", "Raw Material", "Not MSME", "Verified", "Company"),
+	("Coastal Bitumen Supplies (fictional)", "Kerala", "Kozhikode", "West Hill", "673005", "AAKFC6612P", "Raw Material", "Small", "Verified", "Company"),
+	("Chennai Interiors Supply Co. (fictional)", "Tamil Nadu", "Chennai", "Guindy Industrial Estate", "600032", "AAKFC7713Q", "Raw Material", "Micro", "Pending", "Company"),
+	("Siporex AAC Blocks (fictional)", "Kerala", "Palakkad", "Kanjikode Industrial Area", "678621", "AAKCS5541R", "Raw Material", "Small", "Verified", "Company"),
+	("Thrissur Labour Contractors", "Kerala", "Thrissur", "Round North", "680001", "ABCPT4521K", "Services", "Micro", "Verified", "Individual"),
+	("Karnataka Labour Services", "Karnataka", "Bengaluru", "Hosur Road", "560068", "AAKFK3381S", "Services", "Micro", "Verified", "Company"),
+	("Precision MEP Services Pvt. Ltd.", "Kerala", "Kochi", "Vyttila", "682019", "AAKCP9921T", "Services", "Small", "Verified", "Company"),
+	("Southern Earthmovers (fictional)", "Kerala", "Kochi", "Aroor Bypass", "682304", "AAKFS1182U", "Services", "Micro", "Verified", "Company"),
+]
+STORY = {"P-2401": {"CEM-OPC53": 1.066, "TMT-FE500D": 1.018}, "P-2403": {"BIT-VG30": 1.051}, "P-2406": {"GYP-BOARD": 1.118}}
+WORKERS = {  # project: [(name, trade, skill, home state, own?)]
+	"P-2401": [("Biju K", "Mason", "Skilled", "", 1), ("Saji Thomas", "Carpenter", "Skilled", "", 1), ("Rajan P", "Bar bender", "Semi-skilled", "", 1), ("Anil Kumar", "Helper", "Unskilled", "", 1),
+		("Subhash Mondal", "Helper", "Unskilled", "West Bengal", 1), ("Rakesh Oraon", "Helper", "Unskilled", "Jharkhand", 1), ("Shibu Varghese", "Electrician", "Skilled", "", 1),
+		("Manoj M", "Mason", "Skilled", "", 0), ("Gopal Das", "Helper", "Unskilled", "Odisha", 0), ("Ratan Sardar", "Bar bender", "Semi-skilled", "West Bengal", 0),
+		("Pradeep Sahu", "Helper", "Unskilled", "Odisha", 0), ("Ajith V", "Carpenter", "Skilled", "", 0)],
+	"P-2402": [("Sreejith R", "Mason", "Skilled", "", 1), ("Vineeth S", "Welder", "Skilled", "", 1), ("Bablu Sheikh", "Helper", "Unskilled", "Assam", 1), ("Ramesh N", "Fitter", "Semi-skilled", "", 1),
+		("Dilip Munda", "Helper", "Unskilled", "Jharkhand", 1), ("Joby Joseph", "Operator", "Highly skilled", "", 1)],
+	"P-2403": [("Sunil Kumar", "Operator", "Highly skilled", "", 1), ("Abdul Rasheed", "Helper", "Unskilled", "", 1), ("Shaji C", "Mason", "Skilled", "", 1), ("Bikash Pradhan", "Helper", "Unskilled", "Odisha", 1),
+		("Nandakumar", "Rigger", "Semi-skilled", "", 1)],
+	"P-2405": [("Manjunath G", "Fitter", "Skilled", "", 0), ("Ravi Gowda", "Helper", "Unskilled", "", 0), ("Shivappa", "Welder", "Skilled", "", 0), ("Imran Pasha", "Helper", "Unskilled", "", 0),
+		("Lokesh R", "Rigger", "Semi-skilled", "", 0)],
+	"P-2406": [("Murugan S", "Carpenter", "Skilled", "", 1), ("Karthik V", "Painter", "Semi-skilled", "", 1), ("Selvam P", "Tiler", "Skilled", "", 1), ("Arun Raj", "Helper", "Unskilled", "", 1)],
+}
+MIN_WAGE = {"Kerala": (780, 850, 950, 1050), "Karnataka": (650, 720, 800, 880), "Tamil Nadu": (620, 690, 760, 830), "Maharashtra": (600, 670, 740, 810)}
+SKILL_I = {"Unskilled": 0, "Semi-skilled": 1, "Skilled": 2, "Highly skilled": 3}
+EQUIP = [  # name, kind, project, own/hired, supplier, rate, basis, reg, norm L/h, plan h, start HMR, status, insurance (days), fitness (days)
+	("Tower crane TC-01 (Potain MC 85)", "Tower crane", "P-2401", "Own", None, 0, "Hour", "TC-HCI-01", 0, 220, 6210, "Working", 210, 300),
+	("Concrete pump CP-03", "Concrete pump", "P-2401", "Hired", "Southern Earthmovers (fictional)", 1850, "Hour", "KL-07-BX-4410", 9, 120, 3320, "Breakdown", 120, 160),
+	("Batching plant BP-02 (30 m³/h)", "Batching plant", "P-2402", "Own", None, 0, "Hour", "BP-HCI-02", 6, 200, 8840, "Working", 260, 400),
+	("Transit mixer TM-05", "Transit mixer", "P-2402", "Own", None, 0, "Hour", "KL-01-CK-2207", 4.5, 180, 12450, "Working", 95, 12),
+	("Excavator JCB 3DX", "Excavator", "P-2403", "Hired", "Southern Earthmovers (fictional)", 1450, "Hour", "KL-60-H-8830", 6.5, 200, 4410, "Working", 140, 200),
+	("Sensor paver SP-01", "Paver", "P-2403", "Hired", "Southern Earthmovers (fictional)", 3200, "Hour", "KL-60-J-1101", 12, 150, 2290, "Working", 180, 220),
+	("Vibratory roller VR-02", "Roller", "P-2403", "Own", None, 0, "Hour", "KL-07-CR-5512", 7, 180, 5630, "Working", 22, 250),
+	("Motor grader MG-01", "Grader", "P-2403", "Own", None, 0, "Hour", "KL-07-CM-9081", 10, 150, 7105, "Working", 300, 9),
+	("DG set 125 kVA", "DG set", "P-2405", "Own", None, 0, "Hour", "DG-HCI-07", 18, 160, 10220, "Working", 200, 400),
+	("Scissor lift SL-04", "Scissor lift", "P-2406", "Hired", "Chennai Interiors Supply Co. (fictional)", 2800, "Day", "SL-CIS-04", 0, 180, 1880, "Working", 160, 300),
+]
+
+
+def _uom(u):
+	if not frappe.db.exists("UOM", u):
+		frappe.get_doc({"doctype": "UOM", "uom_name": u, "must_be_whole_number": 1 if u in ("Bag", "Nos") else 0}).insert(ignore_permissions=True)
+	return u
+
+
+def _vendor_addr(name):
+	return frappe.db.get_value("Dynamic Link", {"link_doctype": "Supplier", "link_name": name, "parenttype": "Address"}, "parent")
+
+
+def _post(doc, date):
+	if doc.meta.has_field("set_posting_time"):
+		doc.set_posting_time = 1
+	doc.posting_date = date
+	return doc
+
+
+def _purchase(project, supplier, lines, date, warehouse, bill=True, pay=True, rejected=None):
+	"""A receipt at the store (accepted / rejected), the supplier's bill and its payment — what the site actually bought."""
+	from hipersign_trading.api import construction as CN
+	from hipersign_trading.api import construction_site as S
+
+	addr = frappe.db.get_value("Project", project, "hs_cn_address") if project else CN.branch_address(CO)
+	pr = frappe.get_doc({"doctype": "Purchase Receipt", "company": CO, "supplier": supplier, "project": project, "set_warehouse": warehouse, "supplier_delivery_note": f"DC/{date[2:].replace('-', '')}",
+		"lr_no": "KL-07-" + str(1000 + len(supplier) * 37 % 8999), "billing_address": addr, "shipping_address": addr,
+		"items": [{"item_code": c, "qty": q, "received_qty": q + ((rejected or {}).get(c) or 0), "rejected_qty": (rejected or {}).get(c) or 0, "rate": r, "warehouse": warehouse,
+			"rejected_warehouse": S.rejected_store(CO) if (rejected or {}).get(c) else None, "project": project} for c, q, r in lines]})
+	_post(pr, date)
+	S._apply_taxes(pr, S.input_tax_template(CO, addr, supplier))
+	pr.insert(ignore_permissions=True)
+	pr.submit()
+	if not bill:
+		return pr.name
+	from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+
+	pi = make_purchase_invoice(pr.name)
+	pi.bill_no, pi.bill_date = f"INV/{pr.name[-5:]}", date
+	_post(pi, add_days(date, 1))
+	pi.due_date = add_days(date, 45)
+	pi.insert(ignore_permissions=True)
+	pi.submit()
+	if pay and getdate(add_days(date, 30)) < getdate(today()):
+		pe = frappe.get_doc({"doctype": "Payment Entry", "payment_type": "Pay", "company": CO, "posting_date": add_days(date, 30), "party_type": "Supplier", "party": supplier,
+			"paid_from": CN.bank_account(CO), "paid_to": pi.credit_to, "paid_amount": pi.outstanding_amount, "received_amount": pi.outstanding_amount, "reference_no": f"NEFT/{pi.name}",
+			"reference_date": add_days(date, 30), "references": [{"reference_doctype": "Purchase Invoice", "reference_name": pi.name, "allocated_amount": pi.outstanding_amount}]})
+		pe.setup_party_account_field()
+		pe.set_missing_values()
+		pe.insert(ignore_permissions=True)
+		pe.submit()
+	return pr.name
+
+
+def _issue(project, lines, date, warehouse, to):
+	from hipersign_trading.api import projects as P
+
+	acc = P.accounts(CO)
+	se = frappe.get_doc({"doctype": "Stock Entry", "stock_entry_type": "Material Issue", "purpose": "Material Issue", "company": CO, "project": project, "remarks": to,
+		"items": [{"item_code": c, "qty": q, "s_warehouse": warehouse, "expense_account": acc.heads["Materials"], "project": project, "cost_center": _cc()} for c, q in lines if q > 0]})
+	_post(se, date)
+	se.insert(ignore_permissions=True)
+	se.submit()
+
+
+def cn_resources(c):
+	from hipersign_trading.api import construction as CN
+	from hipersign_trading.api import construction_site as S
+	from hipersign_trading.api import projects as P
+
+	if not frappe.db.exists("DocType", "Material Norm") or frappe.db.exists("Material Norm", {"item": "CEM-OPC53"}):
+		return
+	_uom("Bag")
+	t18 = frappe.db.get_value("Item Tax Template", {"gst_rate": 18, "company": CO}) if frappe.db.exists("DocType", "Item Tax Template") else None
+	t5 = frappe.db.get_value("Item Tax Template", {"gst_rate": 5, "company": CO}) if frappe.db.exists("DocType", "Item Tax Template") else None
+	for code, name, uom, hsn, gst, rate, grp in MATERIALS:
+		if frappe.db.exists("Item", code):
+			continue
+		it = frappe.get_doc({"doctype": "Item", "item_code": code, "item_name": name, "item_group": grp, "stock_uom": uom, "is_stock_item": 1, "is_purchase_item": 1, "is_sales_item": 0,
+			"valuation_rate": rate, "include_item_in_manufacturing": 0})
+		if it.meta.has_field("gst_hsn_code") and frappe.db.exists("GST HSN Code", hsn):
+			it.gst_hsn_code = hsn
+		tt = t5 if gst == 5 else t18
+		if tt:
+			it.append("taxes", {"item_tax_template": tt})
+		it.insert(ignore_permissions=True)
+	for item, match, unit, per, w in NORMS:
+		frappe.get_doc({"doctype": "Material Norm", "item": item, "boq_match": match, "boq_unit": unit, "qty_per_unit": per, "wastage_pct": w, "recovery_factor": 1.5}).insert(ignore_permissions=True)
+	for name, state, city, line1, pin, pan, grp, msme, kyc, stype in VENDORS:
+		if not frappe.db.exists("Supplier", name):
+			sg = "Services" if grp == "Services" and frappe.db.exists("Supplier Group", "Services") else frappe.db.get_value("Supplier Group", {"is_group": 0}, "name")
+			su = frappe.get_doc({"doctype": "Supplier", "supplier_name": name, "supplier_group": sg, "supplier_type": stype, "country": "India", "hs_kyc_status": kyc,
+				"hs_msme_category": msme, "hs_msme_no": f"UDYAM-{STATE_CODE[state][:2]}-0{len(name) % 9}-00{pin[-5:]}" if msme != "Not MSME" else None})
+			if su.meta.has_field("gstin"):
+				su.gstin, su.gst_category = gstin(STATE_CODE[state], pan), "Registered Regular"
+			if su.meta.has_field("pan"):
+				su.pan = pan
+			su.insert(ignore_permissions=True)
+		_address(name, "Supplier", name, state, city, line1, pin, gstin(STATE_CODE[state], pan))
+	live = [p for p in PROJECTS if p[11] < 22]
+	cs = S.central_store(CO)
+	# central store: opening stock (and plywood idle since summer — dead stock)
+	_purchase(None, "Malabar Cements Distributors (fictional)", [("CEM-OPC53", 6000, 390)], D(-75), cs)
+	_purchase(None, "Kerala Steel Traders Pvt. Ltd. (fictional)", [("TMT-FE500D", 120, 57800)], D(-70), cs)
+	_purchase(None, "Chennai Interiors Supply Co. (fictional)" if False else "Kerala Steel Traders Pvt. Ltd. (fictional)", [("PLY-SHUT", 400, 1650)], D(-130), cs)
+	# what each site bought and used: the work measured × the norm, with the story's over-use
+	vend = {"CEM-OPC53": "Malabar Cements Distributors (fictional)", "TMT-FE500D": "Kerala Steel Traders Pvt. Ltd. (fictional)", "MSAND": "Periyar Aggregates & Sand LLP",
+		"AGG-20": "Periyar Aggregates & Sand LLP", "AAC-BLOCK": "Siporex AAC Blocks (fictional)", "BIT-VG30": "Coastal Bitumen Supplies (fictional)", "GYP-BOARD": "Chennai Interiors Supply Co. (fictional)"}
+	price = {m[0]: m[5] for m in MATERIALS}
+	for p in live:
+		pid = p[0]
+		w = P.site_warehouse(pid)
+		st = S.material_status(pid)
+		start = R(p[10][6])
+		for x in st:
+			if x.theory <= 0:
+				continue
+			f = STORY.get(pid, {}).get(x.item, 1 + (x.wastage - .8) / 100)
+			used = round(x.theory * f, 1 if frappe.get_cached_value("Item", x.item, "stock_uom") not in ("Bag", "Nos") else 0)
+			stock = round(used * .06, 1 if frappe.get_cached_value("Item", x.item, "stock_uom") not in ("Bag", "Nos") else 0)
+			v = vend[x.item]
+			if pid == "P-2405" and x.item == "TMT-FE500D":
+				v = "Bengaluru TMT Mart (fictional)"
+			buy = used + stock
+			chunks = [.55, .45]
+			span = max(60, date_diff(today(), start) - 20)
+			for k, share in enumerate(chunks):
+				d = add_days(start, int(span * (.35 + .5 * k)))
+				_purchase(pid, v, [(x.item, round(buy * share, 1) if frappe.get_cached_value("Item", x.item, "stock_uom") not in ("Bag", "Nos") else round(buy * share),
+					price[x.item] * (1 + .01 * k))], d, w)
+				_issue(pid, [(x.item, round(used * share, 1) if frappe.get_cached_value("Item", x.item, "stock_uom") not in ("Bag", "Nos") else round(used * share))],
+					add_days(d, 8), w, "To the work fronts — BOQ " + ", ".join(x.lines[:3]))
+		CN.clear_cache()
+	# a receipt with rejected bags, not billed yet
+	_purchase("P-2405", "Malabar Cements Distributors (fictional)" if False else "Bengaluru TMT Mart (fictional)", [("CEM-OPC53", 480, 405)], D(-3), P.site_warehouse("P-2405"), bill=False,
+		rejected={"CEM-OPC53": 20})
+	# indents: above the BOQ need (waits for the PM), within it, approved with three quotations (lowest basic is not L1 on landed cost)
+	def indent(pid, item, qty, days, submit=False):
+		m = frappe.get_doc({"doctype": "Material Request", "material_request_type": "Purchase", "company": CO, "hs_project": pid, "transaction_date": D(days), "schedule_date": D(days + 10),
+			"set_warehouse": P.site_warehouse(pid), "items": [{"item_code": item, "qty": qty, "schedule_date": D(days + 10), "warehouse": P.site_warehouse(pid), "project": pid}]})
+		m.insert(ignore_permissions=True)
+		if submit:
+			m.submit()
+		return m
+	indent("P-2401", "CEM-OPC53", 15500, -2)
+	indent("P-2402", "TMT-FE500D", 45, -1)
+	m = indent("P-2402", "CEM-OPC53", 2400, -9, submit=True)
+	for sup, rate, freight, unl, tech in (("Malabar Cements Distributors (fictional)", 392, 9600, 4800, 1), ("Periyar Aggregates & Sand LLP", 386, 31200, 7200, 1),
+			("Coastal Bitumen Supplies (fictional)", 381, 12000, 4800, 0)):
+		from erpnext.stock.doctype.material_request.material_request import make_supplier_quotation
+
+		sq = make_supplier_quotation(m.name)
+		sq.supplier, sq.transaction_date, sq.valid_till = sup, D(-6), D(24)
+		for i in sq.items:
+			i.rate = rate
+		sq.hs_project, sq.hs_freight, sq.hs_unloading, sq.hs_tech_ok = "P-2402", freight, unl, tech
+		addr = frappe.db.get_value("Project", "P-2402", "hs_cn_address")
+		sq.billing_address = addr
+		S._apply_taxes(sq, S.input_tax_template(CO, addr, sup))
+		sq.insert(ignore_permissions=True)
+		sq.submit()
+	# an open PO waiting for delivery (TMT for P-2402), and its rate contract
+	addr = frappe.db.get_value("Project", "P-2402", "hs_cn_address")
+	po = frappe.get_doc({"doctype": "Purchase Order", "company": CO, "supplier": "Kerala Steel Traders Pvt. Ltd. (fictional)", "transaction_date": D(-5), "schedule_date": D(4),
+		"hs_project": "P-2402", "hs_cost_head": "Materials", "billing_address": addr, "shipping_address": addr, "set_warehouse": P.site_warehouse("P-2402"),
+		"items": [{"item_code": "TMT-FE500D", "qty": 38, "rate": 58200, "schedule_date": D(4), "warehouse": P.site_warehouse("P-2402"), "project": "P-2402"}]})
+	S._apply_taxes(po, S.input_tax_template(CO, addr, po.supplier))
+	po.insert(ignore_permissions=True)
+	po.submit()
+	for sup, item, qty, rate, frm, to, drawn in (("Malabar Cements Distributors (fictional)", "CEM-OPC53", 60000, 388, -150, 120, 41200),
+			("Kerala Steel Traders Pvt. Ltd. (fictional)", "TMT-FE500D", 400, 57900, -200, 20, 372), ("Siporex AAC Blocks (fictional)", "AAC-BLOCK", 3000, 4100, -90, 200, 1100)):
+		bo = frappe.get_doc({"doctype": "Blanket Order", "blanket_order_type": "Purchasing", "supplier": sup, "company": CO, "from_date": D(frm), "to_date": D(to),
+			"items": [{"item_code": item, "qty": qty, "rate": rate}]})
+		bo.insert(ignore_permissions=True)
+		bo.submit()
+		frappe.db.set_value("Blanket Order Item", {"parent": bo.name}, "ordered_qty", drawn)
+	# transfers from the central store: delivered, in transit for two days, requested
+	tr = S.transit_store(CO)
+	for pid, item, qty, days, status, veh, drv in (("P-2401", "CEM-OPC53", 1200, -20, "Delivered", "KL-07-CB-3321", "Sathyan K"), ("P-2401", "TMT-FE500D", 18, -12, "Delivered", "KL-07-CD-8810", "Rafeeq M"),
+			("P-2402", "CEM-OPC53", 1500, -2, "In transit", "KL-07-CB-3321", "Sathyan K"), ("P-2406", "PLY-SHUT", 0, -1, "Requested", "", "")):
+		if status == "Requested":
+			item, qty = "TMT-FE500D", 6
+		se = frappe.get_doc({"doctype": "Stock Entry", "stock_entry_type": "Material Transfer", "purpose": "Material Transfer", "company": CO, "project": pid,
+			"hs_destination": P.site_warehouse(pid), "hs_vehicle": veh, "hs_driver": drv, "hs_driver_mobile": "98470 12345" if drv else None,
+			"hs_eway_bill": f"3410 {abs(days) * 7919 % 9999:04d} {len(pid) * 1234:04d}" if drv else None, "hs_transfer_status": "Requested",
+			"items": [{"item_code": item, "qty": qty, "s_warehouse": cs, "t_warehouse": tr if status != "Requested" else P.site_warehouse(pid)}]})
+		_post(se, D(days))
+		if status != "Requested":
+			se.add_to_transit = 1
+			se.hs_transfer_status = "In transit"
+		se.insert(ignore_permissions=True)
+		if status == "Requested":
+			continue
+		se.submit()
+		if status == "Delivered":
+			from erpnext.stock.doctype.stock_entry.stock_entry import make_stock_in_entry
+
+			n = make_stock_in_entry(se.name)
+			for d in n.items:
+				d.t_warehouse = P.site_warehouse(pid)
+			_post(n, D(days + 1))
+			n.project, n.hs_transfer_status = pid, "Delivered"
+			n.insert(ignore_permissions=True)
+			n.submit()
+			frappe.db.set_value("Stock Entry", se.name, "hs_transfer_status", "Delivered")
+	# subcontractors: work orders, running bills (paid, approved, certified on hold), labour-law documents
+	from frappe.utils import get_first_day, add_months
+
+	for sup, months, missing in (("Thrissur Labour Contractors", 3, False), ("Karnataka Labour Services", 3, True)):
+		for k in range(1, months + 1):
+			mth = get_first_day(add_months(today(), -k))
+			ok = not (missing and k == 1)
+			frappe.get_doc({"doctype": "Labour Compliance", "supplier": sup, "company": CO, "month": mth, "workers": 14 if sup.startswith("Thrissur") else 9,
+				"clra_licence": "CLRA/KL/2025/0412" if sup.startswith("Thrissur") else "CLRA/KA/2024/1180", "licence_valid_to": D(300) if sup.startswith("Thrissur") else D(30),
+				"wage_register": 1, "pf_ecr": 1 if ok else 0, "esi_challan": 1 if ok else 0}).insert(ignore_permissions=True)
+	WO = [("P-2401", "Labour — RCC frame & masonry", "Thrissur Labour Contractors", "Labour only (materials issued free)", [("2.2", 1450), ("3.1", 900)], 4, 1),
+		("P-2401", "Internal plumbing & sanitary", "Precision MEP Services Pvt. Ltd.", "Item rate (with materials)", [("6.1", None)], 3, 2),
+		("P-2405", "Labour — PEB erection support & flooring", "Karnataka Labour Services", "Labour only (materials issued free)", [("3.2", 160), ("4.1", 140)], 3, 1),
+		("P-2403", "Road marking & signage", "Precision MEP Services Pvt. Ltd.", "Item rate (with materials)", [("5.1", None)], 0, 0)]
+	for pid, scope, sup, kind, its, nbills, tdsp in WO:
+		b = CN.boq(pid)
+		lines = {r.item_no: r for r in b.items}
+		items = []
+		for no, rate in its:
+			r = lines[no]
+			items.append({"item_no": no, "description": r.description, "unit": r.unit, "qty": r.qty, "rate": rate if rate else round(flt(r.rate) * .82, 2)})
+		w = frappe.get_doc({"doctype": "Subcontractor Work Order", "project": pid, "supplier": sup, "scope": scope, "kind": kind, "wo_date": add_days(R(next(p for p in PROJECTS if p[0] == pid)[10][6]), 30),
+			"tds_pct": tdsp, "retention_pct": 5, "gst_rate": 18, "items": items, "status": "Draft"})
+		w.insert(ignore_permissions=True)
+		if not nbills:
+			continue
+		w.db_set("status", "Active")
+		for k in range(1, nbills + 1):
+			last = k == nbills
+			bi = []
+			for r in items:
+				done = flt(lines[r["item_no"]].measured_pct) / 100 * flt(r["qty"]) * (k / (nbills + .6))
+				prev = flt(lines[r["item_no"]].measured_pct) / 100 * flt(r["qty"]) * ((k - 1) / (nbills + .6))
+				bi.append({"item_no": r["item_no"], "this_qty": round(done - prev, 3)})
+			d = D(-120 + k * 28)
+			sb = frappe.get_doc({"doctype": "Subcontractor Bill", "work_order": w.name, "bill_no": k, "bill_date": d, "period_to": add_days(d, -3), "supplier_invoice_no": f"RB{k:02d}/{w.name[-3:]}",
+				"items": bi, "material_recovery": 393000 if (pid == "P-2401" and kind.startswith("Labour") and last) else 0})
+			sb.insert(ignore_permissions=True)
+			sb.db_set({"status": "Certified", "certified_by": next(p for p in PROJECTS if p[0] == pid)[9]})
+			if last and pid == "P-2405":
+				continue  # certified, on hold — last month's PF / ESI missing
+			if last and pid == "P-2401" and kind.startswith("Item"):
+				continue  # certified, waiting for the PM
+			sb.db_set("approved_by", next(p for p in PROJECTS if p[0] == pid)[7])
+			S.make_sub_invoice(sb.name, add_days(d, 2))
+			if not last:
+				S.pay_sub(sb.name, add_days(d, 16))
+	# own workers, minimum wages, advances and the weekly musters (two weeks paid, this week to approve)
+	for st, rates in MIN_WAGE.items():
+		for sk, i in SKILL_I.items():
+			frappe.get_doc({"doctype": "Minimum Wage", "state": st, "skill": sk, "daily_rate": rates[i], "effective_from": "2026-10-01"}).insert(ignore_permissions=True)
+	con = {"P-2401": "Thrissur Labour Contractors", "P-2405": "Karnataka Labour Services"}
+	k = 0
+	for pid, ws in WORKERS.items():
+		st = BRANCHES[next(p for p in PROJECTS if p[0] == pid)[5]][1]
+		for name, trade, skill, home, own in ws:
+			k += 1
+			rate = MIN_WAGE[st][SKILL_I[skill]] + (60 if skill in ("Skilled", "Highly skilled") else 30) + (k % 3) * 20
+			frappe.get_doc({"doctype": "Site Worker", "worker_name": name, "project": pid, "contractor": None if own else con.get(pid), "trade": trade, "skill": skill, "state": st,
+				"daily_rate": rate, "status": "Active", "joined_on": D(-200 + k * 3), "upi_id": f"{name.split()[0].lower()}{k}@okaxis" if own else None, "mobile": f"9{(846000000 + k * 7919) % 1000000000:09d}",
+				"aadhaar_last4": f"{(k * 3571) % 10000:04d}", "home_state": home, "pf_uan": f"10{k * 917331 % 10**10:010d}" if own else None,
+				"bocw_reg_no": None if k % 7 == 0 else f"BOCW/{st[:2].upper()}/{24000 + k}", "id_expiry": D(20) if k % 11 == 0 else D(400),
+				"induction_done": 0 if k % 9 == 0 else 1, "ppe_issued": 0 if k % 8 == 0 else 1, "police_verified": 0 if (home and k % 2) else 1, "medical_fit": 1}).insert(ignore_permissions=True)
+	for wname, amt, days, status in (("Subhash Mondal", 9000, -24, "Paid"), ("Bablu Sheikh", 3000, -18, "Paid"), ("Rakesh Oraon", 6000, -1, "Requested"),
+			("Abdul Rasheed", 2500, -2, "Requested"), ("Arun Raj", 3500, -3, "Approved")):
+		wk = frappe.db.get_value("Site Worker", {"worker_name": wname})
+		a = frappe.get_doc({"doctype": "Worker Advance", "worker": wk, "amount": amt, "requested_on": D(days), "reason": "Family needs — sending money home" if days < -10 else "Medical expense"})
+		a.insert(ignore_permissions=True)
+		if status in ("Approved", "Paid"):
+			a.db_set("status", "Approved")
+		if status == "Paid":
+			S.pay_advance(a.name, D(days + 1))
+	for pid in ("P-2401", "P-2402", "P-2403", "P-2406"):
+		ws = frappe.get_all("Site Worker", filters={"project": pid, "contractor": ["is", "not set"]}, fields=["name", "daily_rate"])
+		for wk in (2, 1, 0):
+			start = S.week_start(D(-7 * wk - 7))
+			m = frappe.get_doc({"doctype": "Weekly Muster", "project": pid, "week_start": start,
+				"rows": [{"worker": w.name, "rate": w.daily_rate, "days": 6 - ((i + wk) % 4 == 0), "ot_hours": (i * 3 + wk) % 5} for i, w in enumerate(ws)]})
+			m.insert(ignore_permissions=True)
+			if wk:
+				m.db_set({"status": "Approved", "approved_by": next(p for p in PROJECTS if p[0] == pid)[7]})
+				S.pay_muster(m.name, add_days(start, 7))
+	# plant & equipment: register, ten days of log sheets, maintenance
+	for name, kind, pid, own, sup, rate, basis, reg, norm, plan, hmr, status, ins, fit in EQUIP:
+		e = frappe.get_doc({"doctype": "Construction Equipment", "equipment_name": name, "kind": kind, "company": CO, "project": pid, "ownership": own, "supplier": sup, "hire_rate": rate,
+			"hire_basis": basis, "reg_no": reg, "diesel_norm_lph": norm, "planned_hours_month": plan, "status": status, "service_interval": 250,
+			"next_service_hmr": hmr + 95 if kind != "Grader" else hmr + 60, "insurance_expiry": D(ins), "fitness_expiry": D(fit)})
+		e.insert(ignore_permissions=True)
+		cur = hmr
+		for d in range(-10, 0):
+			if getdate(D(d)).weekday() == 6 or (status == "Breakdown" and d > -4):
+				continue
+			hrs = round(plan / 26 * (.75 + ((d * 7) % 5) / 10), 1)
+			idle = round(hrs * .08, 1)
+			diesel = round(hrs * norm * (1.18 if kind == "Excavator" else 1.0), 0) if norm else 0
+			frappe.get_doc({"doctype": "Equipment Log", "equipment": e.name, "project": pid, "log_date": D(d), "operator": "Sunil Kumar" if pid == "P-2403" else "Joby Joseph",
+				"start_hmr": cur, "end_hmr": round(cur + hrs + idle, 1), "idle_hours": idle, "diesel_litres": diesel,
+				"work_done": {"Tower crane": "Lifting steel & shuttering — Block B", "Batching plant": "Concrete for podium slab", "Excavator": "Drain excavation Ch. 3+100",
+					"Paver": "DBM laying Ch. 2+650", "Roller": "Compaction behind the paver", "Grader": "GSB grading Ch. 4+000"}.get(kind, "Site work")}).insert(ignore_permissions=True)
+			cur = round(cur + hrs + idle, 1)
+	for name, d, job, down, cost, by, desc in (("Concrete pump CP-03", -3, "Hydraulics", 26, 48000, "Southern Earthmovers", "Boom cylinder seal failed — pump off site for repair"),
+			("Tower crane TC-01 (Potain MC 85)", -16, "Scheduled service", 6, 18500, "Potain service engineer", "500-hour service, wire rope inspection"),
+			("Excavator JCB 3DX", -9, "Tyres & tracks", 4, 22000, "Southern Earthmovers", "Rear tyre replaced"),
+			("Transit mixer TM-05", -22, "Scheduled service", 5, 14200, "Own workshop", "Drum rollers greased, oil change"),
+			("Vibratory roller VR-02", -30, "Breakdown", 18, 36500, "Own workshop", "Vibration motor rewound"),
+			("Batching plant BP-02 (30 m³/h)", -12, "Electrical", 3, 9800, "Own electrician", "Load cell recalibrated")):
+		e = frappe.db.get_value("Construction Equipment", {"equipment_name": name})
+		frappe.get_doc({"doctype": "Equipment Maintenance", "equipment": e, "project": frappe.db.get_value("Construction Equipment", e, "project"), "job_date": D(d), "job_type": job,
+			"downtime_hours": down, "cost": cost, "done_by": by, "description": desc}).insert(ignore_permissions=True)
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -788,4 +1167,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_costs, cn_business, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_finish]

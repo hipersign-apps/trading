@@ -338,7 +338,32 @@ CN_PERMS = {
 }
 
 
+# v1.9.0 A3: the storekeeper receives, issues and transfers; HR & admin keeps workers; the plant manager runs equipment;
+# project staff work the indents and receipts of their sites
+CN_SITE_PERMS = {
+	"Material Request": {"Storekeeper": "rwc", "Site Engineer": "rwc", "Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Supplier Quotation": {"Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "rwc", "Demo Viewer": "r"},
+	"Request for Quotation": {"Project Manager": "rwcs", "Quantity Surveyor": "rwc", "Demo Viewer": "r"},
+	"Purchase Order": {"Project Manager": "rwc", "Managing Director": "rwcs", "Demo Viewer": "r"},
+	"Purchase Receipt": {"Storekeeper": "rwcs", "Demo Viewer": "r"},
+	"Stock Entry": {"Storekeeper": "rwcs", "Demo Viewer": "r"},
+	"Stock Reconciliation": {"Storekeeper": "rwc", "Project Manager": "rwcs"},
+	"Blanket Order": {"Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Supplier": {"Storekeeper": "r", "Plant Manager": "r", "Demo Viewer": "r"},
+	"Item": {"Storekeeper": "r", "Plant Manager": "r", "HR & Admin": "r"},
+	"Warehouse": {"Storekeeper": "r", "Quantity Surveyor": "r"},
+	"Bin": {"Storekeeper": "r", "Project Manager": "r", "Site Engineer": "r", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Project": {"Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r"}, "Company": {"Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r"},
+	"Purchase Invoice": {"Demo Viewer": "r"}, "Journal Entry": {"Project Manager": "r", "HR & Admin": "r"},
+	"UOM": {"Storekeeper": "r", "Site Engineer": "r"},
+	"Address": {"Project Manager": "r", "Quantity Surveyor": "r", "Site Engineer": "r", "Storekeeper": "r"},
+	"Contact": {"Project Manager": "r", "Storekeeper": "r"},
+	"Purchase Taxes and Charges Template": {"Project Manager": "r", "Quantity Surveyor": "r", "Storekeeper": "r"},
+}
+
+
 def construction_roles_can_work():
+	_grant(CN_SITE_PERMS)
 	_grant(CN_PERMS)
 
 

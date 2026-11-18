@@ -632,3 +632,11 @@ KEYS = KEYS + _biz.KEYS
 for _k in _biz.KEYS:
 	globals()[_k + "_module"] = getattr(_biz, _k + "_module")
 	globals()[_k + "_rows"] = _whole(getattr(_biz, _k + "_rows"))
+
+# v1.9.0 A3: the site-resource pages (Procurement & Stores, Vendors, Central Store, Subcontractors, Labour & Workers, Equipment)
+from hipersign_trading.api import module_cn_site as _site  # noqa: E402
+
+KEYS = KEYS + _site.KEYS
+for _k in _site.KEYS:
+	globals()[_k + "_module"] = getattr(_site, _k + "_module")
+	globals()[_k + "_rows"] = _whole(getattr(_site, _k + "_rows"))
