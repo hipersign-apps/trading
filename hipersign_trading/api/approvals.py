@@ -145,9 +145,25 @@ def _permits(company=None):
 		for w in frappe.get_all("Work Permit", filters=f, fields=["name", "kind", "location", "project", "work", "owner", "creation"])]
 
 
+def _journals(company=None):
+	"""v1.9.0 A5: manual journals of a construction company waiting for the Accounts Manager (the MD above the limit)."""
+	from hipersign_trading.api import construction_fin as FN
+
+	cos = FN.companies()
+	if not cos or not frappe.db.exists("DocType", "Staff Payroll"):
+		return []
+	lim = FN.limits().jv_md
+	f = {"docstatus": 0, "voucher_type": "Journal Entry", "company": ["in", [company] if company in cos else cos]}
+	return [{"kind": "cn_jv", "type": _("Manual journal"), "doctype": "Journal Entry", "name": j.name, "description": (j.user_remark or j.title or j.name)[:120],
+		"reason": _("{0} — the MD approves above {1}").format(frappe.format(j.total_debit, {"fieldtype": "Currency", "options": "INR"}), frappe.format(lim, {"fieldtype": "Currency", "options": "INR"}))
+		if flt(j.total_debit) > lim else _("Accounts Manager approves"), "value": flt(j.total_debit), "waiting_for": ["Managing Director"] if flt(j.total_debit) > lim else ["Accounts Manager", "Managing Director"],
+		"actions": ["Approve"], "by": j.owner, "since": str(j.creation)[:10]}
+		for j in frappe.get_all("Journal Entry", filters=f, fields=["name", "user_remark", "title", "total_debit", "owner", "creation"])]
+
+
 def pending(company=None, mine=False):
 	items = []
-	for src in (_workflow_items, _tax_returns, _hr, _construction, _permits):
+	for src in (_workflow_items, _tax_returns, _hr, _construction, _permits, _journals):
 		try:
 			items.extend(src(company))
 		except Exception:
@@ -205,6 +221,14 @@ def act(kind, doctype, name, action, note=None):
 
 		cn_act("ptw_issue" if approve else "ptw_reject", name, frappe.as_json({"note": note}))
 		return {"state": frappe.db.get_value("Work Permit", name, "status")}
+	if kind == "cn_jv":  # v1.9.0 A5
+		from hipersign_trading.api.construction import act as cn_act
+
+		if not approve:
+			doc.add_comment("Comment", _("Sent back: {0}").format(note or ""))
+			return {"state": "Draft"}
+		cn_act("jv_approve", name, "{}")
+		return {"state": "Posted"}
 	if kind == "expense":
 		doc.approval_status = "Approved" if approve else "Rejected"
 		doc.save()

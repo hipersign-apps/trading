@@ -273,3 +273,36 @@ $(document).on("app_ready", () => {
 		"Construction Drawing": ["hipersign-cn-drawings", "dwg"], RFI: ["hipersign-cn-drawings", "rfi"], Transmittal: ["hipersign-cn-drawings", "trn"], Snag: ["hipersign-cn-handover", "snag"],
 		"Handover Document": ["hipersign-cn-handover", "docs"], "DLP Defect": ["hipersign-cn-handover", "def"], "Construction Warranty": ["hipersign-cn-handover", "wty"] });
 });
+
+// v1.9.0 A5 (prototype C8): finance & tax — statutory payments from the GST & TDS page, payroll buttons on the form
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (!L || !hipersign.feature("cn_fin")) return;
+	Object.assign(L, { "Staff Payroll": ["hipersign-cn-payroll", "run"], "Statutory Deposit": ["hipersign-cn-payroll", "dep"] });
+});
+Object.assign(hipersign.cn.FORM_ACTS, { "Staff Payroll": { Draft: [["Approve", "pay_approve", 1]], Approved: [["Pay", "pay_pay", 1]] } });
+Object.assign(hipersign.projects, {
+	_cn_dep(title, args, fields, done) {
+		const d = new frappe.ui.Dialog({ title, fields: [...fields,
+			{ fieldname: "challan_no", fieldtype: "Data", label: __("Challan / CIN"), reqd: 1 },
+			{ fieldname: "date", fieldtype: "Date", label: __("Paid on"), default: frappe.datetime.get_today(), reqd: 1 }],
+			primary_action_label: __("Pay"),
+			primary_action(v) { d.hide(); hipersign.cn.act("dep_pay", "new", Object.assign({}, args, v), done); } });
+		d.show();
+	},
+	cn_gst_pay(code, done) {
+		const [gstin, month] = code.split("|");
+		hipersign.projects._cn_dep(__("Pay GST — {0}", [gstin]), { kind: "GST", gstin, month }, [
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("Output tax is set off against the input tax credit first; the balance is paid in cash from the bank.")}</p>` }], done);
+	},
+	cn_dep_pay(code, done) {
+		const [kind, month, amount] = code.split("|");
+		hipersign.projects._cn_dep(__("Deposit {0}", [__(kind)]), { kind, month }, [
+			{ fieldname: "amount", fieldtype: "Currency", label: __("Amount"), options: "INR", default: flt(amount), reqd: 1 }], done);
+	},
+	cn_cess_pay(code, done) {
+		const [project, amount] = code.split("|");
+		hipersign.projects._cn_dep(__("Pay BOCW cess to the welfare board"), { kind: "BOCW labour cess", project, month: frappe.datetime.get_today() }, [
+			{ fieldname: "amount", fieldtype: "Currency", label: __("Amount"), options: "INR", default: flt(amount), reqd: 1 }], done);
+	},
+});

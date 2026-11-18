@@ -73,6 +73,9 @@ FEATURES = {
 		["construction"], ["ITP Item", "Inspection Request", "Cube Test", "NCR", "Safety Incident", "Work Permit", "Toolbox Talk", "Safety Audit", "Construction Drawing", "RFI",
 			"Transmittal", "Snag", "Handover Document", "DLP Defect", "Construction Warranty"], [],
 		["hipersign-cn-quality", "hipersign-cn-safety", "hipersign-cn-drawings", "hipersign-cn-handover"], [], [], []),
+	# v1.9.0 A5 (prototype C8): finance, tax and payroll for Indian contractors on ERPNext + India Compliance
+	"cn_fin": ("Construction — finance, tax & payroll", "Industries", "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals",
+		["construction"], ["Staff Payroll", "Statutory Deposit"], [], ["hipersign-cn-accounts", "hipersign-cn-tax", "hipersign-cn-cost", "hipersign-cn-payroll"], [], [], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]
 STANDARD_ON = ["crm", "tracker", "exports", "rfq", "imports", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc"]
@@ -90,9 +93,9 @@ PACKS = {
 		"desc": "Indian contractors starting out — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR"},
 	"Structure": {"on": ["construction", "cn_site", "cn_qhse", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
 		"form_mode": "Standard", "desc": "Growing contractors — Foundation plus HR, plant and assets, company compliance"},
-	"Capstone": {"on": ["construction", "cn_biz", "cn_site", "cn_qhse", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
+	"Capstone": {"on": ["construction", "cn_biz", "cn_site", "cn_qhse", "cn_fin", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
 		"form_mode": "Detailed", "desc": "Builders and EPC groups — Structure plus several companies and branches"},
-	"Enterprise": {"on": [k for k in FEATURES if k not in ("construction", "cn_biz", "cn_site", "cn_qhse")],  # v1.9.0: Construction (India) has its own editions
+	"Enterprise": {"on": [k for k in FEATURES if not k.startswith("cn_") and k != "construction"],  # v1.9.0: Construction (India) has its own editions
 		 "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
 }
 

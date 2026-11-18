@@ -244,6 +244,10 @@ def validate_doc(doc):
 
 	if doc.doctype in Q.VALIDATE:
 		return Q.VALIDATE[doc.doctype](doc)
+	from hipersign_trading.api import construction_fin as FN  # v1.9.0 A5
+
+	if doc.doctype in FN.VALIDATE:
+		return FN.VALIDATE[doc.doctype](doc)
 	fn = {"Tender": _v_tender, "Measurement Book": _v_mb, "RA Bill": ra_compute, "Extra Item": _v_ei, "Hindrance": _v_hin,
 		"Daily Progress Report": _v_dpr, "Construction Contract": B.contract_validate, "Contract Claim": _v_claim}.get(doc.doctype)
 	if fn:
@@ -484,6 +488,9 @@ def flags(name):
 	from hipersign_trading.api import construction_qhse as Q
 
 	out += Q.flags(name)
+	from hipersign_trading.api import construction_fin as FN
+
+	out += FN.flags(name)
 	return out
 
 
@@ -586,7 +593,9 @@ def act(action, name, args=None):
 
 	from hipersign_trading.api import construction_qhse as Q  # v1.9.0 A4: quality, safety, drawings, handover
 
-	fn = ACTIONS.get(action) or B.ACTIONS.get(action) or S.ACTIONS.get(action) or Q.ACTIONS.get(action)
+	from hipersign_trading.api import construction_fin as FN  # v1.9.0 A5: finance & tax
+
+	fn = ACTIONS.get(action) or B.ACTIONS.get(action) or S.ACTIONS.get(action) or Q.ACTIONS.get(action) or FN.ACTIONS.get(action)
 	if not fn:
 		frappe.throw(_("Unknown action"))
 	r = fn(name, args) or {}

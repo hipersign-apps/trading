@@ -187,6 +187,7 @@ doc_events = {
 	"Material Request": {"validate": ["hipersign_trading.api.projects.mr_project", "hipersign_trading.api.construction_site.mr_validate"],  # v1.9.0 A3
 		"before_submit": "hipersign_trading.api.construction_site.mr_before_submit"},
 	"Supplier Quotation": {"validate": "hipersign_trading.api.construction_site.sq_validate"},
+	"Journal Entry": {"before_submit": "hipersign_trading.api.construction_fin.je_before_submit"},  # v1.9.0 A5: the approval matrix
 	"User": {"before_insert": "hipersign_trading.overrides.user.before_insert",
 		"validate": "hipersign_trading.licence.check_user"},  # v1.8.3: the licence's user limit
 	"Company": {"before_insert": "hipersign_trading.licence.check_company"},  # v1.8.3: the licence's company limit

@@ -1342,6 +1342,105 @@ def cn_quality(c):
 		frappe.get_doc({"doctype": "Construction Warranty", "project": pid, "item": item, "supplier": sup, "months": months, "valid_from": frm, "handed_over": ho}).insert(ignore_permissions=True)
 
 
+STAFF = [  # name, gender, designation, project (None = head office), state, basic, hra, special, joined
+	("Shihab Musthafa", "Male", "Managing Director", None, "Kerala", 180000, 72000, 48000, "2009-04-01"),
+	("Rahul Nair", "Male", "Project Manager", "P-2401", "Kerala", 72000, 28800, 19200, "2014-06-16"),
+	("Meera Pillai", "Female", "Project Manager", "P-2402", "Kerala", 70000, 28000, 18000, "2016-01-04"),
+	("Karthik Rao", "Male", "Project Manager", "P-2405", "Karnataka", 66000, 26400, 15600, "2019-08-01"),
+	("Senthil Kumar", "Male", "Project Manager", "P-2406", "Tamil Nadu", 62000, 24800, 13200, "2020-02-10"),
+	("Vishnu Prasad", "Male", "Site Engineer", "P-2401", "Kerala", 32000, 12800, 6200, "2021-07-01"),
+	("Aswin Raj", "Male", "Site Engineer", "P-2402", "Kerala", 30000, 12000, 5000, "2022-06-13"),
+	("Nikhil Varghese", "Male", "Site Engineer", "P-2403", "Kerala", 34000, 13600, 6400, "2020-11-02"),
+	("Manjunath S", "Male", "Site Engineer", "P-2405", "Karnataka", 31000, 12400, 5600, "2022-01-17"),
+	("Divya R", "Female", "Site Engineer", "P-2406", "Tamil Nadu", 29000, 11600, 4400, "2023-03-06"),
+	("Deepa Krishnan", "Female", "Quantity Surveyor", None, "Kerala", 48000, 19200, 10800, "2017-09-11"),
+	("Joseph Mathew", "Male", "Quantity Surveyor", "P-2403", "Kerala", 46000, 18400, 9600, "2018-04-02"),
+	("Sajith Kumar", "Male", "Safety Officer", "P-2401", "Kerala", 28000, 11200, 3800, "2021-10-04"),
+	("Anju Thomas", "Female", "Accounts Manager", None, "Kerala", 52000, 20800, 11200, "2015-05-18"),
+	("Ramesh Babu", "Male", "Storekeeper", "P-2402", "Kerala", 11500, 4600, 1400, "2023-08-21"),
+	("Lakshmi Menon", "Female", "HR & Admin", None, "Kerala", 9800, 3900, 1300, "2024-01-15"),
+]
+
+
+def cn_finance(c):
+	"""Staff on the payroll (two months paid, this month in draft), the statutory payments of the last two months — one
+	ESI payment left overdue and last month's GST to pay — and BOCW cess part-paid on the private sites."""
+	from hipersign_trading.api import construction_fin as FN
+
+	if not frappe.db.exists("DocType", "Staff Payroll") or frappe.db.exists("Staff Payroll", {"company": CO}):
+		return
+	from frappe.utils import add_months, get_first_day, get_last_day
+
+	for name, gender, desig, pid, state, basic, hra, special, joined in STAFF:
+		first, last = (name.split(" ", 1) + [""])[:2]
+		if frappe.db.exists("Employee", {"employee_name": name, "company": CO}):
+			continue
+		if desig and not frappe.db.exists("Designation", desig):
+			frappe.get_doc({"doctype": "Designation", "designation_name": desig}).insert(ignore_permissions=True)
+		e = frappe.get_doc({"doctype": "Employee", "first_name": first, "last_name": last, "gender": gender if frappe.db.exists("Gender", gender) else None,
+			"date_of_birth": f"{1968 + (len(name) * 7) % 30}-0{1 + len(name) % 9}-1{len(first) % 9}", "date_of_joining": joined, "company": CO, "status": "Active", "designation": desig,
+			"hs_cn_project": pid, "hs_cn_state": state, "hs_cn_basic": basic, "hs_cn_hra": hra, "hs_cn_special": special, "hs_cn_uan": f"10{abs(hash(name)) % 10 ** 10:010d}",
+			"ctc": (basic + hra + special) * 12 * 1.1})
+		if e.meta.has_field("pan_number"):
+			e.pan_number = f"{''.join(ch for ch in name.upper() if ch.isalpha())[:3]}P{name[0].upper()}{1000 + len(name) * 37}{chr(65 + len(name) % 26)}"
+		e.flags.ignore_mandatory = True
+		e.insert(ignore_permissions=True)
+	emps = frappe.get_all("Employee", filters={"company": CO, "status": "Active"}, pluck="name")
+	t = getdate(today())
+	for k in (2, 1, 0):
+		m = get_first_day(add_months(t, -k))
+		s = frappe.get_doc({"doctype": "Staff Payroll", "company": CO, "month": m, "rows": [{"employee": e} for e in emps]})
+		s.insert(ignore_permissions=True)
+		if k:
+			s.db_set({"status": "Approved", "approved_by": "Shihab Musthafa"})
+			FN.pay_payroll(s.name, get_last_day(m))
+	# statutory payments: two months ago all paid on time; last month TDS and PF paid, ESI left (overdue), GST and PT to pay
+	for k in (2, 1):
+		m = get_first_day(add_months(t, -k))
+		kinds = ["GST", "TDS 194C (contractors)", "TDS 192 (salaries)", "PF", "ESI", "Professional tax"] if k == 2 else ["TDS 194C (contractors)", "TDS 192 (salaries)", "PF"]
+		for kind in kinds:
+			if kind == "GST":
+				for g, x in FN.gst_month(CO, m).items():
+					if x.out or x.inp:
+						d = frappe.get_doc({"doctype": "Statutory Deposit", "company": CO, "kind": "GST", "month": m, "gstin": g, "amount": max(.01, x.cash), "challan_no": f"CPIN{g[:2]}{m.month:02d}{abs(hash(g)) % 10 ** 8}"})
+						d.insert(ignore_permissions=True)
+						FN.pay_deposit(d.name, add_days(FN.due_date("GST", m), -2))
+				continue
+			amt = FN.liability_for(CO, m, kind)
+			if not amt:
+				continue
+			d = frappe.get_doc({"doctype": "Statutory Deposit", "company": CO, "kind": kind, "month": m, "amount": flt(amt, 0), "challan_no": f"{kind[:3].upper()}{m.month:02d}{int(amt) % 99991:05d}"})
+			d.insert(ignore_permissions=True)
+			FN.pay_deposit(d.name, min(t, getdate(add_days(FN.due_date(kind, m), -1))))
+	# GSTR-1 filed on the portal for both months (India Compliance keeps the filing in its GST Return Log)
+	if frappe.db.exists("DocType", "GST Return Log"):
+		for k in (2, 1):
+			m = get_first_day(add_months(t, -k))
+			for g in FN.gst_month(CO, m):
+				if g != "—" and not FN._filed(CO, g, m):
+					try:
+						frappe.get_doc({"doctype": "GST Return Log", "return_type": "GSTR1", "return_period": m.strftime("%m%Y"), "gstin": g, "company": CO, "filing_status": "Filed",
+							"filing_date": add_days(add_months(m, 1), 9), "acknowledgement_number": f"AA{g[:2]}{m.strftime('%m%y')}{abs(hash(g)) % 10 ** 9:09d}"}).insert(ignore_permissions=True)
+					except Exception:
+						frappe.log_error(title="Demo: GSTR-1 log")
+	# BOCW cess on private work: paid up to last quarter on two sites
+	for pid, share in (("P-2401", .7), ("P-2402", .6), ("P-2406", 0)):
+		cd = FN.cess_due(pid)
+		if share and cd.due > 1000:
+			d = frappe.get_doc({"doctype": "Statutory Deposit", "company": CO, "kind": "BOCW labour cess", "month": get_first_day(add_months(t, -2)), "project": pid,
+				"amount": round(cd.due * share, -2), "challan_no": f"KBOCWWB/{pid}/{t.year}"})
+			d.insert(ignore_permissions=True)
+			FN.pay_deposit(d.name, D(-40))
+	# a manual journal waiting for the Accounts Manager — provision for the audit fee
+	exp = frappe.db.get_value("Account", {"company": CO, "account_name": ["like", "%Audit%"], "is_group": 0}) or frappe.db.get_value("Account", {"company": CO, "root_type": "Expense", "is_group": 0, "account_type": ""})
+	prov = frappe.db.get_value("Account", {"company": CO, "account_name": ["like", "%Creditors%"], "is_group": 0, "account_type": ["!=", "Payable"]}) \
+		or frappe.db.get_value("Account", {"company": CO, "root_type": "Liability", "is_group": 0, "account_type": ""})
+	if exp and prov:
+		frappe.get_doc({"doctype": "Journal Entry", "voucher_type": "Journal Entry", "company": CO, "posting_date": D(-1), "user_remark": "Provision for statutory audit fee FY 2026-27 (H1)",
+			"accounts": [{"account": exp, "debit_in_account_currency": 175000, "cost_center": frappe.get_cached_value("Company", CO, "cost_center")},
+				{"account": prov, "credit_in_account_currency": 175000, "cost_center": frappe.get_cached_value("Company", CO, "cost_center")}]}).insert(ignore_permissions=True)
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -1356,4 +1455,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_finish]

@@ -1,0 +1,45 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-cn-cost",
+ "page_name": "hipersign-cn-cost",
+ "title": "Cost Control",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Managing Director"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Finance Manager"
+  },
+  {
+   "role": "Project Manager"
+  },
+  {
+   "role": "Projects Manager"
+  },
+  {
+   "role": "HR & Admin"
+  },
+  {
+   "role": "Quantity Surveyor"
+  },
+  {
+   "role": "Demo Viewer"
+  }
+ ],
+ "owner": "Administrator",
+ "creation": "2026-11-19 00:00:00",
+ "modified": "2026-11-19 00:00:00"
+}

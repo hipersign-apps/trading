@@ -1,5 +1,47 @@
 # Changelog
 
+## 1.9.0 — Construction (India), stage A5: finance & tax (19 Nov 2026)
+Follows prototype C8. New feature `cn_fin` "Construction — finance, tax & payroll" (Capstone edition), menu group
+"Finance (India)" with four pages; settings limit "Manual journal above which the MD approves" (default ₹10 lakh).
+- **Accounts & Cash:** project P&L from the ledger (revenue against the five cost heads, gross profit and margin);
+  receivables and payables ageing (not due, 1–30, 31–60, 61–90, over 90) with Micro and Small suppliers unpaid after 45 days
+  flagged (sec. 43B(h)); an eight-week cash forecast from the documents — invoiced, certified and with-the-client RA bills,
+  supplier and subcontractor bills by due date, weekly wages, staff salaries and the statutory payments; links to the
+  ERPNext and India Compliance statements; the approval matrix with its limits.
+- **GST & TDS:** GST by registration (GSTIN) and month — output tax, input tax credit (RCM aside), credit carried forward,
+  cash to pay — and "Pay…": a Statutory Deposit whose journal sets the credit off the way the law allows (IGST, then CGST /
+  SGST; never CGST against SGST) and pays the balance from the bank, with the company GSTIN on the journal. TDS both ways:
+  deducted by clients (not yet in Form 26AS, GST-TDS) and deducted by us (194C from subcontractor bills, 192 from salaries)
+  with "Deposit…". BOCW labour cess — deducted by government clients, 1% of the cost self-paid to the welfare board on
+  private work. Compliance calendar (GSTR-1 11th — filed when India Compliance's GST Return Log says so — GST 20th, TDS
+  7th, PF and ESI 15th, professional tax), e-invoice IRN status with the 30-day limit.
+- **Cost Control:** earned value per live project (BAC, planned and done %, PV, EV, AC, CPI, SPI, EAC, VAC) and the cost
+  heads (budget, earned, committed, actual, forecast, variance).
+- **Payroll & Statutory:** Staff Payroll (month, one row per employee — basic, HRA, special pro-rated to the days, PF 12% to
+  the ₹15,000 ceiling, ESI 0.75% to ₹21,000, professional tax by state, TDS 192 on the new regime: ₹75,000 standard
+  deduction, rebate to ₹12 lakh with marginal relief, 4% cess); Accounts Manager / MD approve, accounts pay — the journal
+  posts the cost (with employer PF 13% and ESI 3.25%) to the projects the staff are posted at and the rest to head-office
+  salaries. Employee gets "Posted at (project)", work state, UAN and the monthly pay. Gratuity provision (15/26 × basic ×
+  years, payable after five years, cap ₹20 lakh). Statutory Deposit register with challans.
+- **Manual journals:** a construction company's own Journal Entries need the Accounts Manager (the MD above the limit) to
+  post; others save a draft that waits in Approvals ("Approve" posts it). System entries are not held.
+- New red flags: CPI below 0.92, BOCW cess above ₹5 lakh unpaid.
+- Demo: 16 staff across the projects and head office, September and October payroll paid and November in draft,
+  September's GST (three GSTINs), TDS, PF, ESI and professional tax paid with challans and GSTR-1 filed, October's TDS and
+  PF paid, ESI overdue and GST due on the 20th, BOCW cess part-paid on two sites, an audit-fee provision journal waiting
+  for the Accounts Manager.
+- Removed the test scripts that had slipped into the A4 commit (t1–t16, r1 at the app root).
+- Tax rates and slabs are set for FY 2026-27 in api/construction_fin.py — check them with the company's tax adviser.
+
+## 1.9.0 — Construction (India), stage A4: quality, safety & handover (18 Nov 2026)
+Follows prototypes C4 and C7. New feature `cn_qhse` (Structure and Capstone), menu group "Quality & Handover" with four
+pages; new roles QA/QC Engineer, Safety Officer and Document Controller.
+- **Quality:** Inspection & Test Plan per project (inspections due from the quantity measured), inspection requests
+  approved / rejected by QA/QC, cube tests (7 and 28 days against the grade), NCRs closed only with root cause and action.
+- **Safety:** incidents (LTI-free days), permits to work issued by the Safety Officer (in Approvals), toolbox talks, audits.
+- **Drawings & RFIs:** drawing register with revisions and GFC, RFIs with reply due and impact, transmittals.
+- **Handover & DLP:** snags, handover documents (NOCs, completion), DLP defects, warranties and the retention release.
+
 ## 1.9.0 — Construction (India), stage A3: site resources (18 Nov 2026)
 Follows prototypes C3, C6 and C7. New feature `cn_site` "Construction — site resources" (Structure and Capstone editions),
 menu group "Site Resources (India)" with six pages; new roles Storekeeper, HR & Admin and Plant Manager.

@@ -1,0 +1,139 @@
+{
+ "doctype": "DocType",
+ "name": "Staff Payroll Row",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-19 00:00:00.000000",
+ "modified": "2026-11-19 00:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 0,
+ "field_order": [
+  "employee",
+  "employee_name",
+  "project",
+  "state",
+  "days",
+  "basic",
+  "hra",
+  "special",
+  "gross",
+  "pf",
+  "esi",
+  "pt",
+  "tds",
+  "net"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Posted at",
+   "options": "Project"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "days",
+   "fieldtype": "Float",
+   "label": "Days paid",
+   "default": "30"
+  },
+  {
+   "fieldname": "basic",
+   "fieldtype": "Currency",
+   "label": "Basic",
+   "options": "currency"
+  },
+  {
+   "fieldname": "hra",
+   "fieldtype": "Currency",
+   "label": "HRA",
+   "options": "currency"
+  },
+  {
+   "fieldname": "special",
+   "fieldtype": "Currency",
+   "label": "Special allowance",
+   "options": "currency"
+  },
+  {
+   "fieldname": "gross",
+   "fieldtype": "Currency",
+   "label": "Gross",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "pf",
+   "fieldtype": "Currency",
+   "label": "PF 12%",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "esi",
+   "fieldtype": "Currency",
+   "label": "ESI 0.75%",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "pt",
+   "fieldtype": "Currency",
+   "label": "Professional tax",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "tds",
+   "fieldtype": "Currency",
+   "label": "TDS 192",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "net",
+   "fieldtype": "Currency",
+   "label": "Net pay",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "options": "currency"
+  }
+ ],
+ "permissions": [],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "editable_grid": 1
+}

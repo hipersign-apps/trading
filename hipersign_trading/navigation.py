@@ -97,6 +97,13 @@ NAV = [
 		("Drawings & RFIs", "Page", "hipersign-cn-drawings", "drafting-compass", "cn_qhse", {}),
 		("Handover & DLP", "Page", "hipersign-cn-handover", "folder-check", "cn_qhse", {}),
 	]),
+	# v1.9.0 A5 (prototype C8): finance, tax and payroll for Indian contractors
+	("Finance (India)", "indian-rupee", [
+		("Accounts & Cash (India)", "Page", "hipersign-cn-accounts", "landmark", "cn_fin", {}),
+		("GST & TDS", "Page", "hipersign-cn-tax", "percent", "cn_fin", {}),
+		("Cost Control", "Page", "hipersign-cn-cost", "gauge", "cn_fin", {}),
+		("Payroll & Statutory", "Page", "hipersign-cn-payroll", "wallet", "cn_fin", {}),
+	]),
 	# v1.9.0 A3 (prototypes C3, C6, C7): the resources behind the sites
 	("Site Resources (India)", "package", [
 		("Procurement & Stores", "Page", "hipersign-cn-proc", "shopping-cart", "cn_site", {}),
@@ -177,6 +184,10 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0 A5: Finance (India)
+	"Accounts & Cash (India)": [("Journal Entries", "DocType", "Journal Entry", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Purchase Invoices", "DocType", "Purchase Invoice", None)],
+	"GST & TDS": [("Statutory Payments", "DocType", "Statutory Deposit", None), ("GSTR-3B", "Report", "GSTR-3B Details", None)],
+	"Payroll & Statutory": [("Staff Payroll", "DocType", "Staff Payroll", None), ("Employees", "DocType", "Employee", None), ("Statutory Payments", "DocType", "Statutory Deposit", None)],
 	# v1.9.0 A4: Quality & Handover (India)
 	"Quality (QA/QC)": [("Inspection Requests", "DocType", "Inspection Request", None), ("Cube Tests", "DocType", "Cube Test", None), ("NCRs", "DocType", "NCR", None),
 		("Inspection & Test Plan", "DocType", "ITP Item", None)],
@@ -271,6 +282,8 @@ SUB_TABS = {
 	("Drawings & RFIs", "Transmittals"): ("hipersign-cn-drawings", "trn"), ("Handover & DLP", "Snags"): ("hipersign-cn-handover", "snag"),
 	("Handover & DLP", "Handover Documents"): ("hipersign-cn-handover", "docs"), ("Handover & DLP", "DLP Defects"): ("hipersign-cn-handover", "def"),
 	("Handover & DLP", "Warranties"): ("hipersign-cn-handover", "wty"),
+	("GST & TDS", "Statutory Payments"): ("hipersign-cn-tax", "cal"), ("Payroll & Statutory", "Staff Payroll"): ("hipersign-cn-payroll", "run"),
+	("Payroll & Statutory", "Employees"): ("hipersign-cn-payroll", "emp"), ("Payroll & Statutory", "Statutory Payments"): ("hipersign-cn-payroll", "dep"),
 	("Procurement & Stores", "Indents"): ("hipersign-cn-proc", "ind"), ("Procurement & Stores", "Supplier Quotations"): ("hipersign-cn-proc", "cmp"),
 	("Procurement & Stores", "Purchase Orders"): ("hipersign-cn-proc", "po"), ("Procurement & Stores", "Receipts"): ("hipersign-cn-proc", "grn"),
 	("Vendors", "Suppliers"): ("hipersign-cn-vendors", "ven"), ("Vendors", "Rate Contracts"): ("hipersign-cn-vendors", "rc"),
