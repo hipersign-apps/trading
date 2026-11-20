@@ -674,3 +674,8 @@ _est.extend(globals())
 from hipersign_trading.api import module_cn_ctl as _ctl2  # noqa: E402
 
 _ctl2.extend(globals())
+
+# v1.9.1 B3: site diary, productivity, diesel and hire bills, returnables and scrap, subcontractor advances / free issue / margin
+from hipersign_trading.api import module_cn_ops as _ops  # noqa: E402
+
+_ops.extend(globals())

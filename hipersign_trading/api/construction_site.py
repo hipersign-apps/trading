@@ -220,6 +220,9 @@ def sub_wo_validate(doc):
 	doc.value = sum(flt(r.amount) for r in doc.items)
 	if doc.supplier and not cint(doc.tds_pct):
 		doc.tds_pct = 1 if frappe.db.get_value("Supplier", doc.supplier, "supplier_type") == "Individual" else 2
+	from hipersign_trading.api import construction_ops as OPS  # v1.9.1 B3: the advance and its recovery %
+
+	OPS.wo_validate(doc)
 
 
 def compliance_ok(supplier, month=None):
@@ -260,6 +263,9 @@ def sub_bill_validate(doc):
 		if r and flt(r.qty) and it.cum_qty > flt(r.qty) * 1.10 + 0.001:
 			frappe.throw(_("Item {0}: {1:g} up to date is more than the work order quantity {2:g} + 10%.").format(it.item_no, it.cum_qty, flt(r.qty)))
 	doc.gross = flt(sum(flt(i.amount) for i in doc.items), 2)
+	from hipersign_trading.api import construction_ops as OPS  # v1.9.1 B3: recover the work order's advance on the draft bill
+
+	OPS.bill_advance(doc, w)
 	doc.taxable = flt(doc.gross - flt(doc.material_recovery) - flt(doc.other_recovery), 2)
 	doc.gst_amount = flt(doc.taxable * flt(doc.gst_rate) / 100, 2)
 	doc.retention = flt(doc.gross * flt(doc.retention_pct) / 100, 2)

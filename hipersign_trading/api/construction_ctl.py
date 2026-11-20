@@ -321,10 +321,10 @@ FLAG_STEP = {"Tender": 3, "Bank Guarantee": 6, "Construction Contract": 6, "Mate
 	"Sales Invoice": 18, "Collection Follow-up": 18, "Extra Item": 19, "Hindrance": 19, "Contract Claim": 19, "NCR": 21, "Cube Test": 21, "Inspection Request": 21,
 	"Work Permit": 21, "Safety Incident": 21, "Toolbox Talk": 21, "Snag": 22, "Handover Document": 22, "DLP Defect": 24, "Construction Warranty": 24,
 	"Project Constraint": 13, "Construction Milestone": 13, "Project Risk": 20, "Task": 13, "Construction Equipment": 13, "Equipment Log": 13,
-	"Equipment Maintenance": 13, "RFI": 13, "Construction Drawing": 13, "Transmittal": 13, "Safety Audit": 21, "Staff Payroll": 14, "Statutory Deposit": 18}
+	"Equipment Maintenance": 13, "RFI": 13, "Construction Drawing": 13, "Transmittal": 13, "Safety Audit": 21, "Staff Payroll": 14, "Statutory Deposit": 18, "Site Diary": 19, "Scrap Lot": 11}
 # what a flag says when it opens the project itself (or a record shared by several steps)
 FLAG_WORDS = [("Advance payment guarantee", 7), ("obilisation advance", 7), ("labour cess", 18), ("behind the extended completion", 19), ("over theory", 11),
-	("indents", 10), ("snag", 22), ("Margin", 20), ("beyond the BOQ", 19), ("TDS", 18)]
+	("indents", 10), ("hire bill", 13), ("diesel", 13), ("snag", 22), ("Margin", 20), ("beyond the BOQ", 19), ("TDS", 18)]
 
 
 def flag_step(f, step):

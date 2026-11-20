@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.9.1 — Construction (India), stage B3: site, plant, store and subcontractor gaps (23 Nov 2026)
+- **Site diary** (new, DPR & Hindrances › Site diary): the site's day-book — weather, visitors, events, safety and any
+  instruction received with who gave it. An instruction waits "to confirm in writing" until it is confirmed (with the
+  letter / RFI reference), raised as an extra item (draft, linked back) or closed as no cost. One page per site per day.
+  Red flag: a verbal instruction not confirmed after 7 days.
+- **Productivity** (Labour & Workers › Productivity): DPR quantity ÷ man-days per activity against the standard output per
+  man-day of the trade (new Productivity Norm, matched on the DPR activity). The DPR gets Trade and Man-days.
+- **Equipment › Diesel:** litres issued ÷ logbook hours against the norm, excess litres and their value (₹92/L); more
+  than 10% over is flagged. **Equipment › Hire bills:** per hired machine and month — logbook hours (or days), the minimum
+  billable hours of the hire terms (new field on the equipment), the amount; "Book bill" (after the month) makes the
+  purchase invoice to the hirer — Plant & Equipment Hire on the project, input GST, TDS 194I 2%. Red flag: last month's
+  hire bill not booked. New KPI: hire bills to book.
+- **Central Store › Returnables at sites:** items marked Returnable (props, scaffolding, plywood) lying at each site store
+  — since when, value, hire at 4% a month, charged so far; "Return to store…" raises the transfer back (dispatch and
+  delivery as usual). New KPI. **Central Store › Scrap** (new Scrap Lot): identified → sealed bids → sold to the highest
+  bidder (a PCB-authorised one for hazardous waste; more than 10% under the estimate only the MD) — Sales Invoice with
+  Other Income - Scrap, output GST 18% and TCS 1% (section 206C(1)).
+- **Subcontractors › Advances:** the work order's advance (at most 20%) and its recovery % (default 10); "Pay advance…"
+  posts Dr Advances to Subcontractors, Cr Bank; every draft running bill recovers its % until nil.
+  **Issued material:** free-issue material (a material issue ticked with the work order) against the theoretical for the
+  work billed plus wastage (the material norms); the excess at 1.5× rate; "Recover on draft bill" puts it on the next
+  running bill. **Margin on scope:** our BOQ rate (its labour share for labour-only work) against the subcontract rate.
+- New custom fields: Item › Returnable; Stock Entry › Issued to subcontractor; Purchase Invoice › Hired equipment, Hire month.
+- Demo: productivity norms and man-days on the DPRs, site diaries with instructions, last month's logbook of the hired
+  machines (one hire bill booked), props and cuplock at two sites, four scrap lots (one sold), a façade work order with an
+  advance and its first bill, AAC blocks issued free to the masonry contractor.
+
 ## 1.9.1 — Construction (India), stage B2: tracker, project controls and billing (22 Nov 2026)
 - **Construction Tracker** (new page, Construction (India) menu): every contract on one line through the 26 Indian steps in
   6 phases — tender, LOA, agreement and PBG, mobilisation advance, mobilisation, budget, procurement, stores, subcontracts,

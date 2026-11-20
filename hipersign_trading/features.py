@@ -56,7 +56,7 @@ FEATURES = {
 	# v1.9.0 (prototype C11): Indian contractors — tenders and EMD, BOQ, measurement book, RA bills with GST, retention, mobilisation
 	# advance recovery, TDS 194C, GST-TDS and BOCW labour cess, DPR and hindrances (api/construction.py)
 	"construction": ("Construction (India)", "Industries", "Tenders and EMD, BOQ and extra items, measurement book, RA bills with GST, retention, TDS, GST-TDS and labour cess, DPR and hindrances", [],
-		["Tender", "Measurement Book", "RA Bill", "Extra Item", "Daily Progress Report", "Hindrance"], [],
+		["Tender", "Measurement Book", "RA Bill", "Extra Item", "Daily Progress Report", "Hindrance", "Site Diary"], [],
 		["hipersign-cn-projects", "hipersign-cn-tenders", "hipersign-cn-boq", "hipersign-cn-mb", "hipersign-cn-billing", "hipersign-cn-site", "hipersign-cn-tracker"],
 		[], ["Projects"], []),
 	# v1.9.0 A2 (prototype C5): construction CRM, quotations with MD approval and revisions, contracts, claims, LD, collections
@@ -66,7 +66,7 @@ FEATURES = {
 	# v1.9.0 A3 (prototypes C3, C6, C7): procurement & stores, vendors, central store, subcontractors, workers & wages, equipment
 	"cn_site": ("Construction — site resources", "Industries", "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment",
 		["construction"], ["Material Norm", "Subcontractor Work Order", "Subcontractor Bill", "Labour Compliance", "Minimum Wage", "Site Worker", "Weekly Muster",
-			"Worker Advance", "Construction Equipment", "Equipment Log", "Equipment Maintenance"], [],
+			"Worker Advance", "Construction Equipment", "Equipment Log", "Equipment Maintenance", "Productivity Norm", "Scrap Lot"], [],
 		["hipersign-cn-proc", "hipersign-cn-vendors", "hipersign-cn-store", "hipersign-cn-subcon", "hipersign-cn-labour", "hipersign-cn-equipment"], [], [], []),
 	# v1.9.0 A4 (prototypes C4, C7): QA/QC, HSE, drawings & RFIs, handover & DLP
 	"cn_qhse": ("Construction — quality, safety & handover", "Industries", "Inspection & test plans, inspections, cube tests and NCRs; incidents, permits, toolbox talks and audits; drawings, RFIs and transmittals; snags, handover documents, DLP defects, warranties and retention release",

@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-18 22:00:00.000000",
- "modified": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-23 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -27,6 +27,8 @@
   "sb_w",
   "boq_item",
   "activity",
+  "trade",
+  "mandays",
   "unit",
   "cb2",
   "planned_qty",
@@ -126,6 +128,18 @@
    "fieldtype": "Data",
    "label": "Activity",
    "in_list_view": 1
+  },
+  {
+   "fieldname": "trade",
+   "fieldtype": "Select",
+   "label": "Trade",
+   "options": "\nMason\nCarpenter\nBar bender\nHelper\nElectrician\nPlumber\nWelder\nPainter\nFitter\nOperator\nRigger\nTiler\nGypsum fixer\nPaving gang"
+  },
+  {
+   "fieldname": "mandays",
+   "fieldtype": "Float",
+   "label": "Man-days on this activity",
+   "description": "For productivity against the standard output per man-day"
   },
   {
    "fieldname": "unit",

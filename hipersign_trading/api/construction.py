@@ -260,6 +260,10 @@ def validate_doc(doc):
 
 	if doc.doctype in CTL.VALIDATE:
 		return CTL.VALIDATE[doc.doctype](doc)
+	from hipersign_trading.api import construction_ops as OPS  # v1.9.1 B3
+
+	if doc.doctype in OPS.VALIDATE:
+		return OPS.VALIDATE[doc.doctype](doc)
 	fn = {"Tender": _v_tender, "Measurement Book": _v_mb, "RA Bill": ra_compute, "Extra Item": _v_ei, "Hindrance": _v_hin,
 		"Daily Progress Report": _v_dpr, "Construction Contract": B.contract_validate, "Contract Claim": _v_claim}.get(doc.doctype)
 	if fn:
@@ -271,7 +275,9 @@ def EST_ACTIONS():
 
 	from hipersign_trading.api import construction_ctl as CTL  # v1.9.1 B2: tracker, risks, meetings, advance, final bill
 
-	return dict(EST.ACTIONS, **CTL.ACTIONS)
+	from hipersign_trading.api import construction_ops as OPS  # v1.9.1 B3: diary, hire bills, returnables, scrap, subcontractor advances
+
+	return dict(EST.ACTIONS, **CTL.ACTIONS, **OPS.ACTIONS)
 
 
 def _v_tender(doc):
@@ -524,6 +530,9 @@ def flags(name):
 	from hipersign_trading.api import construction_ctl as CTL  # v1.9.1 B2
 
 	out += CTL.flags(name)
+	from hipersign_trading.api import construction_ops as OPS  # v1.9.1 B3
+
+	out += OPS.flags(name)
 	return out
 
 

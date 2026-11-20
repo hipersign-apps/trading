@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-18 22:00:00.000000",
- "modified": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-23 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -25,6 +25,7 @@
   "supplier",
   "hire_rate",
   "hire_basis",
+  "min_hours_month",
   "status",
   "sb_u",
   "planned_hours_month",
@@ -115,6 +116,12 @@
    "label": "per",
    "options": "Hour\nDay\nMonth",
    "default": "Hour",
+   "depends_on": "eval:doc.ownership=='Hired'"
+  },
+  {
+   "fieldname": "min_hours_month",
+   "fieldtype": "Float",
+   "label": "Minimum billable hours a month",
    "depends_on": "eval:doc.ownership=='Hired'"
   },
   {

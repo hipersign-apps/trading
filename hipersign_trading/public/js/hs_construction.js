@@ -405,11 +405,13 @@ $(document).on("app_ready", () => {
 Object.assign(hipersign.cn.FORM_ACTS, { "Project Risk": { Open: [["Close…", "js:cn_risk_close", 1]], Closed: [["Reopen", "risk_reopen"]] },
 	"Project Meeting": { "*": [["Raise tasks from the action points", "mtg_tasks", 1]] } });
 // the buttons of record types added after the first binding (B1 Rate Analysis, B2 risks and minutes); "*" = any status
-["Rate Analysis", "Project Risk", "Project Meeting"].forEach((dt) => frappe.ui.form.on(dt, {
+Object.assign(hipersign.cn.FORM_ACTS, { "Site Diary": { "To confirm in writing": [["Confirmed in writing…", "js:cn_sd_confirm", 1], ["Raise extra item…", "js:cn_sd_ei"], ["No cost effect", "sd_nocost"]] },
+	"Scrap Lot": { Identified: [["Invite bids", "scrap_invite", 1]], "Bids invited": [["Sell to the highest bidder", "scrap_sell", 1]] } });
+["Rate Analysis", "Project Risk", "Project Meeting", "Site Diary", "Scrap Lot"].forEach((dt) => frappe.ui.form.on(dt, {
 	refresh(frm) {
 		if (frm.is_new()) return;
 		const A = hipersign.cn.FORM_ACTS[dt] || {};
-		(A[frm.doc.status] || A["*"] || []).forEach(([label, act, primary]) => {
+		(A[frm.doc.status || frm.doc.instruction_status] || A["*"] || []).forEach(([label, act, primary]) => {
 			const b = frm.add_custom_button(__(label), () => (act.startsWith("js:") ? hipersign.projects[act.slice(3)](frm.doc.name, () => frm.reload_doc())
 				: (frm.is_dirty() ? frm.save() : Promise.resolve()).then(() => hipersign.cn.act(act, frm.doc.name, {}, () => frm.reload_doc()))));
 			if (primary) b.removeClass("btn-default").addClass("btn-primary");
@@ -477,3 +479,36 @@ hipersign.cn.tracker = function (wrapper) {
 	wrapper.hs_reload = load;
 	load();
 };
+
+// v1.9.1 B3: site diary instructions, returnables, subcontractor advances
+Object.assign(hipersign.projects, {
+	cn_sd_confirm(name, done) {
+		hipersign.projects._cn_ask(__("Instruction confirmed in writing — {0}", [name]), [{ fieldname: "ref", fieldtype: "Data", label: __("Letter / e-mail / RFI reference"), reqd: 1 }],
+			__("Record"), (v) => hipersign.cn.act("sd_confirm", name, v, done));
+	},
+	cn_sd_ei(name, done) {
+		frappe.db.get_value("Site Diary", name, ["instructions", "project"]).then(({ message: d }) => hipersign.projects._cn_ask(__("Raise an extra item from {0}", [name]), [
+			{ fieldname: "title", fieldtype: "Data", label: __("Extra item"), reqd: 1, default: (d.instructions || "").split("\n")[0].slice(0, 140) },
+			{ fieldname: "kind", fieldtype: "Select", label: __("Kind"), options: "Extra item\nSubstituted item\nDeviation (excess quantity)", default: "Extra item" },
+			{ fieldname: "amount", fieldtype: "Currency", options: "INR", label: __("Estimated value (priced later if blank)") }],
+			__("Raise"), (v) => hipersign.cn.act("sd_ei", name, v, done)));
+	},
+	cn_ret_back(arg, done) {
+		const [project, item] = arg.split("|");
+		hipersign.projects._cn_ask(__("Return {0} from {1} to the central store", [item, project]), [
+			{ fieldname: "qty", fieldtype: "Float", label: __("Quantity (blank: everything at the site)") }],
+			__("Request return"), (v) => hipersign.cn.act("ret_back", project, Object.assign({ item }, v), done));
+	},
+	cn_swo_adv_pay(name, done) {
+		hipersign.projects._cn_ask(__("Pay the mobilisation advance — {0}", [name]), [
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("Posts Dr Advances to Subcontractors, Cr Bank. Every running bill then recovers the work order's % until the advance is nil.")}</p>` },
+			{ fieldname: "amount", fieldtype: "Currency", options: "INR", label: __("Amount (blank: the whole advance due)") },
+			{ fieldname: "date", fieldtype: "Date", label: __("Paid on"), default: frappe.datetime.get_today(), reqd: 1 },
+			{ fieldname: "ref", fieldtype: "Data", label: __("UTR / cheque no.") }],
+			__("Pay"), (v) => hipersign.cn.act("swo_adv_pay", name, v, done));
+	},
+});
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (L) Object.assign(L, { "Site Diary": ["hipersign-cn-site", "diary"], "Scrap Lot": ["hipersign-cn-store", "scrap"] });
+});
