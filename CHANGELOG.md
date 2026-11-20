@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.9.1 — Construction (India), stage B2: tracker, project controls and billing (22 Nov 2026)
+- **Construction Tracker** (new page, Construction (India) menu): every contract on one line through the 26 Indian steps in
+  6 phases — tender, LOA, agreement and PBG, mobilisation advance, mobilisation, budget, procurement, stores, subcontracts,
+  DPR, labour, MB, RA bill, certification, invoice, extra items / EOT, cost, QA/HSE, handover, final bill, DLP, closure.
+  Each step shows status, % and the facts from the records (pop-up with who, documents and figures); on site steps 11–22
+  run side by side. Every red flag is placed on its step and opens the record. Filters: open, tender, mobilising,
+  execution, handover, DLP, closed, red flags; search.
+- **Project Controls:** Tasks (ERPNext Task on the live projects; mark done), Risks & issues (new Project Risk — risk or
+  issue, probability × impact score 1–9, cost and delay if it happens, owner, mitigation, review date; close with the
+  outcome, reopen) and Meetings (new Project Meeting — minutes with action points; "Raise tasks" turns each action point
+  into a Task owned and dated as agreed). New red flags: high risks past their review date, overdue tasks.
+- **RA Billing:**
+  - RA workbench — the next bill per BOQ line: billed before, this bill (client-checked measurements not yet billed),
+    measured but not yet checked, balance against the BOQ; "Create RA bill" from it.
+  - Mobilisation advance — per project: as per terms, received, recovered, to recover, the advance BG. "Advance
+    received…" posts Dr Bank, Cr Mobilisation Advance Received on the project; it needs an advance payment guarantee on the
+    project and cannot exceed the advance in the terms (MD / Accounts).
+  - Final bill — final measured value, approved extra items, less the RA bills certified, retention, advance left,
+    performance BG and what is still open. "Prepare final bill" (after handover, nothing with the client, no unchecked
+    measurement, no open extra item) bills the last measurements and the extra items not yet billed, and recovers the rest
+    of the advance.
+- **Change:** an RA bill now recovers only the mobilisation advance actually received (credits to Mobilisation Advance
+  Received for the project), capped at the advance in the terms. A project whose advance has not come in recovers nothing.
+  New red flag: advance not received after mobilisation.
+- Fixed: the form buttons of Rate Analysis (B1) were not shown; they are now, with those of risks and minutes.
+- Demo: risks and issues on every live project, three sets of minutes (two turned into tasks) and a few tasks.
+
 ## 1.9.1 — Construction (India), stage B1: estimating (21 Nov 2026)
 First of the stages that close the gaps against the C12 prototype (see the parity check). No new feature switch — part of
 the construction module. The BOQ page is now "BOQ & Estimating".

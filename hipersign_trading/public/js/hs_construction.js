@@ -396,3 +396,84 @@ Object.assign(hipersign.projects, {
 		});
 	},
 });
+
+// v1.9.1 B2: Construction Tracker (26 steps), tasks / risks / meetings, mobilisation advance, final bill
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (L && hipersign.feature("cn_ctl")) Object.assign(L, { "Project Risk": ["hipersign-cn-controls", "risk"], "Project Meeting": ["hipersign-cn-controls", "mtg"] });
+});
+Object.assign(hipersign.cn.FORM_ACTS, { "Project Risk": { Open: [["Close…", "js:cn_risk_close", 1]], Closed: [["Reopen", "risk_reopen"]] },
+	"Project Meeting": { "*": [["Raise tasks from the action points", "mtg_tasks", 1]] } });
+// the buttons of record types added after the first binding (B1 Rate Analysis, B2 risks and minutes); "*" = any status
+["Rate Analysis", "Project Risk", "Project Meeting"].forEach((dt) => frappe.ui.form.on(dt, {
+	refresh(frm) {
+		if (frm.is_new()) return;
+		const A = hipersign.cn.FORM_ACTS[dt] || {};
+		(A[frm.doc.status] || A["*"] || []).forEach(([label, act, primary]) => {
+			const b = frm.add_custom_button(__(label), () => (act.startsWith("js:") ? hipersign.projects[act.slice(3)](frm.doc.name, () => frm.reload_doc())
+				: (frm.is_dirty() ? frm.save() : Promise.resolve()).then(() => hipersign.cn.act(act, frm.doc.name, {}, () => frm.reload_doc()))));
+			if (primary) b.removeClass("btn-default").addClass("btn-primary");
+		});
+	},
+}));
+Object.assign(hipersign.projects, {
+	cn_risk_close(name, done) {
+		hipersign.projects._cn_ask(__("Close {0}", [name]), [{ fieldname: "outcome", fieldtype: "Small Text", label: __("Outcome — what happened, what was done"), reqd: 1 }],
+			__("Close"), (v) => hipersign.cn.act("risk_close", name, v, done));
+	},
+	cn_adv_receive(project, done) {
+		hipersign.projects._cn_ask(__("Mobilisation advance received — {0}", [project]), [
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("Posts Dr Bank, Cr Mobilisation Advance Received on the project. Each RA bill recovers it at the advance % until it is cleared; the final bill recovers what is left.")}</p>` },
+			{ fieldname: "amount", fieldtype: "Currency", options: "INR", label: __("Amount received (blank: the whole balance)") },
+			{ fieldname: "date", fieldtype: "Date", label: __("Received on"), default: frappe.datetime.get_today(), reqd: 1 },
+			{ fieldname: "ref", fieldtype: "Data", label: __("UTR / cheque no.") }],
+			__("Record receipt"), (v) => hipersign.cn.act("adv_receive", project, v, done));
+	},
+});
+hipersign.cn.tracker = function (wrapper) {
+	const ui = hipersign.ui, P = hipersign.projects, esc = (s) => frappe.utils.escape_html(s == null ? "" : String(s));
+	const v = ui.page(wrapper, { band: "cn_tracker", title: __("Construction Tracker"), desc: __("Every contract on one line through the 26 steps — status, % and the facts per step, with red flags. On site, steps 11–22 run side by side. Hover or tap a step for who does it, the documents and the facts behind its status; a flag opens the record.") });
+	v.page.set_title(__("Construction Tracker"));
+	v.$wrap.addClass("hsx-mod");
+	const st = { filter: "open", q: "" };
+	v.$actions.html(`<button class="btn btn-sm btn-primary hsp-new">${frappe.utils.icon("add", "sm")} ${__("New project")}</button>`);
+	v.$actions.on("click", ".hsp-new", () => frappe.new_doc("Project", { hs_cn: 1 }));
+	function card(p, r) {
+		const cur = r.currency, paid = p.rev ? Math.min(100, (p.collected / (p.rev * 1.18)) * 100) : 0, inv = p.rev ? Math.min(100 - paid, ((p.billed * 1.18 - p.collected) / (p.rev * 1.18)) * 100) : 0;
+		return `<article class="hsp-trk"><div class="hsp-trk-h">
+			<div class="f"><span>${__("Project")}</span><a class="hsp-open" data-name="${esc(p.name)}">${esc(p.name)}</a></div>
+			<div class="f wide"><span>${__("Project · client")}</span><b>${esc(p.title)}</b><small>${esc(p.client || "")}${p.location ? " · " + esc(p.location) : ""}</small></div>
+			<div class="f"><span>${__("Order value")}</span><b>${esc(ui.money(p.rev, cur, true))}</b><small>${__("incl. extra items")}</small></div>
+			<div class="f"><span>${__("Step")}</span><b>${Math.min(26, p.step + 1)}. ${esc(p.next)}</b><small>${Math.round(p.pct)}% ${__("work done")}</small></div>
+			<div class="f"><span>${__("Certified")}</span><b>${esc(ui.money(p.certified, cur, true))}</b><small>${__("Finish")} ${esc(p.finish ? frappe.datetime.str_to_user(p.finish) : "—")}</small></div>
+			<div class="f"><span>${__("Received")}</span><b class="${p.collected ? "text-success" : ""}">${esc(ui.money(p.collected, cur, true))}</b><small class="${p.overdue > 1 ? "text-danger" : ""}">${p.overdue > 1 ? esc(ui.money(p.overdue, cur, true)) + " " + __("overdue") : esc(ui.money(p.out, cur, true)) + " " + __("outstanding")}</small></div>
+			<div class="f"><span>${__("Margin")}</span><b class="${p.bud_margin && p.margin < p.bud_margin - 3 ? "text-danger" : ""}">${p.margin.toFixed(1)}%</b><small>${__("estimate")} ${p.bud_margin.toFixed(1)}%</small></div>
+			<div class="f act"><span class="hsx-pill ${esc(p.tone)}">${esc(__(p.status))}</span>${p.flags.length ? `<span class="hsx-pill red">${__("{0} red flags", [p.flags.length])}</span>` : ""}</div></div>
+			<div class="hsp-pay"><i style="width:${paid}%"></i><i class="inv" style="width:${Math.max(0, inv)}%"></i></div>
+			${P.phase_html(r.steps, r.phases, p.states)}
+			${p.flags.length ? `<div class="hsp-flags">${p.flags.map((f) => `<button class="hsp-tf" data-dt="${esc((f.open || ["Project", p.name])[0])}" data-name="${esc((f.open || ["Project", p.name])[1])}">${frappe.utils.icon("flag", "xs")} <b>${__("Step {0}", [f.step + 1])}</b> ${esc(f.text)}</button>`).join("")}</div>` : ""}
+		</article>`;
+	}
+	function load() {
+		frappe.xcall("hipersign_trading.api.construction_ctl.tracker", { filter: st.filter, q: st.q }).then((r) => {
+			const segs = [["open", __("Open {0}", [r.counts.open])], ["Tender", __("Tender")], ["Mobilising", __("Mobilising")], ["Execution", __("Execution")], ["Handover", __("Handover")],
+				["DLP", __("DLP")], ["Closed", __("Closed")], ["flags", __("Red flags {0}", [r.counts.flags])], ["all", __("All")]];
+			v.$body.html(`<div class="hsx-kpis">${r.kpis.map((k) => ui.kpi(Object.assign({}, k, { route: null }))).join("")}</div>
+				<div class="hsx-chips hsp-filters"><input class="form-control hsx-q" placeholder="${__("Project, client or number")}" style="max-width:220px" value="${esc(st.q)}">
+				${segs.map(([k, l]) => `<button data-f="${k}" class="${k === st.filter ? "on" : ""}">${esc(l)}</button>`).join("")}</div>
+				<div class="hsp-legend">${[["done", __("Completed")], ["cur", __("In progress")], ["wait", __("Pending")], ["late", __("Red flag")]].map(([c, l]) => `<span><i class="st-${c}"></i>${esc(l)}</span>`).join("")}
+				<span class="text-muted">· ${__("6 phases · 26 steps · on site, steps 11–22 run side by side")}</span></div>
+				${r.projects.length ? `<div class="hsp-list">${r.projects.map((p) => card(p, r)).join("")}</div>` : `<div class="hsx-card"><div class="hsx-empty"><b>${__("No projects match these filters")}</b> ${__("Clear a filter to see more projects.")}</div></div>`}`);
+			const q = v.$body.find(".hsx-q");
+			if (st.focus) { q.focus(); q[0].setSelectionRange(st.q.length, st.q.length); st.focus = false; }
+		});
+	}
+	v.$body.on("click", "[data-f]", function () { st.filter = $(this).attr("data-f"); load(); });
+	v.$body.on("input", ".hsx-q", frappe.utils.debounce(function () { st.q = $(this).val(); st.focus = true; load(); }, 350));
+	const open = (dt, name) => (hipersign.panel && hipersign.panel.has && hipersign.panel.has(dt) ? hipersign.panel.open(dt, name) : frappe.set_route("Form", dt, name));
+	v.$body.on("click", ".hsp-open", function () { open("Project", $(this).attr("data-name")); });
+	v.$body.on("click", ".hsp-tf", function () { open($(this).attr("data-dt"), $(this).attr("data-name")); });
+	$(document).on("hs-scope-change hp-changed", () => { if ($(wrapper).is(":visible")) load(); });
+	wrapper.hs_reload = load;
+	load();
+};

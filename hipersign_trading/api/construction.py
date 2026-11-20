@@ -256,6 +256,10 @@ def validate_doc(doc):
 
 	if doc.doctype in EST.VALIDATE:
 		return EST.VALIDATE[doc.doctype](doc)
+	from hipersign_trading.api import construction_ctl as CTL  # v1.9.1 B2
+
+	if doc.doctype in CTL.VALIDATE:
+		return CTL.VALIDATE[doc.doctype](doc)
 	fn = {"Tender": _v_tender, "Measurement Book": _v_mb, "RA Bill": ra_compute, "Extra Item": _v_ei, "Hindrance": _v_hin,
 		"Daily Progress Report": _v_dpr, "Construction Contract": B.contract_validate, "Contract Claim": _v_claim}.get(doc.doctype)
 	if fn:
@@ -265,7 +269,9 @@ def validate_doc(doc):
 def EST_ACTIONS():
 	from hipersign_trading.api import construction_est as EST  # v1.9.1 B1: estimating
 
-	return EST.ACTIONS
+	from hipersign_trading.api import construction_ctl as CTL  # v1.9.1 B2: tracker, risks, meetings, advance, final bill
+
+	return dict(EST.ACTIONS, **CTL.ACTIONS)
 
 
 def _v_tender(doc):
@@ -381,9 +387,12 @@ def ra_compute(doc):
 	doc.gst_amount = flt(base * flt(doc.gst_rate) / 100, 2)
 	doc.gross_with_gst = flt(base + doc.gst_amount, 2)
 	doc.retention = flt(base * flt(doc.retention_pct) / 100, 2)
-	adv_total = flt(p.get("hs_contract_value")) * flt(p.get("hs_advance_pct")) / 100
+	# v1.9.1 B2: recover only what the client actually paid as the mobilisation advance (capped at the advance in the terms)
+	from hipersign_trading.api import construction_ctl as CTL
+
+	adv_total = min(flt(p.get("hs_contract_value")) * flt(p.get("hs_advance_pct")) / 100, CTL.adv_received(doc.project)) if flt(p.get("hs_advance_pct")) else 0
 	adv_done = sum(flt(x.advance_recovery) for x in earlier)
-	doc.advance_recovery = flt(max(0, min(base * flt(doc.advance_pct) / 100, adv_total - adv_done)) if adv_total else base * flt(doc.advance_pct) / 100, 2)
+	doc.advance_recovery = flt(max(0, min(base * flt(doc.advance_pct) / 100, adv_total - adv_done)), 2)
 	if cint(doc.is_final) and adv_total:
 		doc.advance_recovery = flt(max(0, adv_total - adv_done), 2)
 	doc.tds = flt(base * flt(doc.tds_pct) / 100, 2)
@@ -512,6 +521,9 @@ def flags(name):
 	from hipersign_trading.api import construction_portal as PT
 
 	out += PT.flags(name)
+	from hipersign_trading.api import construction_ctl as CTL  # v1.9.1 B2
+
+	out += CTL.flags(name)
 	return out
 
 

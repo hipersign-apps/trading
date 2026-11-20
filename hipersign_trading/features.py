@@ -57,7 +57,7 @@ FEATURES = {
 	# advance recovery, TDS 194C, GST-TDS and BOCW labour cess, DPR and hindrances (api/construction.py)
 	"construction": ("Construction (India)", "Industries", "Tenders and EMD, BOQ and extra items, measurement book, RA bills with GST, retention, TDS, GST-TDS and labour cess, DPR and hindrances", [],
 		["Tender", "Measurement Book", "RA Bill", "Extra Item", "Daily Progress Report", "Hindrance"], [],
-		["hipersign-cn-projects", "hipersign-cn-tenders", "hipersign-cn-boq", "hipersign-cn-mb", "hipersign-cn-billing", "hipersign-cn-site"],
+		["hipersign-cn-projects", "hipersign-cn-tenders", "hipersign-cn-boq", "hipersign-cn-mb", "hipersign-cn-billing", "hipersign-cn-site", "hipersign-cn-tracker"],
 		[], ["Projects"], []),
 	# v1.9.0 A2 (prototype C5): construction CRM, quotations with MD approval and revisions, contracts, claims, LD, collections
 	"cn_biz": ("Construction — business & contracts", "Industries", "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder",
@@ -77,8 +77,8 @@ FEATURES = {
 	"cn_fin": ("Construction — finance, tax & payroll", "Industries", "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals",
 		["construction"], ["Staff Payroll", "Statutory Deposit"], [], ["hipersign-cn-accounts", "hipersign-cn-tax", "hipersign-cn-cost", "hipersign-cn-payroll"], [], [], []),
 	# v1.9.0 A6 (prototype C9): project controls; the client and subcontractor portals, site app and worker app
-	"cn_ctl": ("Construction — project controls", "Industries", "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline and the weekly review",
-		["construction"], ["Project Constraint", "Construction Milestone", "Project Review"], [], ["hipersign-cn-controls"], [], [], []),
+	"cn_ctl": ("Construction — project controls", "Industries", "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline, the weekly review, tasks, risks & issues and minutes of meeting",
+		["construction"], ["Project Constraint", "Construction Milestone", "Project Review", "Project Risk", "Project Meeting"], [], ["hipersign-cn-controls"], [], [], []),
 	"cn_portal": ("Construction — portals & apps", "Industries", "Client portal, subcontractor portal, site app, worker app and site deliveries for the driver app",
 		["construction"], ["Site Photo", "Client Publication", "Site Attendance", "Site Expense", "Portal Activity"], [],
 		["hipersign-cn-client-portal", "hipersign-cn-partner-portal", "hipersign-cn-apps"], [], [], []),

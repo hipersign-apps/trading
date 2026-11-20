@@ -90,6 +90,7 @@ NAV = [
 		("RA Billing", "Page", "hipersign-cn-billing", "receipt", "construction", {}),
 		("DPR & Hindrances", "Page", "hipersign-cn-site", "hard-hat", "construction", {}),
 		("Project Controls", "Page", "hipersign-cn-controls", "traffic-cone", "cn_ctl", {}),  # v1.9.0 A6
+		("Construction Tracker", "Page", "hipersign-cn-tracker", "list-checks", "construction", {}),  # v1.9.1 B2
 	]),
 	# v1.9.0 A6 (prototype C9): what clients, partners, site engineers and workers see
 	("Portals & Apps (India)", "smartphone", [
@@ -192,7 +193,8 @@ NAV_SUB = {
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
 	# v1.9.0 A6
-	"Project Controls": [("Constraints", "DocType", "Project Constraint", None), ("Milestones", "DocType", "Construction Milestone", None), ("Reviews", "DocType", "Project Review", None)],
+	"Project Controls": [("Constraints", "DocType", "Project Constraint", None), ("Milestones", "DocType", "Construction Milestone", None), ("Reviews", "DocType", "Project Review", None),
+		("Tasks", "DocType", "Task", None), ("Risks & issues", "DocType", "Project Risk", None), ("Minutes of meeting", "DocType", "Project Meeting", None)],
 	"Site & Worker App": [("Site Photos", "DocType", "Site Photo", None), ("Site Attendance", "DocType", "Site Attendance", None), ("Site Cash", "DocType", "Site Expense", None)],
 	# v1.9.0 A5: Finance (India)
 	"Accounts & Cash (India)": [("Journal Entries", "DocType", "Journal Entry", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Purchase Invoices", "DocType", "Purchase Invoice", None)],
@@ -294,7 +296,8 @@ SUB_TABS = {
 	("Handover & DLP", "Handover Documents"): ("hipersign-cn-handover", "docs"), ("Handover & DLP", "DLP Defects"): ("hipersign-cn-handover", "def"),
 	("Handover & DLP", "Warranties"): ("hipersign-cn-handover", "wty"),
 	("Project Controls", "Constraints"): ("hipersign-cn-controls", "con"), ("Project Controls", "Milestones"): ("hipersign-cn-controls", "ms"),
-	("Project Controls", "Reviews"): ("hipersign-cn-controls", "rev"), ("Site & Worker App", "Site Photos"): ("hipersign-cn-apps", "pho"),
+	("Project Controls", "Reviews"): ("hipersign-cn-controls", "rev"), ("Project Controls", "Tasks"): ("hipersign-cn-controls", "task"),
+	("Project Controls", "Risks & issues"): ("hipersign-cn-controls", "risk"), ("Project Controls", "Minutes of meeting"): ("hipersign-cn-controls", "mtg"), ("Site & Worker App", "Site Photos"): ("hipersign-cn-apps", "pho"),
 	("Site & Worker App", "Site Cash"): ("hipersign-cn-apps", "cash"),
 	("GST & TDS", "Statutory Payments"): ("hipersign-cn-tax", "cal"), ("Payroll & Statutory", "Staff Payroll"): ("hipersign-cn-payroll", "run"),
 	("Payroll & Statutory", "Employees"): ("hipersign-cn-payroll", "emp"), ("Payroll & Statutory", "Statutory Payments"): ("hipersign-cn-payroll", "dep"),

@@ -1741,6 +1741,65 @@ def cn_estimating(c):
 		t.save()
 
 
+# ---------------------------------------------------------------- v1.9.1 B2: risks & issues, minutes of meeting, tasks
+RISKS = [  # project, kind, title, category, probability, impact, owner, review (days), mitigation, cost (₹ L), delay days
+	("P-2401", "Risk", "Monsoon delays the terrace and podium waterproofing", "Weather", "High", "Medium", "Rahul Nair", 10,
+		"Finish the APP membrane on Block A before the rains; tarpaulin cover and a dewatering pump on standby", 6, 21),
+	("P-2401", "Risk", "Steel price rise — firm-price contract, 420 MT still to buy", "Materials & supply", "Medium", "High", "Deepa Krishnan", 20,
+		"Book the balance TMT with SAIL dealer at today's rate; stagger deliveries", 38, 0),
+	("P-2402", "Issue", "Revised MEP drawings for floors 6–8 not issued — sleeves on hold", "Design", "High", "High", "Meera Pillai", -4,
+		"RFI raised; CBRE to release the drawings; slab cycle shifted to the core walls meanwhile", 12, 14),
+	("P-2403", "Risk", "Land not handed over at Ch. 3+100 — utility shifting by KSEB", "Client", "High", "High", "Rahul Nair", 7,
+		"Hindrance logged; EOT application with the KSEB letter; crews moved to culvert C-7", 0, 45),
+	("P-2406", "Risk", "Imported sanitaryware for guest floors stuck at customs", "Materials & supply", "Medium", "Medium", "Senthil Kumar", 12,
+		"Clearing agent following up; local alternate approved by the designer for floor 5", 3, 10),
+	("P-2405", "Risk", "PEB roof sheeting subcontractor short of crew for the last two bays", "Subcontractor", "Low", "Medium", "Karthik Rao", 15,
+		"Second crew from the Hosur sheeting contractor on standby at the same rate", 2, 7),
+]
+MEETINGS = [  # project, title, kind, days ago, chair, attendees, points, [(action, by, due in days)], raise tasks
+	("P-2401", "Weekly site progress review — week 46", "Site progress review", 3, "Rahul Nair", "Rahul Nair, Vishnu Prasad, Deepa Krishnan, Marble & tiling subcontractor",
+		"<p>Block A 5th-floor columns 80% cast; slab shuttering from Monday. Waterproofing to finish before the rains. RA bill 9 with the PMC since last week.</p>",
+		[("Follow up RA bill 9 certification with the PMC", "Deepa Krishnan", 2), ("Book balance TMT steel at today's rate", "Rahul Nair", -2), ("Mock-up of the lobby tiling for approval", "Vishnu Prasad", 6)], 1),
+	("P-2402", "Client / PMC coordination meeting", "Client / PMC meeting", 6, "Meera Pillai", "Meera Pillai, CBRE PM, MEP consultant, Aswin Raj",
+		"<p>MEP drawings for floors 6–8 still pending; sleeves on hold. Cube results for the 5th-floor slab passed. Next RA bill on 30th.</p>",
+		[("Issue revised MEP drawings for floors 6–8", "CBRE PM", 4), ("Submit the EOT notice for the drawing delay", "Meera Pillai", 9)], 1),
+	("P-2403", "Monthly review with the MD", "Monthly review (MD)", 1, "Managing Director", "Managing Director, Rahul Nair, Joseph Mathew, Finance Manager",
+		"<p>RA bill 11 overdue with the client; GST-TDS credit to accept. Utility shifting at Ch. 3+100 holding the work front.</p>",
+		[("Meet the Executive Engineer about the overdue RA bill", "Managing Director", 5), ("Apply EOT for the KSEB hindrance", "Rahul Nair", 7)], 0),
+]
+
+
+def cn_controls2(c):
+	"""Risks and issues per project, minutes of meeting with action points (two already turned into tasks) and a few tasks
+	on the live projects, one of them overdue."""
+	if not frappe.db.exists("DocType", "Project Risk") or frappe.db.exists("Project Risk", {"company": CO}):
+		return
+	for pid, kind, title, cat, pr, im, owner, rv, mit, cost, dl in RISKS:
+		frappe.get_doc({"doctype": "Project Risk", "project": pid, "kind": kind, "title": title, "category": cat, "probability": pr, "impact": im, "owner_name": owner,
+			"review_by": D(rv), "mitigation": mit, "cost_impact": cost * 1e5, "days_impact": dl}).insert(ignore_permissions=True)
+	r = frappe.get_doc({"doctype": "Project Risk", "project": "P-2405", "kind": "Risk", "title": "Fire NOC inspection before handover", "category": "Statutory & permits",
+		"probability": "Medium", "impact": "High", "owner_name": "Karthik Rao", "review_by": D(-20), "mitigation": "Sprinkler test witnessed by the fire officer"})
+	r.insert(ignore_permissions=True)
+	frappe.db.set_value("Project Risk", r.name, {"status": "Closed", "closed_on": D(-12), "outcome": "Fire NOC inspection passed on the first visit"}, update_modified=False)
+	from hipersign_trading.api import construction_ctl as CTL
+
+	for pid, title, kind, ago, chair, att, pts, acts, raise_tasks in MEETINGS:
+		m = frappe.get_doc({"doctype": "Project Meeting", "project": pid, "title": title, "meeting_type": kind, "meeting_date": D(-ago), "chaired_by": chair, "attendees": att,
+			"minutes": pts, "next_meeting": D(7 - ago), "actions": [{"action": a, "owner_name": by, "due": D(due - ago if due >= 0 else due)} for a, by, due in acts]})
+		m.insert(ignore_permissions=True)
+		if raise_tasks:
+			frappe.flags.hs_cn_skip_role = True
+			try:
+				CTL._a_mtg_tasks(m.name, frappe._dict())
+			finally:
+				frappe.flags.hs_cn_skip_role = False
+	for pid, subj, by, due, pri in (("P-2406", "Designer sign-off on the guest-room mock-up", "Senthil Kumar", 4, "High"),
+			("P-2405", "Witness the dock-leveller load test with the client", "Karthik Rao", 9, "Medium"),
+			("P-2403", "Renew the CAR policy before expiry", "Joseph Mathew", -3, "High")):
+		frappe.get_doc({"doctype": "Task", "subject": subj, "project": pid, "company": CO, "exp_end_date": D(due), "status": "Open", "priority": pri,
+			"hs_task_owner": by}).insert(ignore_permissions=True)
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -1755,4 +1814,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_estimating, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_estimating, cn_controls2, cn_finish]

@@ -669,3 +669,8 @@ for _k in _ptl.KEYS:
 from hipersign_trading.api import module_cn_est as _est  # noqa: E402
 
 _est.extend(globals())
+
+# v1.9.1 B2: tasks, risks & issues and meetings on Project Controls; RA workbench, mobilisation advance and final bill on RA Billing
+from hipersign_trading.api import module_cn_ctl as _ctl2  # noqa: E402
+
+_ctl2.extend(globals())
