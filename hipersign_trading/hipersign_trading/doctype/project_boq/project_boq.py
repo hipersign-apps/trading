@@ -37,3 +37,7 @@ class ProjectBOQ(Document):
 			self.client_name = frappe.db.get_value("Customer", self.customer, "customer_name")
 		if not self.title:
 			self.title = (self.project and frappe.db.get_value("Project", self.project, "project_name")) or self.client_name or _("Tender")
+		if frappe.db.exists("DocType", "Rate Analysis"):  # v1.9.1 B1: rate analysis, versions and the tender price
+			from hipersign_trading.api import construction_est as EST
+
+			EST.boq_validate(self)

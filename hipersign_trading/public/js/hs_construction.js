@@ -364,3 +364,35 @@ Object.assign(hipersign.projects, {
 			__("Save PIN"), (v) => hipersign.cn.act("wpin", worker, v, done));
 	},
 });
+
+// v1.9.1 B1: estimating — rate analysis, BOQ versions, tender price, templates, submission checklist
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (L && hipersign.feature("construction")) Object.assign(L, { "Rate Analysis": ["hipersign-cn-boq", "lib"], "BOQ Template": ["hipersign-cn-boq", "tpl"] });
+});
+Object.assign(hipersign.cn.FORM_ACTS, { "Rate Analysis": { Draft: [["Approve", "ran_approve", 1], ["Refresh rates from purchases", "ran_refresh"]], Approved: [["Refresh rates from purchases", "ran_refresh"]] } });
+Object.assign(hipersign.projects, {
+	cn_boq_contract(name, done) {
+		hipersign.projects._cn_ask(__("Contract BOQ from the tender BOQ"), [
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("The agreed rates after negotiation become the contract BOQ; the tender BOQ is kept, superseded.")}</p>` },
+			{ fieldname: "discount", fieldtype: "Percent", label: __("Negotiated reduction on every rate %"), default: 0 }], __("Make contract BOQ"),
+			(v) => hipersign.cn.act("boq_ver", name, { kind: "Contract", discount: v.discount || 0 }, done));
+	},
+	cn_boq_margin(name, done) {
+		hipersign.projects._cn_ask(__("Target margin"), [{ fieldname: "margin", fieldtype: "Percent", label: __("Margin %"), reqd: 1 }], __("Price the bid"),
+			(v) => hipersign.cn.act("boq_price", name, { margin: v.margin }, done));
+	},
+	cn_boq_tpl(template, done) {
+		hipersign.projects._cn_ask(__("New BOQ from {0}", [template]), [
+			{ fieldname: "tender", fieldtype: "Link", options: "Tender", label: __("For the tender"), get_query: () => ({ filters: { status: ["in", ["Bid / no-bid", "Being priced"]] } }) },
+			{ fieldname: "project", fieldtype: "Link", options: "Project", label: __("Or for the project"), get_query: () => ({ filters: { hs_cn: 1 } }) },
+			{ fieldname: "value", fieldtype: "Currency", options: "INR", label: __("Value to price for (blank: the tender's estimate or the contract value)") }],
+			__("Make BOQ"), (v) => hipersign.cn.act("boq_tpl", template, v, done));
+	},
+	cn_tnd_chk(tender, done) {
+		frappe.db.get_doc("Tender", tender).then((t) => {
+			hipersign.projects._cn_ask(__("Submission checklist — {0}", [tender]), (t.checklist || []).map((r) => ({ fieldname: "c" + r.idx, fieldtype: "Check", label: r.item, default: r.done })),
+				__("Save"), (v) => hipersign.cn.act("tnd_chk", tender, { done: JSON.stringify((t.checklist || []).filter((r) => v["c" + r.idx]).map((r) => r.idx)) }, done));
+		});
+	},
+});

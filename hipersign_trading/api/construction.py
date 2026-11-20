@@ -252,13 +252,27 @@ def validate_doc(doc):
 
 	if doc.doctype in PT.VALIDATE:
 		return PT.VALIDATE[doc.doctype](doc)
+	from hipersign_trading.api import construction_est as EST  # v1.9.1 B1
+
+	if doc.doctype in EST.VALIDATE:
+		return EST.VALIDATE[doc.doctype](doc)
 	fn = {"Tender": _v_tender, "Measurement Book": _v_mb, "RA Bill": ra_compute, "Extra Item": _v_ei, "Hindrance": _v_hin,
 		"Daily Progress Report": _v_dpr, "Construction Contract": B.contract_validate, "Contract Claim": _v_claim}.get(doc.doctype)
 	if fn:
 		fn(doc)
 
 
+def EST_ACTIONS():
+	from hipersign_trading.api import construction_est as EST  # v1.9.1 B1: estimating
+
+	return EST.ACTIONS
+
+
 def _v_tender(doc):
+	if frappe.get_meta("Tender").has_field("checklist"):  # v1.9.1 B1: submission checklist and the bids opened
+		from hipersign_trading.api import construction_est as EST
+
+		EST.tender_validate(doc)
 	if doc.due_date and doc.published_on and getdate(doc.due_date) < getdate(doc.published_on):
 		frappe.throw(_("The bid due date is before the date the tender was published."))
 	if doc.emd_mode == "Exempt (MSE)":
@@ -604,7 +618,7 @@ def act(action, name, args=None):
 
 	from hipersign_trading.api import construction_portal as PT  # v1.9.0 A6: controls, portals and apps
 
-	fn = ACTIONS.get(action) or B.ACTIONS.get(action) or S.ACTIONS.get(action) or Q.ACTIONS.get(action) or FN.ACTIONS.get(action) or PT.ACTIONS.get(action)
+	fn = ACTIONS.get(action) or B.ACTIONS.get(action) or S.ACTIONS.get(action) or Q.ACTIONS.get(action) or FN.ACTIONS.get(action) or PT.ACTIONS.get(action) or EST_ACTIONS().get(action)
 	if not fn:
 		frappe.throw(_("Unknown action"))
 	r = fn(name, args) or {}
@@ -647,6 +661,10 @@ def _a_tnd_submit(name, a):
 		frappe.throw(_("{0} has no bid decision yet.").format(t.name))
 	if not flt(t.our_bid):
 		frappe.throw(_("Enter our quoted value on {0} first.").format(t.name))
+	if t.meta.has_field("checklist"):  # v1.9.1 B1
+		from hipersign_trading.api import construction_est as EST
+
+		EST.check_ready(t)
 	if t.emd_mode != "Exempt (MSE)" and flt(t.emd_amount) and t.emd_status == "Not paid":
 		t.emd_status = "Held by client"
 	t.status = "Submitted"

@@ -1624,6 +1624,123 @@ def get_first_day_(d):
 	return getdate(d).replace(day=1)
 
 
+# rate analyses: title, code, category, unit, BOQ text it prices, SOR code, SOR rate (sample), resources [type, item, description, unit, per unit, rate]
+RATE_ANALYSES = [
+	("RCC M25 in footings, columns, beams & slabs", "DSR 5.33", "Concrete", "Cum", ("RCC M25", "RCC M2", "RCC M3"), "KL-SOR 4.14", 8900, [
+		("Material", "CEM-OPC53", "Cement OPC 53 (bags)", "Bag", 8.06, 410), ("Material", "MSAND", "M-sand", "Cum", .45, 2350), ("Material", "AGG-20", "20 mm aggregate", "Cum", .86, 1650),
+		("Material", None, "Admixture", "Litre", 2.4, 95), ("Labour", None, "Mason", "Day", .17, 950), ("Labour", None, "Beldar / helper", "Day", 1.9, 720),
+		("Plant", None, "Concrete mixer & vibrator", "Hour", 1.2, 320), ("Material", None, "Water & curing", "LS", 1, 85)]),
+	("PCC M10 (1:3:6) in foundation bed", "DSR 4.1.8", "Concrete", "Cum", ("PCC M1",), "KL-SOR 4.02", 6050, [
+		("Material", "CEM-OPC53", "Cement OPC 53 (bags)", "Bag", 4.4, 410), ("Material", "MSAND", "M-sand", "Cum", .47, 2350), ("Material", None, "40 mm aggregate", "Cum", .94, 1500),
+		("Labour", None, "Mason", "Day", .1, 950), ("Labour", None, "Beldar / helper", "Day", 1.65, 720), ("Plant", None, "Concrete mixer", "Hour", .9, 260)]),
+	("Reinforcement Fe500D — cutting, bending & placing", "DSR 5.22.6", "Reinforcement", "MT", ("Reinforcement",), "KL-SOR 5.06", 76200, [
+		("Material", "TMT-FE500D", "TMT Fe500D bars", "MT", 1.03, 58500), ("Material", None, "Binding wire", "Kg", 10, 92), ("Labour", None, "Bar bender", "Day", 4.2, 1050),
+		("Labour", None, "Helper", "Day", 4.2, 720), ("Plant", None, "Bar cutting & bending machine", "Hour", 3, 180)]),
+	("AAC block masonry 200 mm in CM 1:6", "DSR 6.13", "Masonry", "Cum", ("AAC block",), "KL-SOR 6.21", 7150, [
+		("Material", "AAC-BLOCK", "AAC blocks 600 × 200 × 200", "Cum", 1.0, 4150), ("Material", None, "Block jointing mortar", "Bag", 1.6, 420), ("Labour", None, "Mason", "Day", .6, 950),
+		("Labour", None, "Helper", "Day", .9, 720)]),
+	("Cement plaster 12 mm in CM 1:4", "DSR 13.4.1", "Finishes", "Sqm", ("plaster",), "KL-SOR 13.03", 372, [
+		("Material", "CEM-OPC53", "Cement OPC 53 (bags)", "Bag", .1, 410), ("Material", None, "Plastering sand", "Cum", .015, 2600), ("Labour", None, "Mason", "Day", .075, 950),
+		("Labour", None, "Helper", "Day", .09, 720), ("Plant", None, "Scaffolding hire", "Sqm", 1, 18)]),
+	("Vitrified tile flooring 800 × 800 incl. bedding", "DSR 11.41", "Finishes", "Sqm", ("Vitrified tile",), "KL-SOR 11.18", 1395, [
+		("Material", None, "Vitrified tiles 800 × 800 (incl. 5% wastage)", "Sqm", 1.05, 720), ("Material", "CEM-OPC53", "Cement for bedding & joints", "Bag", .2, 410),
+		("Material", "MSAND", "Sand for bedding", "Cum", .025, 2350), ("Labour", None, "Tile mason", "Day", .12, 1100), ("Labour", None, "Helper", "Day", .12, 720)]),
+	("Dense bituminous macadam (DBM) 60 mm", "MoRTH 507", "Roads", "Cum", ("Dense bituminous",), "KL-SOR R-5.07", 9200, [
+		("Material", "BIT-VG30", "Bitumen VG-30", "MT", .105, 48500), ("Material", "AGG-20", "Graded aggregate", "Cum", 1.25, 1650), ("Material", None, "Filler (lime / cement)", "MT", .02, 6500),
+		("Plant", None, "Hot mix plant, paver & rollers", "Cum", 1, 1180), ("Labour", None, "Road gang", "Day", .08, 760)]),
+	("Wet mix macadam (WMM)", "MoRTH 406", "Roads", "Cum", ("Wet mix macadam",), "KL-SOR R-4.06", 2590, [
+		("Material", None, "Graded crushed aggregate", "Cum", 1.32, 1250), ("Plant", None, "WMM plant, paver & rollers", "Cum", 1, 410), ("Labour", None, "Road gang", "Day", .05, 760)]),
+]
+
+
+def cn_estimating(c):
+	"""Rate analyses linked to the BOQ lines they price, BOQ templates from the standard BOQs, the tender BOQ of the Kochi
+	Water Metro bid being priced, BOQ versions (tender → contract → revised) on the awarded projects, the submission
+	checklists of the open tenders and the bids opened on the decided ones."""
+	from hipersign_trading.api import construction_est as EST
+
+	if not frappe.db.exists("DocType", "Rate Analysis") or frappe.db.exists("Rate Analysis", {"company": CO}):
+		return
+	ras = {}
+	for title, code, cat, unit, texts, sor_code, sor_rate, res in RATE_ANALYSES:
+		a = frappe.get_doc({"doctype": "Rate Analysis", "company": CO, "title": title, "code": code, "category": cat, "unit": unit, "based_on": "CPWD DSR 2023" if not code.startswith("MoRTH")
+			else "Company norms", "sor_name": "Kerala PWD SOR 2025 (sample)", "sor_code": sor_code, "sor_rate": sor_rate,
+			"resources": [{"resource_type": t, "item": i if i and frappe.db.exists("Item", i) else None, "description": d, "unit": u, "coefficient": q, "rate": r} for t, i, d, u, q, r in res]})
+		EST.refresh_rates(a)
+		a.insert(ignore_permissions=True)
+		if cat != "Roads":
+			a.db_set({"status": "Approved", "approved_by": "Deepa Krishnan"})
+		ras[a.name] = texts
+	def match(desc):
+		return next((n for n, texts in ras.items() if any(t.lower() in (desc or "").lower() for t in texts)), None)
+	# link the existing BOQ lines (the awarded budgets stay as they are)
+	for r in frappe.get_all("Project BOQ Item", filters={"parenttype": "Project BOQ"}, fields=["name", "description"]):
+		n = match(r.description)
+		if n:
+			frappe.db.set_value("Project BOQ Item", r.name, {"rate_analysis": n, "analysed_rate": frappe.db.get_value("Rate Analysis", n, "analysed_rate")}, update_modified=False)
+	# BOQ templates
+	labels = {"bld": "Buildings — RCC frame G+5", "road": "Roads — service road with culverts", "peb": "Industrial — PEB warehouse", "fit": "Interior fit-out — hotel"}
+	for k, lines in TPL.items():
+		items = []
+		for code, ch, d, unit, rate, w, s_, sh in lines:
+			items.append({"section_name": ch, "item_no": code, "description": d, "unit": unit, "rate": rate, "weight_pct": round(w * 100, 2), "rate_analysis": match(d),
+				**{SHARE[x]: v * 100 for x, v in sh.items()}})
+		items.insert(0, {"section_name": "Preliminaries", "item_no": "0.1", "description": "Preliminaries, site establishment, insurance & statutory registrations", "unit": "LS",
+			"rate": 0, "weight_pct": round(100 - sum(x["weight_pct"] for x in items), 2), "ovh_share": 85})
+		frappe.get_doc({"doctype": "BOQ Template", "title": labels[k], "category": CATEGORY[k], "description": f"Standard BOQ for {CATEGORY[k].lower()} — the shares are of the contract value",
+			"items": items}).insert(ignore_permissions=True)
+	# versions on the awarded projects: the tender BOQ (V0) behind P-2401 and P-2403; P-2401 revised with its approved variations
+	for pid, tid, up in (("P-2401", "TND-2507-019", 1.021), ("P-2403", "TND-2505-011", 1.034)):
+		cur = frappe.get_doc("Project BOQ", frappe.db.get_value("Project BOQ", {"project": pid, "status": ["!=", "Superseded"]}))
+		v0 = frappe.copy_doc(cur)
+		v0.update({"version_type": "Tender BOQ", "revision": 0, "status": "Submitted", "tender": tid, "project": None})
+		for r in v0.items:
+			r.rate, r.measured_pct, r.certified_pct = round(flt(r.rate) * up, 2), 0, 0
+		v0.insert(ignore_permissions=True)
+		v0.db_set({"status": "Superseded", "project": pid})
+		frappe.db.set_value("Project BOQ", cur.name, {"version_type": "Contract BOQ", "version_of": v0.name, "tender": tid}, update_modified=False)
+		frappe.db.set_value("Tender", tid, "boq", v0.name)
+	frappe.clear_cache(doctype="Project BOQ")
+	EST.new_version(frappe.db.get_value("Project BOQ", {"project": "P-2401", "status": ["!=", "Superseded"]}), "Revised")
+	# the tender being priced: Kochi Water Metro Terminal from the buildings template, at 11.8% margin
+	b = EST.from_template("Buildings — RCC frame G+5", 21.5 * CR * .955, tender="TND-2611-021", company=CO)
+	b.reload()
+	b.target_margin = 11.8
+	b.save(ignore_permissions=True)
+	t = frappe.get_doc("Tender", "TND-2611-021")
+	t.our_bid, t.our_margin_pct = b.bid_price, 11.8
+	t.save(ignore_permissions=True)
+	# submission checklists
+	ready = {"TND-2611-021": 7, "TND-2611-024": 2}
+	for tid in frappe.get_all("Tender", filters={"company": CO}, pluck="name"):
+		t = frappe.get_doc("Tender", tid)
+		if not t.checklist:
+			for x in EST.CHECKLIST:
+				t.append("checklist", {"item": x})
+		n = ready.get(tid, len(t.checklist) if t.status not in ("Bid / no-bid", "Being priced") else 0)
+		for r in t.checklist:
+			r.done = 1 if r.idx <= n else 0
+			if r.done:
+				r.done_by, r.done_on = "Arjun Menon", add_days(t.due_date or today(), -3) if t.due_date else today()
+		t.flags.ignore_permissions = True
+		t.save()
+		for r in t.checklist:
+			if r.done:
+				frappe.db.set_value("Tender Checklist Item", r.name, {"done_by": "Arjun Menon", "done_on": add_days(t.due_date, -3 - (len(t.checklist) - r.idx) // 3) if t.due_date else today()})
+	# bids opened
+	bidders = {"TND-2610-014": [("Hindustan Infra Projects", 1.034), ("Malabar Builders & Engineers", 1.057), ("Sree Ganesh Constructions", 1.112)],
+		"TND-2609-009": [("Kerala Infra Builders", .967), ("Ernad Constructions", 1.021), ("Southern Structurals", 1.048)],
+		"TND-2608-006": [("Interio Spaces LLP", .955), ("Design Build Co.", .981), ("Studio Fitouts", 1.06)],
+		"TND-2505-011": [("Coastal Roadways Ltd.", 1.022), ("NH Infra & Paving", 1.046)], "TND-2507-019": [("Kochi Habitat Builders", 1.031)]}
+	for tid, others in bidders.items():
+		t = frappe.get_doc("Tender", tid)
+		us = flt(t.our_bid) or flt(t.estimated_value)
+		t.set("bidders", [{"bidder": "Hipersign Constructions India (us)", "is_us": 1, "bid_amount": us}] +
+			[{"bidder": n, "bid_amount": round(us * f, -3)} for n, f in others])
+		t.flags.ignore_permissions = True
+		t.save()
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -1638,4 +1755,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_estimating, cn_finish]

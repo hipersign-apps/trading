@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-18 22:00:00.000000",
- "modified": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-21 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -41,6 +41,14 @@
   "emd_bg",
   "sb_n",
   "notes",
+  "sb_chk",
+  "checklist",
+  "checklist_done",
+  "checklist_total",
+  "sb_bid",
+  "bidders",
+  "l1_amount",
+  "boq",
   "currency"
  ],
  "fields": [
@@ -207,6 +215,56 @@
    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "sb_chk",
+   "fieldtype": "Section Break",
+   "label": "Submission checklist",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist",
+   "options": "Tender Checklist Item"
+  },
+  {
+   "fieldname": "checklist_done",
+   "fieldtype": "Int",
+   "label": "Ready",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checklist_total",
+   "fieldtype": "Int",
+   "label": "Items",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_bid",
+   "fieldtype": "Section Break",
+   "label": "Bids opened",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "bidders",
+   "fieldtype": "Table",
+   "label": "Bidders",
+   "options": "Tender Bidder"
+  },
+  {
+   "fieldname": "l1_amount",
+   "fieldtype": "Currency",
+   "label": "L1 bid",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "boq",
+   "fieldtype": "Link",
+   "label": "Priced BOQ",
+   "options": "Project BOQ",
+   "read_only": 1
   },
   {
    "fieldname": "currency",

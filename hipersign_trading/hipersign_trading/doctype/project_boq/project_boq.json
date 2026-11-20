@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-02 12:00:00.000000",
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-21 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -23,6 +23,10 @@
   "cb_1",
   "status",
   "revision",
+  "version_type",
+  "version_of",
+  "tender",
+  "template",
   "received_on",
   "due_date",
   "sb_items",
@@ -36,6 +40,15 @@
   "tender_value",
   "margin_pct",
   "target_margin",
+  "sb_price",
+  "site_oh_pct",
+  "ho_oh_pct",
+  "contingency_pct",
+  "cb_price",
+  "total_cost",
+  "bid_price",
+  "approved_variations",
+  "revised_value",
   "work_done",
   "currency",
   "sb_notes",
@@ -94,7 +107,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Being priced\nSubmitted\nAwarded\nLost — price\nLost — programme\nLost\nWithdrawn",
+   "options": "Being priced\nSubmitted\nAwarded\nLost — price\nLost — programme\nLost\nWithdrawn\nSuperseded",
    "default": "Being priced",
    "in_list_view": 1,
    "in_standard_filter": 1
@@ -103,6 +116,34 @@
    "fieldname": "revision",
    "fieldtype": "Int",
    "label": "Revision"
+  },
+  {
+   "fieldname": "version_type",
+   "fieldtype": "Select",
+   "label": "Version",
+   "options": "Tender BOQ\nContract BOQ\nRevised BOQ",
+   "default": "Contract BOQ",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "version_of",
+   "fieldtype": "Link",
+   "label": "Revises",
+   "options": "Project BOQ",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "label": "Tender",
+   "options": "Tender"
+  },
+  {
+   "fieldname": "template",
+   "fieldtype": "Link",
+   "label": "From template",
+   "options": "BOQ Template",
+   "read_only": 1
   },
   {
    "fieldname": "received_on",
@@ -177,6 +218,62 @@
    "fieldtype": "Percent",
    "label": "Target margin %",
    "default": "17"
+  },
+  {
+   "fieldname": "sb_price",
+   "fieldtype": "Section Break",
+   "label": "Tender price",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "site_oh_pct",
+   "fieldtype": "Percent",
+   "label": "Site overheads %",
+   "default": "6"
+  },
+  {
+   "fieldname": "ho_oh_pct",
+   "fieldtype": "Percent",
+   "label": "Head-office overheads %",
+   "default": "4"
+  },
+  {
+   "fieldname": "contingency_pct",
+   "fieldtype": "Percent",
+   "label": "Contingency %",
+   "default": "2"
+  },
+  {
+   "fieldname": "cb_price",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "label": "Total cost",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bid_price",
+   "fieldtype": "Currency",
+   "label": "Bid price",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_variations",
+   "fieldtype": "Currency",
+   "label": "Approved variations (revised BOQ)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "revised_value",
+   "fieldtype": "Currency",
+   "label": "Revised value",
+   "options": "currency",
+   "read_only": 1
   },
   {
    "fieldname": "work_done",

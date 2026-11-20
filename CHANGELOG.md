@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.9.1 — Construction (India), stage B1: estimating (21 Nov 2026)
+First of the stages that close the gaps against the C12 prototype (see the parity check). No new feature switch — part of
+the construction module. The BOQ page is now "BOQ & Estimating".
+- **Rate Analysis** (new): an item of work per unit — material, labour and plant resources with their quantity per unit
+  (DSR / SOR / company norms) and rate; water charges, contractor overheads and profit → the analysed rate. "Refresh rates
+  from purchases" takes each linked item's latest bought rate (purchase order, receipt or invoice). Approved by the QS / PM
+  / MD. Holds the state SOR rate for comparison.
+- **BOQ lines** link to a rate analysis. On a tender BOQ the material / labour / plant shares (the cost build-up) follow the
+  analysis; on an awarded BOQ the budget stays as it is. Lines quoted below the analysed rate are flagged.
+- **BOQ versions:** Project BOQ gets Version (tender / contract / revised), Revises and Tender. "Contract version…" makes
+  the contract BOQ from the tender BOQ once the tender is awarded or L1 (optional negotiated reduction on every rate);
+  "Revise with approved variations" makes the revised BOQ (value = BOQ + approved variations). The old version is kept,
+  superseded; the measurement book and RA bills work on the current one.
+- **Tender price & margin:** direct cost from the build-up + site overheads 6% + head-office overheads 4% + contingency 2%
+  (editable on the BOQ) → total cost → bid price at the target margin, against the client's estimate. Margin buttons set
+  the tender's quoted value; above ₹20 crore only the MD can set it; the price is locked once the bid is submitted.
+- **BOQ Template** (new): standard BOQs (buildings, roads, PEB, fit-out) with each line's share of the value; "New BOQ from
+  template…" makes a tender or project BOQ with quantities following the value.
+- **Tenders:** submission checklist (11 standard items, ticked with who and when; a bid is not submitted while items are
+  missing; KPI for bids due in 7 days with documents missing) and the bids opened (bidders and amounts → ranks, L1, our
+  rank, vs L1 and vs the estimate).
+- New tabs: BOQ › Rate analysis, Cost build-up, BOQ versions, Rate library vs SOR, Tender price & margin, Templates;
+  Tenders › Submission checklist, Bid analysis. Table buttons can now open a dialog first.
+- Demo: 8 rate analyses (concrete, steel, masonry, plaster, tiles, DBM, WMM) linked to 46 BOQ lines, 4 BOQ templates,
+  tender BOQs (V0) behind P-2401 and P-2403, P-2401 revised with its approved variations, the Kochi Water Metro tender
+  priced from the buildings template, checklists and the bids of five decided tenders.
+
 ## 1.9.0 — Construction (India), stage A6: project controls, portals & apps (20 Nov 2026)
 Follows prototype C9. Two features: `cn_ctl` "Construction — project controls" (Structure and Capstone) and `cn_portal`
 "Construction — portals & apps" (Capstone). Project Controls joins the Construction (India) menu; a new group "Portals &

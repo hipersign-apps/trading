@@ -214,6 +214,7 @@ hipersign.module.render = function (wrapper, key) {
 					// v1.8.0: a list action may open a create window or run a server method (Approve submitted timesheets)
 					if (a.new) return hipersign.fm ? hipersign.fm.new(a.new, a.values || {}) : frappe.new_doc(a.new);
 					if (a.url) return window.open(frappe.urllib.get_full_url(a.url));
+					if (a.js && hipersign.projects && hipersign.projects[a.js]) return hipersign.projects[a.js](a.arg, load);  // v1.9.1: a dialog first
 					if (a.method) return frappe.xcall(a.method, a.args || {}).then((m) => { frappe.show_alert({ message: (m && m.message) || __("Done"), indicator: "green" }, 6); load(); });
 					frappe.route_options = a.options || null; frappe.set_route(...a.route);
 				});

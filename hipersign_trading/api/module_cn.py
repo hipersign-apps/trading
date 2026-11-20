@@ -664,3 +664,8 @@ KEYS = KEYS + _ptl.KEYS
 for _k in _ptl.KEYS:
 	globals()[_k + "_module"] = getattr(_ptl, _k + "_module")
 	globals()[_k + "_rows"] = _whole(getattr(_ptl, _k + "_rows"))
+
+# v1.9.1 B1: estimating tabs on the BOQ and Tenders pages
+from hipersign_trading.api import module_cn_est as _est  # noqa: E402
+
+_est.extend(globals())

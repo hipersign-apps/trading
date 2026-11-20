@@ -1,0 +1,387 @@
+{
+ "doctype": "DocType",
+ "name": "Rate Analysis",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-21 00:00:00.000000",
+ "modified": "2026-11-21 00:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "field_order": [
+  "naming_series",
+  "company",
+  "title",
+  "code",
+  "category",
+  "unit",
+  "cb1",
+  "based_on",
+  "rates_as_of",
+  "status",
+  "approved_by",
+  "sb_r",
+  "resources",
+  "sb_t",
+  "material_cost",
+  "labour_cost",
+  "plant_cost",
+  "base_cost",
+  "cb2",
+  "water_pct",
+  "overhead_pct",
+  "profit_pct",
+  "water",
+  "overheads",
+  "profit",
+  "analysed_rate",
+  "sb_s",
+  "sor_name",
+  "sor_code",
+  "cb3",
+  "sor_rate",
+  "notes",
+  "currency"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "RAN-.####",
+   "default": "RAN-.####",
+   "reqd": 1,
+   "hidden": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Item of work",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "label": "Code",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "Earthwork\nConcrete\nReinforcement\nMasonry\nFinishes\nDoors & windows\nRoads\nDrainage\nStructural steel\nMEP\nFit-out\nOther",
+   "default": "Concrete",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Data",
+   "label": "Unit",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "based_on",
+   "fieldtype": "Select",
+   "label": "Coefficients from",
+   "options": "CPWD DSR 2023\nState PWD SOR\nCompany norms\nMarket",
+   "default": "CPWD DSR 2023"
+  },
+  {
+   "fieldname": "rates_as_of",
+   "fieldtype": "Date",
+   "label": "Rates as of",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nApproved",
+   "default": "Draft",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Data",
+   "label": "Approved by",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_r",
+   "fieldtype": "Section Break",
+   "label": "Material, labour and plant per unit"
+  },
+  {
+   "fieldname": "resources",
+   "fieldtype": "Table",
+   "label": "Resources",
+   "options": "Rate Analysis Resource"
+  },
+  {
+   "fieldname": "sb_t",
+   "fieldtype": "Section Break",
+   "label": "Rate"
+  },
+  {
+   "fieldname": "material_cost",
+   "fieldtype": "Currency",
+   "label": "Material",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "labour_cost",
+   "fieldtype": "Currency",
+   "label": "Labour",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "plant_cost",
+   "fieldtype": "Currency",
+   "label": "Plant",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "base_cost",
+   "fieldtype": "Currency",
+   "label": "Material, labour & plant",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "water_pct",
+   "fieldtype": "Percent",
+   "label": "Water charges %",
+   "default": "1"
+  },
+  {
+   "fieldname": "overhead_pct",
+   "fieldtype": "Percent",
+   "label": "Contractor overheads %",
+   "default": "10"
+  },
+  {
+   "fieldname": "profit_pct",
+   "fieldtype": "Percent",
+   "label": "Profit %",
+   "default": "10"
+  },
+  {
+   "fieldname": "water",
+   "fieldtype": "Currency",
+   "label": "Water charges",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "overheads",
+   "fieldtype": "Currency",
+   "label": "Overheads",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "profit",
+   "fieldtype": "Currency",
+   "label": "Profit",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "analysed_rate",
+   "fieldtype": "Currency",
+   "label": "Analysed rate per unit",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "sb_s",
+   "fieldtype": "Section Break",
+   "label": "Schedule of rates"
+  },
+  {
+   "fieldname": "sor_name",
+   "fieldtype": "Data",
+   "label": "Schedule",
+   "default": "Kerala PWD SOR 2025"
+  },
+  {
+   "fieldname": "sor_code",
+   "fieldtype": "Data",
+   "label": "SOR item"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sor_rate",
+   "fieldtype": "Currency",
+   "label": "SOR rate",
+   "options": "currency"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "hidden": 1,
+   "fetch_from": "company.default_currency",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Managing Director"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Project Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Projects Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Quantity Surveyor"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "BD Manager"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Accounts User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Projects User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Demo Viewer"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "editable_grid": 0,
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "title_field": "title",
+ "show_title_field_in_link": 1,
+ "search_fields": "title,code,category",
+ "description": "Construction (India): rate analysis of an item of work — material, labour and plant per unit from DSR coefficients and current rates, plus water, overheads and profit"
+}
