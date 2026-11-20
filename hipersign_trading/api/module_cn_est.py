@@ -175,7 +175,7 @@ def boq_rows(base):
 			rows = [_kv(_("Direct cost (material, labour, plant, subcontract)"), p.direct, cur), _kv(_("Site overheads {0:g}%").format(flt(b.site_oh_pct)), p.site, cur),
 				_kv(_("Head-office overheads {0:g}%").format(flt(b.ho_oh_pct)), p.ho, cur), _kv(_("Contingency {0:g}%").format(flt(b.contingency_pct)), p.cont, cur),
 				_kv(_("Total cost"), p.total, cur, True), _kv(_("Target margin"), f"{p.margin:g}%", cur), _kv(_("Bid price"), p.bid, cur, True,
-					sub=_("the MD sets bids above ₹20 Cr") if p.bid > EST.MD_BID_LIMIT else "")]
+					sub=_("the MD sets bids above {0}").format(CN.inr(EST.bid_limit())) if p.bid > EST.bid_limit() else "")]
 			if est:
 				d = (p.bid / est - 1) * 100
 				rows += [_kv(_("Client's estimate"), est, cur), _kv(_("Bid vs estimate"), f"{d:+.1f}%", cur)]

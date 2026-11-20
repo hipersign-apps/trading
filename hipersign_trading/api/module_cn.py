@@ -679,3 +679,8 @@ _ctl2.extend(globals())
 from hipersign_trading.api import module_cn_ops as _ops  # noqa: E402
 
 _ops.extend(globals())
+
+# v1.9.1 B4: pay day / pay proof / wage ledgers, portal inboxes, unit sales, S-curve, approval matrix, controlled documents, audits & PPE
+from hipersign_trading.api import module_cn_extra as _extra  # noqa: E402
+
+_extra.extend(globals())

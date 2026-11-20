@@ -68,6 +68,14 @@
 	<div class="card"><h4>{{ _("Photos sent") }}</h4><table class="t">{% for x in photos %}<tr><td>{{ x.caption }}</td><td>{{ x.project }}</td><td>{{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</td>
 		<td><span class="pill {{ 'green' if x.status == 'In the project log' else 'orange' }}">{{ _("Accepted") if x.status == "In the project log" else _("Being verified") }}</span></td></tr>
 		{% else %}<tr><td class="mut">{{ _("No photos yet.") }}</td></tr>{% endfor %}</table></div>
+	{% elif tab == "messages" %}
+		<div class="card"><h4>{{ _("Write to us") }}</h4><div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="mg-p"><option value="">{{ _("General") }}</option>{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div><div><small class="mut">{{ _("Subject") }}</small><input class="in" id="mg-s"></div></div>
+			<small class="mut">{{ _("Message") }}</small><textarea class="in" id="mg-m" rows="3"></textarea>
+			<button class="btn p" {{ "disabled" if preview }} onclick="spMsg()">{{ _("Send") }}</button></div>
+		<div class="card"><h4>{{ _("Messages") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Sent") }}</th><th>{{ _("Message") }}</th><th>{{ _("Our reply") }}</th></tr>
+		{% for m in msgs %}<tr><td class="mut" style="white-space:nowrap">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }}<div>{{ m.from_name or "" }}</div></td>
+			<td><b>{{ m.subject or "" }}</b><div>{{ m.message }}</div></td><td>{% if m.reply %}{{ m.reply }}<div class="mut">{{ m.replied_by or "" }}</div>{% else %}<span class="pill orange">{{ _("Waiting for our reply") }}</span>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="3" class="mut">{{ _("No messages yet.") }}</td></tr>{% endfor %}</table></div></div>
 	{% endif %}
 </div>
 <script>
@@ -76,6 +84,11 @@ const done = (r) => { const m = (r && r.message && (r.message.message || r.messa
 const read = (el, max) => new Promise((ok) => { const f = el && el.files[0]; if (!f) return ok(null); const rd = new FileReader();
 	rd.onload = () => { if (!f.type.startsWith("image/")) return ok(rd.result); const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
 		c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .8)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
+function spMsg() {
+	const m = document.getElementById("mg-m").value;
+	if (!m.trim()) return frappe.msgprint("{{ _('Write the message.') }}");
+	frappe.call({ method: "hipersign_trading.api.construction_extra.sp_message", args: { project: document.getElementById("mg-p").value || null, subject: document.getElementById("mg-s").value, message: m }, freeze: true, callback: done });
+}
 function spBill(wo) {
 	const q = {}; document.querySelectorAll(".q").forEach((i) => { if (+i.value) q[i.dataset.item] = +i.value; });
 	if (!Object.keys(q).length) return frappe.msgprint("{{ _('Enter the quantity done on at least one item.') }}");

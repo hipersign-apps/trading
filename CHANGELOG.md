@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.9.1 — Construction (India), stage B4: the last prototype gaps (24 Nov 2026)
+- **Labour & Workers:** *Pay day* — every muster waiting to be approved or paid, worker by worker (days, OT, earned,
+  PF + ESI, advance, net, UPI), with Approve / Pay by UPI. *Contractor pay proof* (new) — per labour-only work order and
+  pay week: our gate attendance of the contractor's workers, what is due at their rates (never below the minimum wage),
+  what they paid as per the proof; Missing proof / Gap / Verified. "Pay direct & recover" (CLRA principal employer) posts
+  Dr Subcontract Costs, Cr Bank and puts the amount on the contractor's draft running bill as a recovery. *Wage ledgers* —
+  net wages week by week per own worker and the advance owed.
+- **Portals:** clients and subcontractors write to us from a Messages tab on their portal (new Portal Message); Client
+  Portal › Client inbox and Subcontractor Portal › Inbox with Reply (back on the portal, and by e-mail when an outgoing
+  account is set up) and Close. Subcontractor Portal › Feature settings — per subcontractor: bills, photos, labour
+  documents, payments, retention, messages (new Supplier fields; the portal hides the tabs and refuses the actions).
+- **Unit sales** (Quotations & Sales › Unit sales): an own development (Project › Own development, RERA no.) with its
+  units (new Development Unit). Booking raises the demand for booking, agreement and every stage already done; "<stage>
+  completed on site" raises a demand for every booked unit (construction-linked plan of 9 stages); demands are Sales
+  Invoices with GST 5% (item tax template); "Received…" posts the buyer's payment against the oldest demands. Agreement
+  value, demanded, received, overdue per unit.
+- **Cost Control › S-curve:** planned value (S-shaped over the contract period), earned value (RA bills and unbilled
+  measurements over time, scaled to today's EV) and actual cost (expense postings), month by month, with the table.
+- **Accounts › Approval matrix:** who approves what with the live limits, "Change limits…" (MD) writing Hipersign
+  Settings with the changes from the audit trail; the tender-bid MD limit is now a setting (cn_bid_md_limit, ₹20 Cr).
+  **Notification rules:** the rules on construction records with their channels, switch on / off, new rule.
+  **Statements** gain GSTR-1, GSTR-2B reconciliation, e-way bills, GST return log, leave, attendance, employee advances
+  and salary slips (when installed); the same links in the GST & TDS and Payroll & Statutory sub-menus.
+- **Drawings & RFIs › Controlled documents** (new Controlled Document): method statements, procedures, ITPs, policies —
+  revision, access, owner, review date; "New revision…" (history kept, review a year on), Under review, Withdrawn. Red
+  flag on a project document past its review.
+- **Safety › Site audits** (the Safety Audit records by site with score) and **PPE compliance** (by site, the workers
+  without PPE, "PPE issued"). Red flag: workers without PPE.
+- Demo: two pay weeks of gate attendance and pay proofs for the labour contractors (one gap, one missing), five portal
+  messages, Hipersign Greens — 12 villas with nine buyers, four stages demanded and two buyers behind, four in-app
+  notification rules, eight controlled documents.
+
 ## 1.9.1 — Construction (India), stage B3: site, plant, store and subcontractor gaps (23 Nov 2026)
 - **Site diary** (new, DPR & Hindrances › Site diary): the site's day-book — weather, visitors, events, safety and any
   instruction received with who gave it. An instruction waits "to confirm in writing" until it is confirmed (with the

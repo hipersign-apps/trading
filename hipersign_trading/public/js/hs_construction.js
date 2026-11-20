@@ -407,7 +407,11 @@ Object.assign(hipersign.cn.FORM_ACTS, { "Project Risk": { Open: [["Close…", "j
 // the buttons of record types added after the first binding (B1 Rate Analysis, B2 risks and minutes); "*" = any status
 Object.assign(hipersign.cn.FORM_ACTS, { "Site Diary": { "To confirm in writing": [["Confirmed in writing…", "js:cn_sd_confirm", 1], ["Raise extra item…", "js:cn_sd_ei"], ["No cost effect", "sd_nocost"]] },
 	"Scrap Lot": { Identified: [["Invite bids", "scrap_invite", 1]], "Bids invited": [["Sell to the highest bidder", "scrap_sell", 1]] } });
-["Rate Analysis", "Project Risk", "Project Meeting", "Site Diary", "Scrap Lot"].forEach((dt) => frappe.ui.form.on(dt, {
+Object.assign(hipersign.cn.FORM_ACTS, { "Contractor Pay Proof": { Gap: [["Pay direct & recover", "cpp_pay_direct", 1]] },
+	"Controlled Document": { Current: [["New revision…", "js:cn_cdoc_rev", 1], ["Under review", "js:cn_cdoc_review"]], "Under review": [["Issue as next revision…", "js:cn_cdoc_rev", 1]] },
+	"Portal Message": { Open: [["Reply…", "js:cn_msg_reply", 1], ["Close", "msg_close"]] },
+	"Development Unit": { Available: [["Book…", "js:cn_unit_book", 1]], Booked: [["Received…", "js:cn_unit_receive", 1]] } });
+["Rate Analysis", "Project Risk", "Project Meeting", "Site Diary", "Scrap Lot", "Contractor Pay Proof", "Controlled Document", "Portal Message", "Development Unit"].forEach((dt) => frappe.ui.form.on(dt, {
 	refresh(frm) {
 		if (frm.is_new()) return;
 		const A = hipersign.cn.FORM_ACTS[dt] || {};
@@ -511,4 +515,48 @@ Object.assign(hipersign.projects, {
 $(document).on("app_ready", () => {
 	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
 	if (L) Object.assign(L, { "Site Diary": ["hipersign-cn-site", "diary"], "Scrap Lot": ["hipersign-cn-store", "scrap"] });
+});
+
+// v1.9.1 B4: portal replies, unit sales, approval limits, controlled documents
+Object.assign(hipersign.projects, {
+	cn_msg_reply(name, done) {
+		frappe.db.get_value("Portal Message", name, ["party", "subject", "message"]).then(({ message: m }) => hipersign.projects._cn_ask(__("Reply to {0}", [m.party]), [
+			{ fieldtype: "HTML", options: `<div class="text-muted" style="margin-bottom:8px"><b>${frappe.utils.escape_html(m.subject || "")}</b><br>${frappe.utils.escape_html(m.message || "")}</div>` },
+			{ fieldname: "reply", fieldtype: "Small Text", label: __("Reply"), reqd: 1 }], __("Send"), (v) => hipersign.cn.act("msg_reply", name, v, done)));
+	},
+	cn_unit_book(name, done) {
+		hipersign.projects._cn_ask(__("Book {0}", [name]), [{ fieldname: "customer", fieldtype: "Link", options: "Customer", label: __("Buyer"), reqd: 1 },
+			{ fieldname: "date", fieldtype: "Date", label: __("Booked on"), default: frappe.datetime.get_today(), reqd: 1 },
+			{ fieldtype: "HTML", options: `<p class="text-muted">${__("Raises the demand for booking, agreement and every stage already completed — GST 5%.")}</p>` }],
+			__("Book"), (v) => hipersign.cn.act("unit_book", name, v, done));
+	},
+	cn_unit_receive(name, done) {
+		frappe.db.get_value("Development Unit", name, ["outstanding", "unit_no"]).then(({ message: u }) => hipersign.projects._cn_ask(__("Payment from the buyer of {0}", [u.unit_no]), [
+			{ fieldname: "amount", fieldtype: "Currency", options: "INR", label: __("Amount received"), default: u.outstanding, reqd: 1 },
+			{ fieldname: "date", fieldtype: "Date", label: __("Received on"), default: frappe.datetime.get_today(), reqd: 1 }, { fieldname: "ref", fieldtype: "Data", label: __("UTR / cheque no.") }],
+			__("Record"), (v) => hipersign.cn.act("unit_receive", name, v, done)));
+	},
+	cn_am_limits(keys, done) {
+		const L = { cn_quote_discount_limit: [__("Quotation discount above which the MD approves (%)"), "Percent"], cn_quote_margin_floor: [__("Quotation margin below which the MD approves (%)"), "Percent"],
+			cn_bid_md_limit: [__("Tender bid above which only the MD sets the price"), "Currency"], cn_jv_md_limit: [__("Manual journal above which the MD approves"), "Currency"],
+			cn_worker_advance_limit: [__("Worker advance above which the PM approves"), "Currency"], cn_site_cash_limit: [__("Site cash a site engineer books without approval"), "Currency"],
+			cn_ld_flag_days: [__("Flag a project this many days behind (LD)"), "Int"] };
+		const ks = keys.split(",").filter((k) => L[k]);
+		frappe.db.get_doc("Hipersign Settings").then((s) => hipersign.projects._cn_ask(__("Change approval limits"), ks.map((k) => ({ fieldname: k, fieldtype: L[k][1], label: L[k][0],
+			options: L[k][1] === "Currency" ? "INR" : undefined, default: s[k], reqd: 1 })).concat([{ fieldtype: "HTML", options: `<p class="text-muted">${__("Applies to the next document; every change is kept in the audit trail.")}</p>` }]),
+			__("Save limits"), (v) => hipersign.cn.act("am_limits", "Hipersign Settings", v, done)));
+	},
+	cn_cdoc_rev(name, done) {
+		hipersign.projects._cn_ask(__("Issue the next revision — {0}", [name]), [{ fieldname: "revision", fieldtype: "Data", label: __("Revision (blank: the next number)") },
+			{ fieldname: "file", fieldtype: "Attach", label: __("Revised file") }, { fieldname: "note", fieldtype: "Data", label: __("What changed") }],
+			__("Issue"), (v) => hipersign.cn.act("cdoc_rev", name, v, done));
+	},
+	cn_cdoc_review(name, done) {
+		hipersign.cn.act("cdoc_status", name, { status: "Under review" }, done);
+	},
+});
+$(document).on("app_ready", () => {
+	const L = (hipersign.nav && hipersign.nav.LIST_PAGE) || null;
+	if (L) Object.assign(L, { "Contractor Pay Proof": ["hipersign-cn-labour", "cpp"], "Controlled Document": ["hipersign-cn-drawings", "cdoc"], "Portal Message": ["hipersign-cn-client-portal", "in"],
+		"Development Unit": ["hipersign-cn-sales", "unit"] });
 });

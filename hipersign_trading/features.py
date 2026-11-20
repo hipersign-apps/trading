@@ -61,17 +61,17 @@ FEATURES = {
 		[], ["Projects"], []),
 	# v1.9.0 A2 (prototype C5): construction CRM, quotations with MD approval and revisions, contracts, claims, LD, collections
 	"cn_biz": ("Construction — business & contracts", "Industries", "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder",
-		["construction"], ["Client Visit", "Construction Contract", "Contract Claim", "Collection Follow-up"], [],
+		["construction"], ["Client Visit", "Construction Contract", "Contract Claim", "Collection Follow-up", "Development Unit"], [],
 		["hipersign-cn-crm", "hipersign-cn-sales", "hipersign-cn-contracts"], [], [], []),
 	# v1.9.0 A3 (prototypes C3, C6, C7): procurement & stores, vendors, central store, subcontractors, workers & wages, equipment
 	"cn_site": ("Construction — site resources", "Industries", "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment",
 		["construction"], ["Material Norm", "Subcontractor Work Order", "Subcontractor Bill", "Labour Compliance", "Minimum Wage", "Site Worker", "Weekly Muster",
-			"Worker Advance", "Construction Equipment", "Equipment Log", "Equipment Maintenance", "Productivity Norm", "Scrap Lot"], [],
+			"Worker Advance", "Construction Equipment", "Equipment Log", "Equipment Maintenance", "Productivity Norm", "Scrap Lot", "Contractor Pay Proof"], [],
 		["hipersign-cn-proc", "hipersign-cn-vendors", "hipersign-cn-store", "hipersign-cn-subcon", "hipersign-cn-labour", "hipersign-cn-equipment"], [], [], []),
 	# v1.9.0 A4 (prototypes C4, C7): QA/QC, HSE, drawings & RFIs, handover & DLP
 	"cn_qhse": ("Construction — quality, safety & handover", "Industries", "Inspection & test plans, inspections, cube tests and NCRs; incidents, permits, toolbox talks and audits; drawings, RFIs and transmittals; snags, handover documents, DLP defects, warranties and retention release",
 		["construction"], ["ITP Item", "Inspection Request", "Cube Test", "NCR", "Safety Incident", "Work Permit", "Toolbox Talk", "Safety Audit", "Construction Drawing", "RFI",
-			"Transmittal", "Snag", "Handover Document", "DLP Defect", "Construction Warranty"], [],
+			"Transmittal", "Snag", "Handover Document", "DLP Defect", "Construction Warranty", "Controlled Document"], [],
 		["hipersign-cn-quality", "hipersign-cn-safety", "hipersign-cn-drawings", "hipersign-cn-handover"], [], [], []),
 	# v1.9.0 A5 (prototype C8): finance, tax and payroll for Indian contractors on ERPNext + India Compliance
 	"cn_fin": ("Construction — finance, tax & payroll", "Industries", "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals",
@@ -80,7 +80,7 @@ FEATURES = {
 	"cn_ctl": ("Construction — project controls", "Industries", "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline, the weekly review, tasks, risks & issues and minutes of meeting",
 		["construction"], ["Project Constraint", "Construction Milestone", "Project Review", "Project Risk", "Project Meeting"], [], ["hipersign-cn-controls"], [], [], []),
 	"cn_portal": ("Construction — portals & apps", "Industries", "Client portal, subcontractor portal, site app, worker app and site deliveries for the driver app",
-		["construction"], ["Site Photo", "Client Publication", "Site Attendance", "Site Expense", "Portal Activity"], [],
+		["construction"], ["Site Photo", "Client Publication", "Site Attendance", "Site Expense", "Portal Activity", "Portal Message"], [],
 		["hipersign-cn-client-portal", "hipersign-cn-partner-portal", "hipersign-cn-apps"], [], [], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]

@@ -463,7 +463,7 @@ VALIDATE = {"Construction Milestone": milestone_validate, "Project Constraint": 
 # ================================================================ client portal
 FEATURES = {"progress": ("Progress & milestones", 1), "photos": ("Published photos", 1), "bills": ("RA bills & invoices", 1), "documents": ("Documents & weekly reports", 1),
 	"certify": ("Certify RA bills online (private clients)", 1), "vo": ("Approve variations online", 1), "snags": ("Raise snags", 1), "whatsapp": ("WhatsApp updates", 0),
-	"cost": ("Cost & margin (off unless agreed)", 0)}
+	"cost": ("Cost & margin (off unless agreed)", 0), "messages": ("Send messages", 1)}
 
 
 def client_features(customer):
@@ -576,10 +576,15 @@ def cp_snag(project, location, description, trade=None):
 
 
 # ================================================================ subcontractor portal
-def _partner_check(work_order=None, project=None):
+def _partner_check(work_order=None, project=None, feature=None):
 	supplier, suppliers, preview = portal_party("Supplier")
 	if preview:
 		frappe.throw(_("This is a preview — the subcontractor does this on their own login."))
+	if feature:  # v1.9.1 B4: what each subcontractor may do on the portal
+		from hipersign_trading.api import construction_extra as X
+
+		if not X.partner_features(supplier).get(feature):
+			frappe.throw(_("This is not switched on for your account."), frappe.PermissionError)
 	if work_order:
 		w = frappe.db.get_value("Subcontractor Work Order", work_order, ["supplier", "project", "status"], as_dict=True)
 		if not w or w.supplier not in suppliers:
@@ -596,7 +601,7 @@ def _partner_check(work_order=None, project=None):
 @frappe.whitelist()
 def sp_bill(work_order, quantities, invoice_no=None, period_to=None):
 	"""quantities: {item_no: quantity this bill}."""
-	supplier, w = _partner_check(work_order)
+	supplier, w = _partner_check(work_order, feature="bills")
 	if w.status != "Active":
 		frappe.throw(_("The work order is {0}.").format(_(w.status)))
 	q = frappe.parse_json(quantities) if isinstance(quantities, str) else quantities
@@ -639,7 +644,7 @@ def _file(doctype, name, field, data_url, filename):
 
 @frappe.whitelist()
 def sp_compliance(project, month, workers=None, wage_register=None, pf_ecr=None, esi=None):
-	supplier, _w = _partner_check(project=project)
+	supplier, _w = _partner_check(project=project, feature="labour")
 	m = getdate(month).replace(day=1)
 	n = frappe.db.get_value("Labour Compliance", {"supplier": supplier, "project": project, "month": m})
 	c = frappe.get_doc("Labour Compliance", n) if n else frappe.get_doc({"doctype": "Labour Compliance", "supplier": supplier, "project": project, "month": m})
@@ -658,7 +663,7 @@ def sp_compliance(project, month, workers=None, wage_register=None, pf_ecr=None,
 
 @frappe.whitelist()
 def sp_photo(project, image, caption=None, location=None):
-	supplier, _w = _partner_check(project=project)
+	supplier, _w = _partner_check(project=project, feature="photos")
 	p = frappe.get_doc({"doctype": "Site Photo", "project": project, "image": "/files/placeholder.png", "caption": (caption or _("Progress photo"))[:140], "location": location,
 		"source": "Subcontractor portal", "supplier": supplier, "taken_by": _contact_name()})
 	with CN._elevated():

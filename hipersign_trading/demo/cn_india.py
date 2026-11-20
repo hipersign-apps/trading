@@ -17,7 +17,7 @@ cost brought forward per cost head. Every step skips what is already there.
 Load it with Hipersign Settings → Set-up → Load demo data → Construction (India)."""
 
 import frappe
-from frappe.utils import add_days, add_months, cint, date_diff, flt, get_first_day, get_last_day, getdate, today
+from frappe.utils import add_days, add_months, cint, date_diff, flt, get_first_day, get_last_day, getdate, now_datetime, today
 
 CO, ABBR = "Hipersign Construction & Infrastructure Pvt. Ltd.", "HCI"
 PAN = "AAHCH4821K"
@@ -1932,6 +1932,114 @@ def cn_ops(c):
 		frappe.flags.hs_cn_skip_role = False
 
 
+# ---------------------------------------------------------------- v1.9.1 B4: pay proof, portal messages, unit sales, notifications, controlled documents
+DEV_BUYERS = ["Anoop & Reshmi Nair", "Dr. Sajan Mathew", "Fathima Beevi", "Jayakrishnan P.", "Lijo & Ancy Joseph", "Mohammed Shafi", "Nimmy George", "Rajesh & Sindhu Pillai",
+	"Thomas Chacko"]
+CDOCS = [  # title, no., category, project, revision, access, issued (days), review (days), status
+	("Quality manual", "HCI-QM-01", "Quality", None, "R3", "All staff", -400, -35, "Current"), ("Method statement — RCC slab casting", "MS-RCC-04", "Method statement", "P-2401", "R1",
+	"Project team", -150, 215, "Current"), ("Method statement — DBM paving", "MS-RD-02", "Method statement", "P-2403", "R0", "Project team", -90, 275, "Current"),
+	("Work at height procedure", "HSE-WAH-03", "Safety", None, "R2", "All staff", -200, 165, "Current"), ("Lifting plan — tower crane TC-01", "HSE-LP-11", "Safety", "P-2401", "R1",
+	"Project team", -60, 305, "Under review"), ("ITP — structural concrete", "ITP-STR-01", "ITP", None, "R2", "Project team", -320, 45, "Current"),
+	("Delegation of financial powers", "POL-DFP-01", "Policy", None, "R4", "Management only", -380, -15, "Current"), ("Pour card", "FRM-QA-07", "Form", None, "R1", "All staff", -500, -135,
+	"Withdrawn")]
+
+
+def cn_extra(c):
+	"""B4: two weeks of gate attendance for the labour contractors' workers and their pay proofs (one with a wage gap,
+	one without proof), client and partner messages, the own villa development with bookings, stage demands and receipts,
+	notification rules and the controlled documents."""
+	from hipersign_trading.api import construction as CN
+	from hipersign_trading.api import construction_extra as X
+	from hipersign_trading.api import construction_site as S
+
+	if not frappe.db.exists("DocType", "Contractor Pay Proof") or frappe.db.exists("Controlled Document", {"doc_no": "HCI-QM-01"}):
+		return
+	frappe.flags.hs_cn_skip_role = True
+	try:
+		# gate attendance of the contractors' workers, the last two pay weeks, and their pay proofs
+		for pid in ("P-2401", "P-2405"):
+			wo = frappe.db.get_value("Subcontractor Work Order", {"project": pid, "kind": ["like", "Labour%"]})
+			ws = frappe.get_all("Site Worker", filters={"project": pid, "status": "Active", "contractor": ["is", "set"]}, pluck="name", order_by="worker_name")
+			for k in (2, 1):
+				st = S.week_start(D(-7 * k))
+				for x in range(7):
+					d = add_days(st, x)
+					if getdate(d).weekday() == 6:
+						continue
+					for i, w in enumerate(ws):
+						if (i + x + k) % 9 == 0 or frappe.db.exists("Site Attendance", {"worker": w, "attendance_date": d}):
+							continue
+						frappe.get_doc({"doctype": "Site Attendance", "project": pid, "worker": w, "attendance_date": d, "method": "Gang check-in", "time_in": "07:45:00",
+							"marked_by": "Gate security"}).insert(ignore_permissions=True)
+				cp = frappe.get_doc({"doctype": "Contractor Pay Proof", "work_order": wo, "project": pid, "week_start": st})
+				cp.insert(ignore_permissions=True)
+				short = .07 if (pid == "P-2401" and k == 1) else 0
+				if not (pid == "P-2405" and k == 1):
+					cp.paid = round(flt(cp.due) * (1 - short) / 100) * 100
+					cp.proof = "/files/placeholder.png"
+				cp.save(ignore_permissions=True)
+		# messages on the portals
+		msgs = [("Customer", "Malabar Habitat Developers Pvt. Ltd.", "P-2401", "Lobby tile sample", "Please keep the 600 × 1200 sample ready for our visit on Saturday.", None),
+			("Customer", "Ananthapuri Tech Parks Ltd.", "P-2402", "RA bill 9 — clarification", "The excavation quantity in bill 9 looks higher than the joint measurement. Can you share the MB pages?",
+				"Shared MB pages 41–44 on the portal; the extra is the sump pit (BOQ 1.3)."),
+			("Customer", "Malabar Habitat Developers Pvt. Ltd.", "P-2401", "Handover date for Block A", "When can our buyers inspect Block A flats?", None),
+			("Supplier", "Thrissur Labour Contractors", "P-2401", "Payment of bill 4", "Bill 4 was certified two weeks ago — when will it be paid?", None),
+			("Supplier", "Precision MEP Services Pvt. Ltd.", "P-2402", "Glazing drawings", "We need the approved shop drawings for the north façade before fabrication.", None)]
+		for kind, party, pj, sub, msg, rep in msgs:
+			if not frappe.db.exists(kind, party):
+				continue
+			m = frappe.get_doc({"doctype": "Portal Message", "party_type": kind, "party": party, "project": pj, "from_name": party.split(" ")[0] + " (portal)", "subject": sub, "message": msg,
+				"sent_on": frappe.utils.add_to_date(now_datetime(), days=-(len(sub) % 5) - 1), "company": CO, "status": "Open"})
+			m.insert(ignore_permissions=True)
+			if rep:
+				m.db_set({"reply": rep, "status": "Replied", "replied_by": "Meera Pillai", "replied_on": now_datetime()})
+		# own development: 12 villas, 9 booked, four stages done, two buyers behind
+		pj = frappe.get_doc({"doctype": "Project", "project_name": "Hipersign Greens — 12 villas, Kakkanad (own development)", "company": CO, "status": "Open", "hs_own_dev": 1,
+			"hs_rera_no": "K-RERA/PRJ/ERN/0123/2026", "expected_start_date": D(-330), "expected_end_date": D(400)})
+		pj.insert(ignore_permissions=True)
+		grp = frappe.db.get_value("Customer Group", {"name": "Individual"}) or frappe.db.get_value("Customer Group", {"is_group": 0})
+		terr = "India" if frappe.db.exists("Territory", "India") else frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"
+		for i in range(12):
+			frappe.get_doc({"doctype": "Development Unit", "project": pj.name, "unit_no": f"V-{i + 1:02d}", "unit_type": "4 BHK villa" if i % 3 == 0 else "3 BHK villa",
+				"area_sqft": 2680 if i % 3 == 0 else 2150, "agreement_value": round((1.15 + (i * 7 % 31) / 100) * 1e7, -3)}).insert(ignore_permissions=True)
+		units = frappe.get_all("Development Unit", filters={"project": pj.name}, pluck="name", order_by="unit_no")
+		for i, b in enumerate(DEV_BUYERS):
+			if not frappe.db.exists("Customer", b):
+				frappe.get_doc({"doctype": "Customer", "customer_name": b, "customer_type": "Individual", "customer_group": grp, "territory": terr,
+					"gst_category": "Unregistered"}).insert(ignore_permissions=True)
+				a = frappe.get_doc({"doctype": "Address", "address_title": b, "address_type": "Billing", "address_line1": f"House {12 + i * 3}, Kakkanad", "city": "Kochi", "state": "Kerala",
+					"pincode": "682030", "country": "India", "is_primary_address": 1, "links": [{"link_doctype": "Customer", "link_name": b}]})
+				if a.meta.has_field("gst_category"):
+					a.gst_category = "Unregistered"
+				a.insert(ignore_permissions=True)
+			X._a_unit_book(units[i], frappe._dict(customer=b, date=D(-300 + i * 22)))
+		frappe.db.set_value("Project", pj.name, "hs_dev_stage", 2)
+		for d in (-150, -60):
+			X._a_dev_stage(pj.name, frappe._dict(date=D(d)))
+		for i, u in enumerate(units[:9]):
+			if i in (2, 6):
+				SI = frappe.get_all("Sales Invoice", filters={"hs_dev_unit": u, "docstatus": 1}, fields=["grand_total"], order_by="posting_date asc")
+				X._a_unit_receive(u, frappe._dict(amount=sum(x.grand_total for x in SI[:-1]), date=D(-55)))
+			else:
+				X._a_unit_receive(u, frappe._dict(date=D(-40)))
+		# notification rules (in-app)
+		for dt, ev, subj, cond, role in (("RA Bill", "Value Change", "RA bill certified by the client", None, "Accounts User"),
+				("Work Permit", "New", "Permit to work requested", None, "Safety Officer"), ("Portal Message", "New", "New message on the portal", None, "Project Manager"),
+				("Hindrance", "New", "Hindrance recorded on site", None, "Project Manager")):
+			n = frappe.get_doc({"doctype": "Notification", "name": subj, "subject": subj, "document_type": dt, "event": ev, "channel": "System Notification", "enabled": 1,
+				"message": "{{ doc.name }} — " + subj, "recipients": [{"receiver_by_role": role}]})
+			if ev == "Value Change":
+				n.value_changed = "status"
+			n.insert(ignore_permissions=True)
+		# controlled documents
+		for t, no, cat, pid, rev, acc, iss, rv, stt in CDOCS:
+			frappe.get_doc({"doctype": "Controlled Document", "title": t, "doc_no": no, "category": cat, "project": pid, "company": CO, "revision": rev, "access": acc, "issued_on": D(iss),
+				"review_on": D(rv), "owner_name": "Sajith Kumar" if cat == "Safety" else "Joseph Mathew" if cat in ("Quality", "ITP", "Form") else "Managing Director",
+				"status": stt}).insert(ignore_permissions=True)
+	finally:
+		frappe.flags.hs_cn_skip_role = False
+
+
 def cn_finish(c):
 	"""The Capstone edition (every Construction module) and the menu."""
 	from hipersign_trading import features, navigation
@@ -1946,4 +2054,4 @@ def cn_finish(c):
 	navigation.apply()
 
 
-STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_estimating, cn_controls2, cn_ops, cn_finish]
+STEPS = [cn_company, cn_customers, cn_projects, cn_tenders, cn_bonds, cn_billing, cn_measurements, cn_site, cn_resources, cn_costs, cn_business, cn_quality, cn_finance, cn_portal, cn_estimating, cn_controls2, cn_ops, cn_extra, cn_finish]

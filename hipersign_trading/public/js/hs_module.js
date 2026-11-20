@@ -119,7 +119,7 @@ hipersign.module.cols_html = function (c) {
 	if (!L.length) return `<div class="hsx-empty">${__("Nothing in this period.")}</div>`;
 	// v1.8.4: column cards (output vs plan, variance by work order…) get axes and the chart type menu — the chart kit
 	if (hipersign.chart && hipersign.chart.chart) {
-		return hipersign.chart.chart({ labels: L, series: S.map((s) => ({ name: s.name, data: s.data.map(flt), color: s.color })), kind: "bar", key: c.title,
+		return hipersign.chart.chart({ labels: L, series: S.map((s) => ({ name: s.name, data: s.data.map((v) => (v === null || v === undefined ? null : flt(v))), color: s.color })), kind: c.kind || "bar", key: c.title,
 			money: !c.count && !c.pct, currency: c.currency, h: 220 });
 	}
 	const all = S.flatMap((s) => s.data.map((v) => flt(v)));

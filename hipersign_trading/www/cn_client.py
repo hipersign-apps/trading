@@ -11,7 +11,7 @@ from hipersign_trading.api import construction_portal as PT
 
 no_cache = 1
 TABS = [("progress", "Progress", "progress"), ("bills", "RA bills", "bills"), ("documents", "Documents", "documents"), ("variations", "Variations", "vo"),
-	("snags", "Snags", "snags"), ("cost", "Cost & margin", "cost")]
+	("snags", "Snags", "snags"), ("cost", "Cost & margin", "cost"), ("messages", "Messages", "messages")]
 
 
 def get_context(context):
@@ -65,5 +65,9 @@ def get_context(context):
 		context.trades = (frappe.get_meta("Snag").get_field("trade").options or "").split("\n")
 	elif t == "cost":
 		context.cost = F
+	elif t == "messages":  # v1.9.1 B4
+		from hipersign_trading.api import construction_extra as X
+
+		context.msgs = [m for m in X.messages("Customer", customer) if not m.project or m.project == p.name]
 	context.today = today()
 	return context

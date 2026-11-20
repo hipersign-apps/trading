@@ -73,6 +73,14 @@
 			<td>{{ frappe.format(s.target, {"fieldtype": "Date"}) if s.target else "—" }}</td><td><span class="pill {{ {'Verified': 'green', 'Fixed': 'blue', 'Open': 'orange'}.get(s.status, '') }}">{{ _(s.status) }}</span></td></tr>
 		{% else %}<tr><td colspan="5" class="mut">{{ _("No snags.") }}</td></tr>{% endfor %}</table></div></div>
 
+	{% elif tab == "messages" %}
+		<div class="card"><h4>{{ _("Write to us") }}</h4><small class="mut">{{ _("Subject") }}</small><input class="in" id="mg-s">
+			<small class="mut">{{ _("Message") }}</small><textarea class="in" id="mg-m" rows="3"></textarea>
+			<button class="btn p" {{ "disabled" if preview }} onclick="cnMsg()">{{ _("Send") }}</button></div>
+		<div class="card"><h4>{{ _("Messages") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Sent") }}</th><th>{{ _("Message") }}</th><th>{{ _("Our reply") }}</th></tr>
+		{% for m in msgs %}<tr><td class="mut" style="white-space:nowrap">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }}<div>{{ m.from_name or "" }}</div></td>
+			<td><b>{{ m.subject or "" }}</b><div>{{ m.message }}</div></td><td>{% if m.reply %}{{ m.reply }}<div class="mut">{{ m.replied_by or "" }}</div>{% else %}<span class="pill orange">{{ _("Waiting for our reply") }}</span>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="3" class="mut">{{ _("No messages yet.") }}</td></tr>{% endfor %}</table></div></div>
 	{% elif tab == "cost" %}
 		<div class="card"><h4>{{ _("Cost & margin") }}</h4><table class="t">
 			<tr><td>{{ _("Revised contract") }}</td><td class="n">{{ frappe.format(cost.revised, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
@@ -92,6 +100,11 @@ function cnCertify(name, claimed, no) {
 function cnVo(name, ok) {
 	frappe.prompt([{ fieldname: "note", fieldtype: "Small Text", label: ok ? "{{ _('Note (optional)') }}" : "{{ _('Why do you reject it?') }}", reqd: !ok }],
 		(v) => frappe.call({ method: M + "cp_variation", args: { extra_item: name, approve: ok, note: v.note }, callback: done }), ok ? "{{ _('Approve variation') }}" : "{{ _('Reject variation') }}");
+}
+function cnMsg() {
+	const m = document.getElementById("mg-m").value;
+	if (!m.trim()) return frappe.msgprint("{{ _('Write the message.') }}");
+	frappe.call({ method: "hipersign_trading.api.construction_extra.cp_message", args: { project: "{{ p.name }}", subject: document.getElementById("mg-s").value, message: m }, freeze: true, callback: done });
 }
 function cnSnag() {
 	const loc = document.getElementById("sn-loc").value, desc = document.getElementById("sn-desc").value, trade = document.getElementById("sn-trade").value;

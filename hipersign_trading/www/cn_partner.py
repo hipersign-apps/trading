@@ -9,7 +9,7 @@ from hipersign_trading.api import construction as CN
 from hipersign_trading.api import construction_portal as PT
 
 no_cache = 1
-TABS = [("orders", "Work orders"), ("bills", "Running bills"), ("payments", "Payments"), ("labour", "Labour documents"), ("photos", "Photos")]
+TABS = [("orders", "Work orders"), ("bills", "Running bills"), ("payments", "Payments"), ("labour", "Labour documents"), ("photos", "Photos"), ("messages", "Messages")]
 
 
 def get_context(context):
@@ -18,9 +18,12 @@ def get_context(context):
 	context.no_breadcrumbs = 1
 	context.preview, context.parties, context.supplier = preview, suppliers, supplier
 	context.title = _("{0} — partner portal").format(supplier)
-	context.tabs = [(k, _(l)) for k, l in TABS]
+	from hipersign_trading.api import construction_extra as X  # v1.9.1 B4: what this subcontractor may see and do
+
+	context.feat = feat = X.partner_features(supplier)
+	context.tabs = [(k, _(l)) for k, l in TABS if k == "orders" or feat.get(k)]
 	tab = frappe.form_dict.get("tab")
-	context.tab = tab if tab in dict(TABS) else "orders"
+	context.tab = tab if tab in dict(context.tabs) else "orders"
 	context.today = today()
 	wos = frappe.get_all("Subcontractor Work Order", filters={"supplier": supplier, "status": ["!=", "Draft"]}, fields=["name", "project", "scope", "kind", "status", "value",
 		"retention_pct", "tds_pct", "start_date", "end_date"], order_by="wo_date desc")
@@ -37,6 +40,10 @@ def get_context(context):
 		(_("Paid"), CN.inr(sum(flt(b.net_payable) for b in paid)), ""),
 		(_("Retention held"), CN.inr(sum(flt(b.retention) for b in bills if b.status in ("Approved", "Paid"))), _("released after the defects period")),
 		(_("TDS deducted"), CN.inr(sum(flt(b.tds) for b in bills if b.status in ("Approved", "Paid"))), _("sec. 194C — in your Form 26AS"))]
+	if not feat.retention:
+		context.kpis = [k for k in context.kpis if k[0] != _("Retention held")]
+	if not feat.payments:
+		context.kpis = [k for k in context.kpis if k[0] != _("Paid")]
 	context.held = [b for b in bills if b.compliance_hold]
 	t = context.tab
 	if t == "bills":
@@ -66,4 +73,7 @@ def get_context(context):
 		context.lab_projects = [(p, frappe.get_cached_value("Project", p, "project_name")) for p in sorted({w.project for w in wos if w.status == "Active"})]
 		context.photos = frappe.get_all("Site Photo", filters={"supplier": supplier, "source": "Subcontractor portal"}, fields=["name", "caption", "project", "status", "taken_on"],
 			order_by="taken_on desc", limit=40)
+	elif t == "messages":
+		context.msgs = X.messages("Supplier", supplier)
+		context.lab_projects = [(p, frappe.get_cached_value("Project", p, "project_name")) for p in sorted({w.project for w in wos})]
 	return context

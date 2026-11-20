@@ -23,7 +23,11 @@ MD, PM, PMS, QS, BD = "Managing Director", "Project Manager", "Projects Manager"
 CHECKLIST = ["Tender documents & corrigenda downloaded", "Pre-bid queries submitted", "Site visit report", "Estimate & rate analysis approved",
 	"PAN, GST and contractor registration", "Turnover — CA certificate, last 3 years", "Similar works — completion certificates", "Solvency certificate",
 	"EMD paid / BG uploaded", "Financial bid (BOQ) filled", "Signed with the digital signature (DSC) and uploaded"]
-MD_BID_LIMIT = 200000000  # ₹20 crore
+MD_BID_LIMIT = 200000000  # ₹20 crore — the default; Hipersign Settings › cn_bid_md_limit (v1.9.1 B4: the approval matrix)
+
+
+def bid_limit():
+	return flt(frappe.get_cached_doc("Hipersign Settings").get("cn_bid_md_limit")) or MD_BID_LIMIT
 SHARE_OF = {"Material": "mat_share", "Labour": "lab_share", "Plant": "plant_share"}
 COST_OF = {"Material": "material_cost", "Labour": "labour_cost", "Plant": "plant_cost"}
 
@@ -274,7 +278,7 @@ def _a_boq_price(name, a):
 		t = frappe.get_doc("Tender", b.tender)
 		if t.status not in ("Bid / no-bid", "Being priced"):
 			frappe.throw(_("{0} is already {1} — the price cannot change.").format(t.name, _(t.status)))
-		if flt(b.bid_price) > MD_BID_LIMIT and not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": MD}) and frappe.session.user != "Administrator":
+		if flt(b.bid_price) > bid_limit() and not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": MD}) and frappe.session.user != "Administrator":
 			frappe.throw(_("A bid of {0} is above ₹20 crore — the Managing Director sets it.").format(CN.inr(b.bid_price)), frappe.PermissionError)
 		t.our_bid, t.our_margin_pct = b.bid_price, m
 		t.flags.ignore_permissions = True
