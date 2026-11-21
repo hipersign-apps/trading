@@ -1,5 +1,277 @@
 # Changelog
 
+## 1.9.1 — Construction (India), stage B4: the last prototype gaps (24 Nov 2026)
+- **Labour & Workers:** *Pay day* — every muster waiting to be approved or paid, worker by worker (days, OT, earned,
+  PF + ESI, advance, net, UPI), with Approve / Pay by UPI. *Contractor pay proof* (new) — per labour-only work order and
+  pay week: our gate attendance of the contractor's workers, what is due at their rates (never below the minimum wage),
+  what they paid as per the proof; Missing proof / Gap / Verified. "Pay direct & recover" (CLRA principal employer) posts
+  Dr Subcontract Costs, Cr Bank and puts the amount on the contractor's draft running bill as a recovery. *Wage ledgers* —
+  net wages week by week per own worker and the advance owed.
+- **Portals:** clients and subcontractors write to us from a Messages tab on their portal (new Portal Message); Client
+  Portal › Client inbox and Subcontractor Portal › Inbox with Reply (back on the portal, and by e-mail when an outgoing
+  account is set up) and Close. Subcontractor Portal › Feature settings — per subcontractor: bills, photos, labour
+  documents, payments, retention, messages (new Supplier fields; the portal hides the tabs and refuses the actions).
+- **Unit sales** (Quotations & Sales › Unit sales): an own development (Project › Own development, RERA no.) with its
+  units (new Development Unit). Booking raises the demand for booking, agreement and every stage already done; "<stage>
+  completed on site" raises a demand for every booked unit (construction-linked plan of 9 stages); demands are Sales
+  Invoices with GST 5% (item tax template); "Received…" posts the buyer's payment against the oldest demands. Agreement
+  value, demanded, received, overdue per unit.
+- **Cost Control › S-curve:** planned value (S-shaped over the contract period), earned value (RA bills and unbilled
+  measurements over time, scaled to today's EV) and actual cost (expense postings), month by month, with the table.
+- **Accounts › Approval matrix:** who approves what with the live limits, "Change limits…" (MD) writing Hipersign
+  Settings with the changes from the audit trail; the tender-bid MD limit is now a setting (cn_bid_md_limit, ₹20 Cr).
+  **Notification rules:** the rules on construction records with their channels, switch on / off, new rule.
+  **Statements** gain GSTR-1, GSTR-2B reconciliation, e-way bills, GST return log, leave, attendance, employee advances
+  and salary slips (when installed); the same links in the GST & TDS and Payroll & Statutory sub-menus.
+- **Drawings & RFIs › Controlled documents** (new Controlled Document): method statements, procedures, ITPs, policies —
+  revision, access, owner, review date; "New revision…" (history kept, review a year on), Under review, Withdrawn. Red
+  flag on a project document past its review.
+- **Safety › Site audits** (the Safety Audit records by site with score) and **PPE compliance** (by site, the workers
+  without PPE, "PPE issued"). Red flag: workers without PPE.
+- Demo: two pay weeks of gate attendance and pay proofs for the labour contractors (one gap, one missing), five portal
+  messages, Hipersign Greens — 12 villas with nine buyers, four stages demanded and two buyers behind, four in-app
+  notification rules, eight controlled documents.
+
+## 1.9.1 — Construction (India), stage B3: site, plant, store and subcontractor gaps (23 Nov 2026)
+- **Site diary** (new, DPR & Hindrances › Site diary): the site's day-book — weather, visitors, events, safety and any
+  instruction received with who gave it. An instruction waits "to confirm in writing" until it is confirmed (with the
+  letter / RFI reference), raised as an extra item (draft, linked back) or closed as no cost. One page per site per day.
+  Red flag: a verbal instruction not confirmed after 7 days.
+- **Productivity** (Labour & Workers › Productivity): DPR quantity ÷ man-days per activity against the standard output per
+  man-day of the trade (new Productivity Norm, matched on the DPR activity). The DPR gets Trade and Man-days.
+- **Equipment › Diesel:** litres issued ÷ logbook hours against the norm, excess litres and their value (₹92/L); more
+  than 10% over is flagged. **Equipment › Hire bills:** per hired machine and month — logbook hours (or days), the minimum
+  billable hours of the hire terms (new field on the equipment), the amount; "Book bill" (after the month) makes the
+  purchase invoice to the hirer — Plant & Equipment Hire on the project, input GST, TDS 194I 2%. Red flag: last month's
+  hire bill not booked. New KPI: hire bills to book.
+- **Central Store › Returnables at sites:** items marked Returnable (props, scaffolding, plywood) lying at each site store
+  — since when, value, hire at 4% a month, charged so far; "Return to store…" raises the transfer back (dispatch and
+  delivery as usual). New KPI. **Central Store › Scrap** (new Scrap Lot): identified → sealed bids → sold to the highest
+  bidder (a PCB-authorised one for hazardous waste; more than 10% under the estimate only the MD) — Sales Invoice with
+  Other Income - Scrap, output GST 18% and TCS 1% (section 206C(1)).
+- **Subcontractors › Advances:** the work order's advance (at most 20%) and its recovery % (default 10); "Pay advance…"
+  posts Dr Advances to Subcontractors, Cr Bank; every draft running bill recovers its % until nil.
+  **Issued material:** free-issue material (a material issue ticked with the work order) against the theoretical for the
+  work billed plus wastage (the material norms); the excess at 1.5× rate; "Recover on draft bill" puts it on the next
+  running bill. **Margin on scope:** our BOQ rate (its labour share for labour-only work) against the subcontract rate.
+- New custom fields: Item › Returnable; Stock Entry › Issued to subcontractor; Purchase Invoice › Hired equipment, Hire month.
+- Demo: productivity norms and man-days on the DPRs, site diaries with instructions, last month's logbook of the hired
+  machines (one hire bill booked), props and cuplock at two sites, four scrap lots (one sold), a façade work order with an
+  advance and its first bill, AAC blocks issued free to the masonry contractor.
+
+## 1.9.1 — Construction (India), stage B2: tracker, project controls and billing (22 Nov 2026)
+- **Construction Tracker** (new page, Construction (India) menu): every contract on one line through the 26 Indian steps in
+  6 phases — tender, LOA, agreement and PBG, mobilisation advance, mobilisation, budget, procurement, stores, subcontracts,
+  DPR, labour, MB, RA bill, certification, invoice, extra items / EOT, cost, QA/HSE, handover, final bill, DLP, closure.
+  Each step shows status, % and the facts from the records (pop-up with who, documents and figures); on site steps 11–22
+  run side by side. Every red flag is placed on its step and opens the record. Filters: open, tender, mobilising,
+  execution, handover, DLP, closed, red flags; search.
+- **Project Controls:** Tasks (ERPNext Task on the live projects; mark done), Risks & issues (new Project Risk — risk or
+  issue, probability × impact score 1–9, cost and delay if it happens, owner, mitigation, review date; close with the
+  outcome, reopen) and Meetings (new Project Meeting — minutes with action points; "Raise tasks" turns each action point
+  into a Task owned and dated as agreed). New red flags: high risks past their review date, overdue tasks.
+- **RA Billing:**
+  - RA workbench — the next bill per BOQ line: billed before, this bill (client-checked measurements not yet billed),
+    measured but not yet checked, balance against the BOQ; "Create RA bill" from it.
+  - Mobilisation advance — per project: as per terms, received, recovered, to recover, the advance BG. "Advance
+    received…" posts Dr Bank, Cr Mobilisation Advance Received on the project; it needs an advance payment guarantee on the
+    project and cannot exceed the advance in the terms (MD / Accounts).
+  - Final bill — final measured value, approved extra items, less the RA bills certified, retention, advance left,
+    performance BG and what is still open. "Prepare final bill" (after handover, nothing with the client, no unchecked
+    measurement, no open extra item) bills the last measurements and the extra items not yet billed, and recovers the rest
+    of the advance.
+- **Change:** an RA bill now recovers only the mobilisation advance actually received (credits to Mobilisation Advance
+  Received for the project), capped at the advance in the terms. A project whose advance has not come in recovers nothing.
+  New red flag: advance not received after mobilisation.
+- Fixed: the form buttons of Rate Analysis (B1) were not shown; they are now, with those of risks and minutes.
+- Demo: risks and issues on every live project, three sets of minutes (two turned into tasks) and a few tasks.
+
+## 1.9.1 — Construction (India), stage B1: estimating (21 Nov 2026)
+First of the stages that close the gaps against the C12 prototype (see the parity check). No new feature switch — part of
+the construction module. The BOQ page is now "BOQ & Estimating".
+- **Rate Analysis** (new): an item of work per unit — material, labour and plant resources with their quantity per unit
+  (DSR / SOR / company norms) and rate; water charges, contractor overheads and profit → the analysed rate. "Refresh rates
+  from purchases" takes each linked item's latest bought rate (purchase order, receipt or invoice). Approved by the QS / PM
+  / MD. Holds the state SOR rate for comparison.
+- **BOQ lines** link to a rate analysis. On a tender BOQ the material / labour / plant shares (the cost build-up) follow the
+  analysis; on an awarded BOQ the budget stays as it is. Lines quoted below the analysed rate are flagged.
+- **BOQ versions:** Project BOQ gets Version (tender / contract / revised), Revises and Tender. "Contract version…" makes
+  the contract BOQ from the tender BOQ once the tender is awarded or L1 (optional negotiated reduction on every rate);
+  "Revise with approved variations" makes the revised BOQ (value = BOQ + approved variations). The old version is kept,
+  superseded; the measurement book and RA bills work on the current one.
+- **Tender price & margin:** direct cost from the build-up + site overheads 6% + head-office overheads 4% + contingency 2%
+  (editable on the BOQ) → total cost → bid price at the target margin, against the client's estimate. Margin buttons set
+  the tender's quoted value; above ₹20 crore only the MD can set it; the price is locked once the bid is submitted.
+- **BOQ Template** (new): standard BOQs (buildings, roads, PEB, fit-out) with each line's share of the value; "New BOQ from
+  template…" makes a tender or project BOQ with quantities following the value.
+- **Tenders:** submission checklist (11 standard items, ticked with who and when; a bid is not submitted while items are
+  missing; KPI for bids due in 7 days with documents missing) and the bids opened (bidders and amounts → ranks, L1, our
+  rank, vs L1 and vs the estimate).
+- New tabs: BOQ › Rate analysis, Cost build-up, BOQ versions, Rate library vs SOR, Tender price & margin, Templates;
+  Tenders › Submission checklist, Bid analysis. Table buttons can now open a dialog first.
+- Demo: 8 rate analyses (concrete, steel, masonry, plaster, tiles, DBM, WMM) linked to 46 BOQ lines, 4 BOQ templates,
+  tender BOQs (V0) behind P-2401 and P-2403, P-2401 revised with its approved variations, the Kochi Water Metro tender
+  priced from the buildings template, checklists and the bids of five decided tenders.
+
+## 1.9.0 — Construction (India), stage A6: project controls, portals & apps (20 Nov 2026)
+Follows prototype C9. Two features: `cn_ctl` "Construction — project controls" (Structure and Capstone) and `cn_portal`
+"Construction — portals & apps" (Capstone). Project Controls joins the Construction (India) menu; a new group "Portals &
+Apps (India)" has Client Portal, Subcontractor Portal and Site & Worker App. Settings limit "Site cash a site engineer
+books without approval" (default ₹5,000).
+- **Project Controls:** RAG on eleven dimensions (schedule, cost, cash, billing, quality, safety, labour, materials, design &
+  RFIs, client, compliance) from every module's red flags plus SPI / CPI, overdue and unbilled work, constraints and
+  milestones — each with its reasons. Project Constraint (look-ahead: need-by, owner, remove), Construction Milestone
+  (planned / forecast / actual, slip, On track / At risk / Late / Done, shown to the client), the portfolio timeline
+  (finish forecast from the SPI) and Project Review (the week's RAG kept with the notes; next week shows what moved).
+- **Publishing:** Client Publication — site photos, GFC drawings and last week's progress report (built from the DPRs)
+  wait for the PM: publish, keep internal, publish all.
+- **Client portal** (`/cn-client`, staff preview from the desk): contract, work done, certified, paid and due; milestones
+  and published photos; RA bills — private clients certify online (a cut needs a note), government works stay on the MB;
+  GFC drawings and weekly reports; variations approved or rejected online (the contract value follows); snags raised.
+  Switches per client on the Customer (cost & margin and WhatsApp off by default). Published files are served only to
+  the client of the project. Invite, disable, resend from the desk; activity log.
+- **Subcontractor portal** (`/cn-partner`): work orders, running bills submitted online (the work order + 10% rule still
+  applies), payments with TDS and retention, labour documents uploaded (wage register, PF ECR, ESI), progress photos.
+  Verification queue: bills verified for the QS, documents verified (releases the held bill), photos added to the
+  project log.
+- **Site app** (`/cn-site`, site engineers, PMs, storekeepers): check-in with GPS and selfie (HRMS Employee Checkin), gang
+  check-in of workers (Site Attendance — fills the weekly muster's days), DPR with own labour from today's check-ins,
+  geo-tagged photos, site cash (Site Expense — booked from the site imprest within the limit, above it the PM approves
+  in Approvals), deliveries with the OTP for the driver, expected purchase orders, site chat (comments on the project,
+  now in Messages).
+- **Worker app** (`/cn-worker`): mobile number + four-digit PIN set by the site engineer (five tries, then a 15-minute
+  lock), in English, Malayalam, Tamil and Hindi — this week's attendance, mark present, the last pay slip, ask for an
+  advance, report a danger (a near-miss for the Safety Officer). The translations need checking by native speakers.
+- **Driver app:** construction transfers on the driver's trips, navigate to the site, delivered with the site's OTP.
+- Client and partner logins open their portal after login. New red flags: constraints past need-by, late milestones.
+- Demo: constraints, milestones and last week's reviews, 12 geo-tagged site photos (drawn stand-ins) with the publishing
+  queue, three client logins and a labour-contractor login with a snag, a running bill, labour documents and a photo,
+  today's check-ins at P-2401, site imprest and cash, worker app PINs (demo PIN 1234), a danger reported by a worker,
+  the driver of the transfer on the road. Demo logins have no password — set one to try the portals.
+
+## 1.9.0 — Construction (India), stage A5: finance & tax (19 Nov 2026)
+Follows prototype C8. New feature `cn_fin` "Construction — finance, tax & payroll" (Capstone edition), menu group
+"Finance (India)" with four pages; settings limit "Manual journal above which the MD approves" (default ₹10 lakh).
+- **Accounts & Cash:** project P&L from the ledger (revenue against the five cost heads, gross profit and margin);
+  receivables and payables ageing (not due, 1–30, 31–60, 61–90, over 90) with Micro and Small suppliers unpaid after 45 days
+  flagged (sec. 43B(h)); an eight-week cash forecast from the documents — invoiced, certified and with-the-client RA bills,
+  supplier and subcontractor bills by due date, weekly wages, staff salaries and the statutory payments; links to the
+  ERPNext and India Compliance statements; the approval matrix with its limits.
+- **GST & TDS:** GST by registration (GSTIN) and month — output tax, input tax credit (RCM aside), credit carried forward,
+  cash to pay — and "Pay…": a Statutory Deposit whose journal sets the credit off the way the law allows (IGST, then CGST /
+  SGST; never CGST against SGST) and pays the balance from the bank, with the company GSTIN on the journal. TDS both ways:
+  deducted by clients (not yet in Form 26AS, GST-TDS) and deducted by us (194C from subcontractor bills, 192 from salaries)
+  with "Deposit…". BOCW labour cess — deducted by government clients, 1% of the cost self-paid to the welfare board on
+  private work. Compliance calendar (GSTR-1 11th — filed when India Compliance's GST Return Log says so — GST 20th, TDS
+  7th, PF and ESI 15th, professional tax), e-invoice IRN status with the 30-day limit.
+- **Cost Control:** earned value per live project (BAC, planned and done %, PV, EV, AC, CPI, SPI, EAC, VAC) and the cost
+  heads (budget, earned, committed, actual, forecast, variance).
+- **Payroll & Statutory:** Staff Payroll (month, one row per employee — basic, HRA, special pro-rated to the days, PF 12% to
+  the ₹15,000 ceiling, ESI 0.75% to ₹21,000, professional tax by state, TDS 192 on the new regime: ₹75,000 standard
+  deduction, rebate to ₹12 lakh with marginal relief, 4% cess); Accounts Manager / MD approve, accounts pay — the journal
+  posts the cost (with employer PF 13% and ESI 3.25%) to the projects the staff are posted at and the rest to head-office
+  salaries. Employee gets "Posted at (project)", work state, UAN and the monthly pay. Gratuity provision (15/26 × basic ×
+  years, payable after five years, cap ₹20 lakh). Statutory Deposit register with challans.
+- **Manual journals:** a construction company's own Journal Entries need the Accounts Manager (the MD above the limit) to
+  post; others save a draft that waits in Approvals ("Approve" posts it). System entries are not held.
+- New red flags: CPI below 0.92, BOCW cess above ₹5 lakh unpaid.
+- Demo: 16 staff across the projects and head office, September and October payroll paid and November in draft,
+  September's GST (three GSTINs), TDS, PF, ESI and professional tax paid with challans and GSTR-1 filed, October's TDS and
+  PF paid, ESI overdue and GST due on the 20th, BOCW cess part-paid on two sites, an audit-fee provision journal waiting
+  for the Accounts Manager.
+- Removed the test scripts that had slipped into the A4 commit (t1–t16, r1 at the app root).
+- Tax rates and slabs are set for FY 2026-27 in api/construction_fin.py — check them with the company's tax adviser.
+
+## 1.9.0 — Construction (India), stage A4: quality, safety & handover (18 Nov 2026)
+Follows prototypes C4 and C7. New feature `cn_qhse` (Structure and Capstone), menu group "Quality & Handover" with four
+pages; new roles QA/QC Engineer, Safety Officer and Document Controller.
+- **Quality:** Inspection & Test Plan per project (inspections due from the quantity measured), inspection requests
+  approved / rejected by QA/QC, cube tests (7 and 28 days against the grade), NCRs closed only with root cause and action.
+- **Safety:** incidents (LTI-free days), permits to work issued by the Safety Officer (in Approvals), toolbox talks, audits.
+- **Drawings & RFIs:** drawing register with revisions and GFC, RFIs with reply due and impact, transmittals.
+- **Handover & DLP:** snags, handover documents (NOCs, completion), DLP defects, warranties and the retention release.
+
+## 1.9.0 — Construction (India), stage A3: site resources (18 Nov 2026)
+Follows prototypes C3, C6 and C7. New feature `cn_site` "Construction — site resources" (Structure and Capstone editions),
+menu group "Site Resources (India)" with six pages; new roles Storekeeper, HR & Admin and Plant Manager.
+- **Procurement & Stores:** indents (Material Request with the project) checked against what the BOQ still needs — Material
+  Norm (material per BOQ unit + allowed wastage) less issued, in the site store and on order; above it only the PM / MD can
+  approve. Supplier quotations carry freight, unloading, landed cost and "technically compliant"; the comparison ranks on
+  landed cost and "PO to L1" drafts the order to the site store. Receipts at the site stores with rejected quantities
+  (rejected material store), "Book bill" (drafts the bill when a document rule needs the supplier's invoice first), site
+  stock, material issues, and the reconciliation: theoretical use of the work measured vs issued, excess valued and the
+  recovery (× 1.5).
+- **Vendors:** GSTIN, PAN, MSME (Udyam), TDS category, KYC, outstanding; scorecard from receipts (quality accepted) and POs
+  (on time); rate contracts on ERPNext Blanket Order (cap, drawn, expiry).
+- **Central Store & Logistics:** central store, transfers to sites through Goods In Transit with vehicle, driver and e-way
+  bill (Requested → In transit → Delivered when the site confirms), stock ledger, dead stock (no issue for 90 days).
+- **Subcontractors:** Subcontractor Work Order (labour only with free-issue material, or item rate); Subcontractor Bill
+  (this bill / up to date, ≤ WO qty + 10%) — QS certifies, PM approves (purchase invoice: GST, TDS 194C 1% / 2%, retention,
+  material and other recoveries, advance recovery), accounts pay; Labour Compliance (wage register, PF ECR, ESI) — a
+  labour contractor's bill is held while last month's documents are missing.
+- **Labour & Workers:** Site Worker register (state minimum wage check, UPI for own workers, BOCW, induction, PPE, ID expiry,
+  police verification); Minimum Wage by state and skill; Weekly Muster (Wednesday → Tuesday, OT at double rate, PF 12% to
+  the ₹15,000 ceiling, ESI 0.75% to ₹21,000, advance recovery up to half the pay) — PM approves, accounts pay by UPI (wage
+  journal with employer PF 13% and ESI 3.25%); Worker Advance (up to four weeks' wages; above ₹5,000 the PM approves).
+- **Equipment:** Construction Equipment (own / hired, hire rate, site, service interval, insurance, fitness), Equipment Log
+  (hour meter never goes back, idle, diesel vs norm), Equipment Maintenance (downtime, cost); utilisation and hire cost.
+- New red flags: material over theory, contractor bills on hold, indents above need, equipment insurance / fitness /
+  service due.
+- Demo: 8 materials with HSN, 13 norms, 11 vendors, purchases and issues for every live project (P-2401 cement +6.6%,
+  P-2403 bitumen +5.1%, P-2406 gypsum), indents (one above need), three quotations (L1 is not the lowest basic), an open PO,
+  three rate contracts, central stock with transfers, four work orders with ten running bills, labour documents (Karnataka
+  Labour Services missing October), 32 workers, 16 minimum wages, 5 advances, 12 weekly musters, 10 machines with log
+  sheets and maintenance. Project costs brought forward now exclude what these documents booked.
+
+## 1.9.0 — Construction (India), stage A2: business & contracts (18 Nov 2026)
+Follows prototype C5. New feature `cn_biz` "Construction — business & contracts" (Capstone edition) and menu group
+"Business (India)" with three pages; new role BD Manager.
+- **CRM & Clients:** construction enquiries are ERPNext Opportunities marked "Construction enquiry" (category, site,
+  competition, next follow-up) on construction sales stages (Lead → Qualified → Site visit → Estimating → Proposal sent →
+  Negotiation); pipeline with follow-ups due, client master (GSTIN, PAN, contracts, certified, outstanding, pipeline),
+  Client Visit (site visits, meetings, calls and next steps), lost analysis by reason. Buttons: Quote, Next stage,
+  Follow-up…, Lost….
+- **Quotations & Sales:** ERPNext Quotations marked "Construction quotation" with estimated cost, value before discount,
+  discount and margin. The MD approves when the discount is above / the margin below the limits in Hipersign Settings
+  (5% / 10% by default) — a quotation waiting cannot be sent, and it shows in the Approvals inbox. A sent quotation is
+  revised, never changed: a new revision with the reason, the old one withdrawn. Won → project (branch GSTIN of the
+  client's state), its BOQ from the quotation lines and the contract (LOA); lost → reason and competitor. Tabs for LOAs
+  & work orders (billed / to bill), the collections ladder on overdue RA bills (L1 e-mail, L2 PM call, L3 MD letter,
+  L4 legal notice) and the Collection Follow-up log with promises to pay.
+- **Contracts & Claims:** Construction Contract (LOA, agreement, original / revised value, retention, advance, escalation,
+  start, completion, EOT, LD rate and cap, DLP) kept in step with approved extra items, awarded claims and granted EOT;
+  Contract Claim (EOT, cost, prolongation, escalation: submit → negotiate → award / reject; an EOT claim on a hindrance
+  grants its EOT). LD exposure = programme slip (planned % vs done) beyond the completion extended by EOT, per week at
+  the LD rate up to the cap, with the hindrance days still claimable. Project gets "Planned % (baseline programme)".
+- New red flags: LD exposure when a project is more than N days late (setting, 21), overdue RA bills with no follow-up
+  for two weeks. A tender award now also creates the contract.
+- Quotations and invoices are issued from the company GST registration in the client's state.
+- Demo: four new prospects, nine enquiries, seven visits, six quotations (revised, waiting for the MD, draft, won, lost),
+  contracts for all six projects, five claims, collection follow-ups.
+
+## 1.9.0 — Construction (India), stage A1: the core (18 Nov 2026)
+Follows the Construction (India) prototype (C11). Built on GitHub main 1.8.4 — merge the 1.8.4 site patches (A1–A6 of
+16 Nov, release/1.8.4) before deploying.
+**New industry: Construction (India)** — feature switch `construction` (Hipersign Settings → Features → Industries) and three
+editions: Foundation, Structure, Capstone. Enterprise stays without it (India-only). New menu group "Construction (India)".
+- Pages: Construction Projects (portfolio, red flags, bank guarantees, how it works), Tenders & EMD, BOQ & Extra Items,
+  Measurement Book, RA Billing (bills, deductions by project, TDS & GST-TDS matching), DPR & Hindrances.
+- DocTypes: Tender, Measurement Book, RA Bill (+ RA Bill Item), Extra Item, Hindrance, Daily Progress Report. Project gets a
+  "Construction (India)" section: category, government client, engineer-in-charge, branch GST registration, TDS 194C %.
+  Project BOQ is shared with the Projects pages.
+- Rules (api/construction.py): tender bid / no-bid → submit → evaluation → award (makes the project) or lost (EMD refund);
+  measurement book dimensions → quantity, QS check → client check → BOQ measured %, beyond-BOQ warning; RA bill from the
+  checked measurements (this bill / up to date), client certification with cuts, GST tax invoice from the branch GSTIN
+  (India Compliance in-state / out-state templates, SAC by project category), receipt net of retention, mobilisation
+  advance recovery, TDS 194C, GST-TDS (sec. 51) and BOCW labour cess as Payment Entry deductions; extra items raise the
+  revised contract; hindrances with EOT; DPR submit / approve. Buttons on the pages and on the forms; role checks per step.
+- Indian amounts: ₹1.86 Cr / ₹45.2 L in cards, 12,34,567 grouping, whole rupees in the Construction tables.
+- Demo: Load demo data asks Trading group or Construction (India). Construction loads Hipersign Construction &
+  Infrastructure Pvt. Ltd. (Kochi HO, Bengaluru, Chennai, Pune GSTINs), seven clients, six projects, 93 RA bills with GST
+  invoices and receipts, tenders, bank guarantees, extra items, measurements, DPRs, hindrances and project costs, then
+  switches to Capstone.
+- The UAE Projects pages leave out Construction (India) projects.
+
 ## 1.8.4 — Fixes from the audit: every open issue, every menu entry in the Hipersign theme (7 Nov 2026)
 **Serious issues (#21–#27 and more)**
 - Transfer to WIP uses the warehouses picked (#21); the Nairobi USD invoice shows its AED outstanding as AED (#22).

@@ -1,0 +1,109 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "templates/includes/cn_portal_style.html" %}{% endblock %}
+{% block content %}
+{% set INR = {"fieldtype": "Currency", "options": "INR"} %}
+<div class="cw">
+	{% if preview %}<div class="pv">👁 {{ _("Preview — what the subcontractor sees. Actions are switched off here.") }}
+		<select class="sel" onchange="location.href='/cn-partner?party='+encodeURIComponent(this.value)" style="margin-left:auto">
+		{% for c in parties %}<option value="{{ c }}" {{ "selected" if c == supplier }}>{{ c }}</option>{% endfor %}</select></div>{% endif %}
+	<div class="hd"><div><small>{{ _("Partner portal") }}</small><b>{{ supplier }}</b></div><div class="r">{% if not preview %}<a class="out" href="/?cmd=web_logout">{{ _("Log out") }}</a>{% endif %}</div></div>
+	<div class="kp">{% for l, v, s in kpis %}<div><small>{{ l }}</small><b>{{ v }}</b><span>{{ s }}</span></div>{% endfor %}</div>
+	{% if held %}<div class="card" style="border-color:#fecaca;background:#fff7f7"><b style="color:#b91c1c">{{ _("{0} bill(s) on hold").format(held|length) }}</b>
+		<div class="mut">{{ _("Upload last month's wage register, PF ECR and ESI challan under Labour documents — the hold is released once they are verified.") }}</div></div>{% endif %}
+	<div class="tb">{% for k, l in tabs %}<a class="{{ 'on' if k == tab }}" href="/cn-partner?party={{ supplier|urlencode }}&tab={{ k }}">{{ l }}</a>{% endfor %}</div>
+
+	{% if tab == "orders" %}
+	<div class="card"><h4>{{ _("Work orders") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Order") }}</th><th>{{ _("Project") }}</th><th>{{ _("Kind") }}</th><th class="n">{{ _("Value") }}</th><th>{{ _("Terms") }}</th><th>{{ _("Status") }}</th></tr>
+	{% for w in wos %}<tr><td><b>{{ w.name }}</b><div class="mut">{{ w.scope }}</div></td><td>{{ w.project_name }}</td><td>{{ _(w.kind) }}</td><td class="n">{{ frappe.format(w.value, INR) }}</td>
+		<td class="mut">{{ _("Retention {0}% · TDS {1}%").format(w.retention_pct|round(1), w.tds_pct|round(1)) }}</td><td><span class="pill {{ 'green' if w.status == 'Active' else '' }}">{{ _(w.status) }}</span></td></tr>
+	{% else %}<tr><td colspan="6" class="mut">{{ _("No work orders.") }}</td></tr>{% endfor %}</table></div></div>
+
+	{% elif tab == "bills" %}
+	{% if form_wo %}
+	<div class="card"><h4>{{ _("New running bill — {0}").format(form_wo.name) }}</h4><p class="mut">{{ _("Enter the quantity done in this period. The total cannot go above the work order + 10%.") }}</p>
+		<div class="tw"><table class="t"><tr><th>{{ _("Item") }}</th><th class="n">{{ _("Rate") }}</th><th class="n">{{ _("WO qty") }}</th><th class="n">{{ _("Billed so far") }}</th><th class="n">{{ _("This bill") }}</th></tr>
+		{% for i in form_items %}<tr><td><b>{{ i.item_no }}</b> {{ i.description }}</td><td class="n">{{ frappe.format(i.rate, INR) }}</td><td class="n">{{ i.qty }} {{ i.unit }}</td><td class="n">{{ i.prev }}</td>
+			<td class="n"><input type="number" step="any" min="0" max="{{ i.left }}" class="in q" data-item="{{ i.item_no }}" style="width:110px;text-align:right"></td></tr>{% endfor %}</table></div>
+		<div class="row"><div><small class="mut">{{ _("Your invoice no.") }}</small><input class="in" id="inv"></div><div><small class="mut">{{ _("Work up to") }}</small><input class="in" type="date" id="upto" value="{{ today }}"></div></div>
+		<button class="btn p" {{ "disabled" if preview }} onclick="spBill('{{ form_wo.name }}')">{{ _("Submit bill") }}</button> <a class="btn" href="/cn-partner?party={{ supplier|urlencode }}&tab=bills">{{ _("Cancel") }}</a></div>
+	{% else %}
+	<div class="card"><b>{{ _("New running bill") }}</b> {% for w in active %}<a class="btn" style="margin:4px" href="/cn-partner?party={{ supplier|urlencode }}&tab=bills&wo={{ w.name }}">{{ w.name }} · {{ w.project_name }}</a>{% else %}<span class="mut">{{ _("No active work order.") }}</span>{% endfor %}</div>
+	{% endif %}
+	<div class="card"><h4>{{ _("Running bills") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Bill") }}</th><th>{{ _("Status") }}</th><th class="n">{{ _("Gross") }}</th><th class="n">{{ _("GST") }}</th><th class="n">{{ _("TDS") }}</th><th class="n">{{ _("Retention") }}</th><th class="n">{{ _("Net") }}</th></tr>
+	{% for b in bills %}<tr><td><b>{{ b.work_order }} / {{ b.bill_no }}</b><div class="mut">{{ frappe.format(b.bill_date, {"fieldtype": "Date"}) }}{% if b.supplier_invoice_no %} · {{ b.supplier_invoice_no }}{% endif %}</div></td>
+		<td>{% if b.status == "Draft" %}<span class="pill orange">{{ _("Verified — with the QS") if b.partner_verified else _("Submitted — being verified") }}</span>{% else %}<span class="pill {{ 'green' if b.status == 'Paid' else 'blue' }}">{{ _(b.status) }}</span>{% endif %}
+			{% if b.compliance_hold %}<div><span class="pill red">{{ _("On hold — labour documents") }}</span></div>{% endif %}</td>
+		<td class="n">{{ frappe.format(b.gross, INR) }}</td><td class="n">{{ frappe.format(b.gst_amount, INR) }}</td><td class="n">{{ frappe.format(b.tds, INR) }}</td><td class="n">{{ frappe.format(b.retention, INR) }}</td><td class="n"><b>{{ frappe.format(b.net_payable, INR) }}</b></td></tr>
+	{% else %}<tr><td colspan="7" class="mut">{{ _("No bills yet.") }}</td></tr>{% endfor %}</table></div></div>
+
+	{% elif tab == "payments" %}
+	<div class="card"><h4>{{ _("Payments") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Date") }}</th><th>{{ _("Reference") }}</th><th>{{ _("Mode") }}</th><th class="n">{{ _("Amount") }}</th></tr>
+	{% for p in payments %}<tr><td>{{ frappe.format(p.posting_date, {"fieldtype": "Date"}) }}</td><td>{{ p.reference_no or p.name }}</td><td>{{ p.mode_of_payment or "—" }}</td><td class="n">{{ frappe.format(p.paid_amount, INR) }}</td></tr>
+	{% else %}<tr><td colspan="4" class="mut">{{ _("No payments yet.") }}</td></tr>{% endfor %}</table></div>
+	<p class="mut">{{ _("TDS under section 194C is deducted from each bill and deposited by the 7th of the next month; retention is released after the defects period.") }}</p></div>
+
+	{% elif tab == "labour" %}
+	<div class="card"><h4>{{ _("Upload labour documents") }}</h4><p class="mut">{{ _("As principal employer we hold a labour contractor's payment until last month's wage register, PF ECR and ESI challan are in.") }}</p>
+		<div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="lc-p">{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div>
+		<div><small class="mut">{{ _("Month") }}</small><select class="in" id="lc-m">{% for m in months %}<option value="{{ m }}">{{ m.strftime("%B %Y") }}</option>{% endfor %}</select></div>
+		<div><small class="mut">{{ _("Workers") }}</small><input class="in" type="number" id="lc-w"></div></div>
+		<div class="row"><div><small class="mut">{{ _("Wage register") }}</small><input class="in" type="file" id="lc-1" accept="image/*,application/pdf"></div>
+		<div><small class="mut">{{ _("PF ECR") }}</small><input class="in" type="file" id="lc-2" accept="image/*,application/pdf"></div>
+		<div><small class="mut">{{ _("ESI challan") }}</small><input class="in" type="file" id="lc-3" accept="image/*,application/pdf"></div></div>
+		<button class="btn p" {{ "disabled" if preview }} onclick="spLc()">{{ _("Upload") }}</button></div>
+	<div class="card"><h4>{{ _("Documents sent") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Month") }}</th><th>{{ _("Project") }}</th><th>{{ _("Workers") }}</th><th>{{ _("Files") }}</th><th>{{ _("Status") }}</th></tr>
+	{% for c in lcs %}<tr><td>{{ c.month.strftime("%b %Y") }}</td><td>{{ c.project }}</td><td>{{ c.workers or "—" }}</td>
+		<td class="mut">{{ [c.wage_register_file and _("wage register"), c.pf_ecr_file and _("PF ECR"), c.esi_file and _("ESI")]|select|join(", ") or "—" }}</td>
+		<td><span class="pill {{ 'green' if c.status == 'Complete' else 'orange' }}">{{ _("Verified") if c.status == "Complete" else (_("Being verified") if c.partner_submitted else _("Missing")) }}</span></td></tr>
+	{% else %}<tr><td colspan="5" class="mut">{{ _("Nothing yet.") }}</td></tr>{% endfor %}</table></div></div>
+
+	{% elif tab == "photos" %}
+	<div class="card"><h4>{{ _("Send a progress photo") }}</h4><div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="ph-p">{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div>
+		<div><small class="mut">{{ _("Caption") }}</small><input class="in" id="ph-c"></div></div><input class="in" type="file" id="ph-f" accept="image/*" capture="environment">
+		<button class="btn p" {{ "disabled" if preview }} onclick="spPhoto()">{{ _("Send photo") }}</button></div>
+	<div class="card"><h4>{{ _("Photos sent") }}</h4><table class="t">{% for x in photos %}<tr><td>{{ x.caption }}</td><td>{{ x.project }}</td><td>{{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</td>
+		<td><span class="pill {{ 'green' if x.status == 'In the project log' else 'orange' }}">{{ _("Accepted") if x.status == "In the project log" else _("Being verified") }}</span></td></tr>
+		{% else %}<tr><td class="mut">{{ _("No photos yet.") }}</td></tr>{% endfor %}</table></div>
+	{% elif tab == "messages" %}
+		<div class="card"><h4>{{ _("Write to us") }}</h4><div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="mg-p"><option value="">{{ _("General") }}</option>{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div><div><small class="mut">{{ _("Subject") }}</small><input class="in" id="mg-s"></div></div>
+			<small class="mut">{{ _("Message") }}</small><textarea class="in" id="mg-m" rows="3"></textarea>
+			<button class="btn p" {{ "disabled" if preview }} onclick="spMsg()">{{ _("Send") }}</button></div>
+		<div class="card"><h4>{{ _("Messages") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Sent") }}</th><th>{{ _("Message") }}</th><th>{{ _("Our reply") }}</th></tr>
+		{% for m in msgs %}<tr><td class="mut" style="white-space:nowrap">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }}<div>{{ m.from_name or "" }}</div></td>
+			<td><b>{{ m.subject or "" }}</b><div>{{ m.message }}</div></td><td>{% if m.reply %}{{ m.reply }}<div class="mut">{{ m.replied_by or "" }}</div>{% else %}<span class="pill orange">{{ _("Waiting for our reply") }}</span>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="3" class="mut">{{ _("No messages yet.") }}</td></tr>{% endfor %}</table></div></div>
+	{% endif %}
+</div>
+<script>
+const M = "hipersign_trading.api.construction_portal.";
+const done = (r) => { const m = (r && r.message && (r.message.message || r.message)) || "Done"; frappe.msgprint({ message: m, indicator: "green" }); setTimeout(() => location.href = location.pathname + "?party={{ supplier|urlencode }}&tab={{ tab }}", 1800); };
+const read = (el, max) => new Promise((ok) => { const f = el && el.files[0]; if (!f) return ok(null); const rd = new FileReader();
+	rd.onload = () => { if (!f.type.startsWith("image/")) return ok(rd.result); const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
+		c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .8)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
+function spMsg() {
+	const m = document.getElementById("mg-m").value;
+	if (!m.trim()) return frappe.msgprint("{{ _('Write the message.') }}");
+	frappe.call({ method: "hipersign_trading.api.construction_extra.sp_message", args: { project: document.getElementById("mg-p").value || null, subject: document.getElementById("mg-s").value, message: m }, freeze: true, callback: done });
+}
+function spBill(wo) {
+	const q = {}; document.querySelectorAll(".q").forEach((i) => { if (+i.value) q[i.dataset.item] = +i.value; });
+	if (!Object.keys(q).length) return frappe.msgprint("{{ _('Enter the quantity done on at least one item.') }}");
+	frappe.call({ method: M + "sp_bill", args: { work_order: wo, quantities: JSON.stringify(q), invoice_no: document.getElementById("inv").value, period_to: document.getElementById("upto").value }, freeze: true, callback: done });
+}
+async function spLc() {
+	const [a, b, c] = await Promise.all([read(document.getElementById("lc-1")), read(document.getElementById("lc-2")), read(document.getElementById("lc-3"))]);
+	if (!a && !b && !c) return frappe.msgprint("{{ _('Pick at least one file.') }}");
+	frappe.call({ method: M + "sp_compliance", args: { project: document.getElementById("lc-p").value, month: document.getElementById("lc-m").value, workers: document.getElementById("lc-w").value,
+		wage_register: a, pf_ecr: b, esi: c }, freeze: true, callback: done });
+}
+async function spPhoto() {
+	const img = await read(document.getElementById("ph-f"), 1600);
+	if (!img) return frappe.msgprint("{{ _('Take or pick a photo.') }}");
+	frappe.call({ method: M + "sp_photo", args: { project: document.getElementById("ph-p").value, caption: document.getElementById("ph-c").value, image: img }, freeze: true, callback: done });
+}
+</script>
+{% endblock %}

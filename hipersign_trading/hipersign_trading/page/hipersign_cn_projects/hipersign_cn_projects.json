@@ -1,0 +1,63 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-cn-projects",
+ "page_name": "hipersign-cn-projects",
+ "title": "Construction Projects",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Managing Director"
+  },
+  {
+   "role": "Project Manager"
+  },
+  {
+   "role": "Projects Manager"
+  },
+  {
+   "role": "Quantity Surveyor"
+  },
+  {
+   "role": "Site Engineer"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Demo Viewer"
+  },
+  {
+   "role": "BD Manager"
+  },
+  {
+   "role": "Storekeeper"
+  },
+  {
+   "role": "HR & Admin"
+  },
+  {
+   "role": "Plant Manager"
+  },
+  {
+   "role": "QA/QC Engineer"
+  },
+  {
+   "role": "Safety Officer"
+  },
+  {
+   "role": "Document Controller"
+  }
+ ],
+ "owner": "Administrator",
+ "creation": "2026-11-18 12:00:00",
+ "modified": "2026-11-18 22:00:00"
+}

@@ -28,8 +28,9 @@ hipersign.module.foot = function (r) {
 		});
 		if (!ok || !n) return null;
 		any = true;
+		const dp = r.rows.every((row) => { const c = row.cells[i]; return !c || typeof c !== "object" || c.dp === 0; }) ? 0 : 2; // v1.9.0
 		// one line per currency when a list mixes them (export orders in USD beside local AED orders)
-		return Object.entries(t).map(([cur, v]) => `${cur ? hm_esc(cur) + " " : ""}${hm_esc(format_number(v, null, 2))}`).join("<br>");
+		return Object.entries(t).map(([cur, v]) => `${cur ? (cur === "INR" ? "₹" : hm_esc(cur) + " ") : ""}${hm_esc(format_number(v, null, dp))}`).join("<br>");
 	});
 	if (!any) return "";
 	if (f[0] === null) f[0] = `${__("Total")} <span class="hsx-tcount">· ${__("{0} rows", [r.rows.length])}</span>`;
@@ -60,7 +61,8 @@ hipersign.module.cell = function (c) {
 	if (c.bar !== undefined) return `<span class="hp-bar" style="width:80px"><span style="width:${Math.min(100, c.bar)}%;${c.bar < 100 ? "background:var(--x-blue)" : ""}"></span></span> <b>${format_number(c.bar, null, 0)}%</b>`;
 	if (c.pill !== undefined) return `<span class="hsx-pill ${c.tone || STAGE_TONE[c.pill] || STATUS_TONE[c.pill] || (/^Pending/.test(c.pill) ? "orange" : "grey")}">${hm_esc(__(c.pill))}</span>`
 		+ (c.sub ? `<span class="hsx-sub2 ${c.late ? "text-danger" : ""}">${hm_esc(c.sub)}</span>` : "");
-	if (c.money !== undefined) return `<span class="${c.neg ? "text-danger" : ""}" style="white-space:nowrap">${c.currency ? hm_esc(c.currency) + " " : ""}${hm_esc(format_number(c.money, null, 2))}</span>${c.sub ? `<span class="hsx-sub2" style="white-space:nowrap">${hm_esc(c.sub)}</span>` : ""}`;
+	// v1.9.0: dp — whole rupees on the Construction (India) pages (c.dp = 0)
+	if (c.money !== undefined) return `<span class="${c.neg ? "text-danger" : ""}" style="white-space:nowrap">${c.currency ? hm_esc(c.currency) + " " : ""}${hm_esc(format_number(c.money, null, c.dp === undefined ? 2 : c.dp))}</span>${c.sub ? `<span class="hsx-sub2" style="white-space:nowrap">${hm_esc(c.sub)}</span>` : ""}`;
 	return "";
 };
 
@@ -83,7 +85,7 @@ hipersign.module.one_cur = function (cols, rows) {
 };
 hipersign.module.thead = function (cols, rows) {
 	const one = hipersign.module.one_cur(cols, rows);
-	return { one, html: cols.map((c, i) => `<th class="${c.cls || ""}">${hm_esc(c.label)}${one[i] && !String(c.label || "").includes(one[i]) ? ` <span class="hsx-thcur">(${hm_esc(one[i])})</span>` : ""}</th>`).join("") };
+	return { one, html: cols.map((c, i) => `<th class="${c.cls || ""}">${hm_esc(c.label)}${one[i] && !String(c.label || "").includes(one[i]) ? ` <span class="hsx-thcur">(${one[i] === "INR" ? "₹" : hm_esc(one[i]) /* v1.9.0 */})</span>` : ""}</th>`).join("") };
 };
 hipersign.module.tcell = function (c, i, one) {
 	return hipersign.module.cell(one[i] && c && typeof c === "object" && c.money !== undefined ? Object.assign({}, c, { currency: "" }) : c);
@@ -117,7 +119,7 @@ hipersign.module.cols_html = function (c) {
 	if (!L.length) return `<div class="hsx-empty">${__("Nothing in this period.")}</div>`;
 	// v1.8.4: column cards (output vs plan, variance by work order…) get axes and the chart type menu — the chart kit
 	if (hipersign.chart && hipersign.chart.chart) {
-		return hipersign.chart.chart({ labels: L, series: S.map((s) => ({ name: s.name, data: s.data.map(flt), color: s.color })), kind: "bar", key: c.title,
+		return hipersign.chart.chart({ labels: L, series: S.map((s) => ({ name: s.name, data: s.data.map((v) => (v === null || v === undefined ? null : flt(v))), color: s.color })), kind: c.kind || "bar", key: c.title,
 			money: !c.count && !c.pct, currency: c.currency, h: 220 });
 	}
 	const all = S.flatMap((s) => s.data.map((v) => flt(v)));
@@ -212,6 +214,7 @@ hipersign.module.render = function (wrapper, key) {
 					// v1.8.0: a list action may open a create window or run a server method (Approve submitted timesheets)
 					if (a.new) return hipersign.fm ? hipersign.fm.new(a.new, a.values || {}) : frappe.new_doc(a.new);
 					if (a.url) return window.open(frappe.urllib.get_full_url(a.url));
+					if (a.js && hipersign.projects && hipersign.projects[a.js]) return hipersign.projects[a.js](a.arg, load);  // v1.9.1: a dialog first
 					if (a.method) return frappe.xcall(a.method, a.args || {}).then((m) => { frappe.show_alert({ message: (m && m.message) || __("Done"), indicator: "green" }, 6); load(); });
 					frappe.route_options = a.options || null; frappe.set_route(...a.route);
 				});

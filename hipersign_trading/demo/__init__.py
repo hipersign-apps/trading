@@ -26,15 +26,24 @@ HS_WORKFLOWS = [
 ]
 
 
-def load_from_button(user=None):
-	"""Background job behind Hipersign Settings → Load demo data."""
+INDUSTRIES = ("Trading group", "Construction (India)")
+
+
+def load_from_button(user=None, industry=None):
+	"""Background job behind Hipersign Settings → Load demo data (v1.9.0: the Trading group, or Construction (India))."""
 	frappe.flags.hs_force_demo = True
+	# v1.8.4: the loader creates masters (items, exchange rates, accounts) that a System Manager alone may not write;
+	# the button is already limited to System Managers on a demo site, so the job itself runs as Administrator.
+	frappe.set_user("Administrator")
+	cn = industry == "Construction (India)"
 	try:
-		load()
+		load_construction() if cn else load()
 		frappe.db.set_default("hs_demo_loaded", 1)
 		frappe.db.commit()
-		msg = ("The demo switched this site to the Enterprise pack, group of companies, so every feature has sample data. "
-			"Change it any time in Hipersign Settings → Setup & features.\n\n" + "\n".join(LOG))
+		msg = (("The Construction (India) demo is loaded — Hipersign Construction & Infrastructure Pvt. Ltd. with six projects, tenders, RA bills, GST invoices "
+			"and receipts. The site is on the Capstone edition; change it any time in Hipersign Settings → Setup & features.\n\n") if cn else
+			("The demo switched this site to the Enterprise pack, group of companies, so every feature has sample data. "
+			"Change it any time in Hipersign Settings → Setup & features.\n\n")) + "\n".join(LOG)
 		ind = "green" if not any(x.startswith("✗") for x in LOG) else "orange"
 	except Exception:
 		frappe.log_error(title="Hipersign demo data")
@@ -60,6 +69,9 @@ def load():
 	frappe.flags.mute_emails = True
 	frappe.flags.hs_skip_doc_rules = True  # documents are attached in v13_documents; history is not blocked
 	frappe.flags.hs_demo_loading = True  # history is created in any order: a re-run must not trip over today's KYC blocks
+	# v1.8.4: once the demo companies are group members, saving a company lets HRMS add an "Expense Claims" account to it,
+	# which ERPNext refuses for a child company unless the group's root company has it — the demo allows it, as company setup does
+	frappe.local.flags.ignore_root_company_validation = True
 	paused = pause_workflows()
 	try:
 		for step in (
@@ -113,10 +125,35 @@ def load():
 		frappe.flags.hs_apply_credit_limit = False
 		frappe.flags.hs_skip_doc_rules = False
 		frappe.flags.hs_demo_loading = False
+		frappe.local.flags.ignore_root_company_validation = False
 	run(set_pending_states, ctx)
 	frappe.db.commit()
 	print("\n".join(LOG))
 	print("\nDone. Take a backup now so you can reset the demo later:\n   bench --site %s backup --with-files" % frappe.local.site)
+
+
+def load_construction():
+	"""v1.9.0: the Construction (India) demo (demo/cn_india.py) — on its own, so an Indian contractor's site gets no UAE trading data."""
+	if frappe.conf.get("hipersign_demo_site") is not True and not frappe.flags.hs_force_demo:
+		print("Refusing to load demo data: add  \"hipersign_demo_site\": true  to this site's site_config.json first.")
+		return
+	LOG.clear()
+	ctx = frappe._dict(company=frappe.db.get_single_value("Global Defaults", "default_company"))
+	frappe.flags.mute_emails = True
+	frappe.flags.hs_skip_doc_rules = True
+	frappe.flags.hs_demo_loading = True
+	paused = pause_workflows()
+	try:
+		from hipersign_trading.demo import cn_india
+
+		for step in cn_india.STEPS:
+			run(step, ctx)
+	finally:
+		resume_workflows(paused)
+		frappe.flags.hs_skip_doc_rules = False
+		frappe.flags.hs_demo_loading = False
+	frappe.db.commit()
+	print("\n".join(LOG))
 
 
 # ------------------------------------------------------------------ framework

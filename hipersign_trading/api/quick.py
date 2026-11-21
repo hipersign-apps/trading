@@ -30,7 +30,7 @@ COVERED = [
 	# v1.8.0: the Manufacturing windows
 	"BOM", "Work Order", "Production Plan", "Job Card", "Quality Inspection",
 ]
-PACK_MODE = {"Starter": "Quick", "Standard": "Standard", "Contractor": "Standard", "Manufacturer": "Standard", "Enterprise": "Detailed"}
+PACK_MODE = {"Starter": "Quick", "Standard": "Standard", "Contractor": "Standard", "Manufacturer": "Standard", "Foundation": "Standard", "Structure": "Standard", "Capstone": "Detailed", "Enterprise": "Detailed"}
 MODES = ("Quick", "Standard", "Detailed")
 
 

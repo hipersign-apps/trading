@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-10-21 14:30:00.000000",
- "modified": "2026-11-06 18:00:00.000000",
+ "modified": "2026-11-24 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -124,20 +124,21 @@
   "sb_feat_industries",
   "feat_projects",
   "feat_manufacturing",
-  "tab_look",
-  "sb_look",
-  "desk_theme",
-  "erp_theme",
-  "chart_style",
-  "chart_brand_colour",
-  "hide_graph_bands",
-  "sb_menus",
-  "only_hipersign_tiles",
-  "cb_menus",
-  "open_home_after_login",
-  "keep_hipersign_sidebar",
-  "hide_getting_started",
-  "hs_hidden_icons",
+  "feat_construction",
+  "feat_cn_biz",
+  "feat_cn_site",
+  "feat_cn_qhse",
+  "feat_cn_fin",
+  "feat_cn_ctl",
+  "feat_cn_portal",
+  "sb_cn_limits",
+  "cn_quote_discount_limit",
+  "cn_quote_margin_floor",
+  "cn_ld_flag_days",
+  "cn_worker_advance_limit",
+  "cn_jv_md_limit",
+  "cn_site_cash_limit",
+  "cn_bid_md_limit",
   "tab_forms",
   "sb_forms",
   "form_modes",
@@ -165,6 +166,20 @@
   "sb_grp",
   "group_currency",
   "group_sync_daily",
+  "tab_look",
+  "sb_look",
+  "desk_theme",
+  "erp_theme",
+  "chart_style",
+  "chart_brand_colour",
+  "hide_graph_bands",
+  "sb_menus",
+  "only_hipersign_tiles",
+  "cb_menus",
+  "open_home_after_login",
+  "keep_hipersign_sidebar",
+  "hs_hidden_icons",
+  "hide_getting_started",
   "sb_demo",
   "deal_demo"
  ],
@@ -557,7 +572,7 @@
    "fieldname": "feature_pack",
    "fieldtype": "Select",
    "label": "Feature pack",
-   "options": "Starter\nStandard\nContractor\nManufacturer\nEnterprise\nCustom",
+   "options": "Starter\nStandard\nContractor\nManufacturer\nFoundation\nStructure\nCapstone\nEnterprise\nCustom",
    "default": "Enterprise"
   },
   {
@@ -809,6 +824,112 @@
    "label": "Manufacturing",
    "default": "0",
    "description": "BOMs and routings, production planning, work orders, shop floor job cards, quality inspection and costing"
+  },
+  {
+   "fieldname": "feat_construction",
+   "fieldtype": "Check",
+   "label": "Construction (India)",
+   "default": "0",
+   "description": "Tenders and EMD, BOQ and extra items, measurement book, RA bills with GST, retention, TDS, GST-TDS and labour cess, DPR and hindrances"
+  },
+  {
+   "fieldname": "feat_cn_biz",
+   "fieldtype": "Check",
+   "label": "Construction — business & contracts",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder"
+  },
+  {
+   "fieldname": "feat_cn_site",
+   "fieldtype": "Check",
+   "label": "Construction — site resources",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment"
+  },
+  {
+   "fieldname": "feat_cn_qhse",
+   "fieldtype": "Check",
+   "label": "Construction — quality, safety & handover",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Inspection & test plans, inspections, cube tests and NCRs; incidents, permits, toolbox talks and audits; drawings, RFIs and transmittals; snags, handover documents, DLP defects, warranties and retention release"
+  },
+  {
+   "fieldname": "feat_cn_fin",
+   "fieldtype": "Check",
+   "label": "Construction — finance, tax & payroll",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals"
+  },
+  {
+   "fieldname": "feat_cn_ctl",
+   "fieldtype": "Check",
+   "label": "Construction — project controls",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline and the weekly review"
+  },
+  {
+   "fieldname": "feat_cn_portal",
+   "fieldtype": "Check",
+   "label": "Construction — portals & apps",
+   "default": "0",
+   "depends_on": "eval:doc.feat_construction",
+   "description": "Client portal, subcontractor portal, site app, worker app and site deliveries for the driver app"
+  },
+  {
+   "fieldname": "sb_cn_limits",
+   "fieldtype": "Section Break",
+   "label": "Construction (India) — limits",
+   "depends_on": "eval:doc.feat_construction"
+  },
+  {
+   "fieldname": "cn_quote_discount_limit",
+   "fieldtype": "Percent",
+   "label": "Quotation discount above which the MD approves",
+   "default": "5"
+  },
+  {
+   "fieldname": "cn_quote_margin_floor",
+   "fieldtype": "Percent",
+   "label": "Quotation margin below which the MD approves",
+   "default": "10"
+  },
+  {
+   "fieldname": "cn_ld_flag_days",
+   "fieldtype": "Int",
+   "label": "Flag a project this many days behind (LD)",
+   "default": "21"
+  },
+  {
+   "fieldname": "cn_worker_advance_limit",
+   "fieldtype": "Currency",
+   "label": "Worker advance above which the PM approves",
+   "default": "5000",
+   "options": "INR"
+  },
+  {
+   "fieldname": "cn_jv_md_limit",
+   "fieldtype": "Currency",
+   "label": "Manual journal above which the MD approves",
+   "default": "1000000",
+   "options": "INR"
+  },
+  {
+   "fieldname": "cn_site_cash_limit",
+   "fieldtype": "Currency",
+   "label": "Site cash a site engineer books without approval",
+   "default": "5000",
+   "options": "INR"
+  },
+  {
+   "fieldname": "cn_bid_md_limit",
+   "fieldtype": "Currency",
+   "label": "Tender bid above which only the MD sets the price",
+   "default": "200000000"
   },
   {
    "fieldname": "tab_forms",

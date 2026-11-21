@@ -1,0 +1,397 @@
+{
+ "doctype": "DocType",
+ "name": "Site Worker",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-20 00:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "field_order": [
+  "naming_series",
+  "worker_name",
+  "project",
+  "company",
+  "contractor",
+  "trade",
+  "skill",
+  "cb1",
+  "state",
+  "daily_rate",
+  "min_wage",
+  "status",
+  "joined_on",
+  "sb_p",
+  "upi_id",
+  "mobile",
+  "aadhaar_last4",
+  "cb2",
+  "home_state",
+  "pf_uan",
+  "esi_ip",
+  "sb_c",
+  "bocw_reg_no",
+  "id_expiry",
+  "cb3",
+  "induction_done",
+  "ppe_issued",
+  "police_verified",
+  "medical_fit",
+  "sb_app",
+  "app_language",
+  "app_pin",
+  "cb_app",
+  "app_last_login",
+  "currency"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "WKR-.#####",
+   "default": "WKR-.#####",
+   "reqd": 1,
+   "hidden": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "worker_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "fetch_from": "project.company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "contractor",
+   "fieldtype": "Link",
+   "label": "Labour contractor (blank = own worker)",
+   "options": "Supplier",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "trade",
+   "fieldtype": "Select",
+   "label": "Trade",
+   "options": "Mason\nCarpenter\nBar bender\nHelper\nElectrician\nPlumber\nWelder\nPainter\nFitter\nOperator\nRigger\nTiler",
+   "default": "Helper",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "skill",
+   "fieldtype": "Select",
+   "label": "Skill",
+   "options": "Unskilled\nSemi-skilled\nSkilled\nHighly skilled",
+   "default": "Unskilled"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Select",
+   "label": "Work state",
+   "options": "Kerala\nKarnataka\nTamil Nadu\nMaharashtra",
+   "default": "Kerala"
+  },
+  {
+   "fieldname": "daily_rate",
+   "fieldtype": "Currency",
+   "label": "Daily wage",
+   "reqd": 1,
+   "in_list_view": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "min_wage",
+   "fieldtype": "Currency",
+   "label": "State minimum",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nLeft",
+   "default": "Active",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "joined_on",
+   "fieldtype": "Date",
+   "label": "Joined on",
+   "default": "Today"
+  },
+  {
+   "fieldname": "sb_p",
+   "fieldtype": "Section Break",
+   "label": "Pay & identity"
+  },
+  {
+   "fieldname": "upi_id",
+   "fieldtype": "Data",
+   "label": "UPI ID"
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile"
+  },
+  {
+   "fieldname": "aadhaar_last4",
+   "fieldtype": "Data",
+   "label": "Aadhaar (last 4)",
+   "length": 4
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "home_state",
+   "fieldtype": "Data",
+   "label": "Home state (migrant)"
+  },
+  {
+   "fieldname": "pf_uan",
+   "fieldtype": "Data",
+   "label": "UAN"
+  },
+  {
+   "fieldname": "esi_ip",
+   "fieldtype": "Data",
+   "label": "ESI IP no."
+  },
+  {
+   "fieldname": "sb_c",
+   "fieldtype": "Section Break",
+   "label": "Labour register"
+  },
+  {
+   "fieldname": "bocw_reg_no",
+   "fieldtype": "Data",
+   "label": "BOCW registration no."
+  },
+  {
+   "fieldname": "id_expiry",
+   "fieldtype": "Date",
+   "label": "ID / migrant card valid to"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "induction_done",
+   "fieldtype": "Check",
+   "label": "Safety induction done"
+  },
+  {
+   "fieldname": "ppe_issued",
+   "fieldtype": "Check",
+   "label": "PPE issued"
+  },
+  {
+   "fieldname": "police_verified",
+   "fieldtype": "Check",
+   "label": "Police verification"
+  },
+  {
+   "fieldname": "medical_fit",
+   "fieldtype": "Check",
+   "label": "Medically fit"
+  },
+  {
+   "fieldname": "sb_app",
+   "fieldtype": "Section Break",
+   "label": "Worker app"
+  },
+  {
+   "fieldname": "app_language",
+   "fieldtype": "Select",
+   "label": "App language",
+   "options": "English\nമലയാളം\nதமிழ்\nहिन्दी",
+   "default": "English"
+  },
+  {
+   "fieldname": "app_pin",
+   "fieldtype": "Password",
+   "label": "App PIN (4 digits)",
+   "length": 4
+  },
+  {
+   "fieldname": "cb_app",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "app_last_login",
+   "fieldtype": "Datetime",
+   "label": "Last app login",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "hidden": 1,
+   "fetch_from": "company.default_currency",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Managing Director"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Project Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Projects Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Site Engineer"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "HR & Admin"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Accounts User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Projects User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Demo Viewer"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "BD Manager"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "editable_grid": 0,
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "title_field": "worker_name",
+ "show_title_field_in_link": 1,
+ "search_fields": "worker_name,project,contractor",
+ "description": "Construction (India): site worker register — trade, wage, pay, identity and labour-register checks"
+}

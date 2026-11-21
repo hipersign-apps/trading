@@ -1,0 +1,398 @@
+{
+ "doctype": "DocType",
+ "name": "Tender",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-21 00:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "field_order": [
+  "naming_series",
+  "tender_name",
+  "company",
+  "customer",
+  "client_name",
+  "portal",
+  "tender_ref",
+  "cb1",
+  "estimated_value",
+  "our_bid",
+  "our_margin_pct",
+  "published_on",
+  "due_date",
+  "sb_dec",
+  "status",
+  "bid_decision",
+  "decided_by",
+  "rank",
+  "result_note",
+  "project",
+  "cb2",
+  "emd_amount",
+  "emd_mode",
+  "emd_status",
+  "emd_bg",
+  "sb_n",
+  "notes",
+  "sb_chk",
+  "checklist",
+  "checklist_done",
+  "checklist_total",
+  "sb_bid",
+  "bidders",
+  "l1_amount",
+  "boq",
+  "currency"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "TND-.YY.MM.-.###",
+   "default": "TND-.YY.MM.-.###",
+   "reqd": 1,
+   "hidden": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "tender_name",
+   "fieldtype": "Data",
+   "label": "Work / tender name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Client (customer)",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "client_name",
+   "fieldtype": "Data",
+   "label": "Client / tendering authority",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "portal",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Private enquiry\nKerala e-Tenders\nCPPP\nGeM\nState e-procurement\nOther",
+   "default": "Private enquiry"
+  },
+  {
+   "fieldname": "tender_ref",
+   "fieldtype": "Data",
+   "label": "Tender ID / NIT no."
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "estimated_value",
+   "fieldtype": "Currency",
+   "label": "Estimated value (put to tender)",
+   "in_list_view": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "our_bid",
+   "fieldtype": "Currency",
+   "label": "Our quoted value",
+   "options": "currency"
+  },
+  {
+   "fieldname": "our_margin_pct",
+   "fieldtype": "Percent",
+   "label": "Estimated margin %"
+  },
+  {
+   "fieldname": "published_on",
+   "fieldtype": "Date",
+   "label": "Published on"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Bid due",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sb_dec",
+   "fieldtype": "Section Break",
+   "label": "Decision & result"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Bid / no-bid\nBeing priced\nSubmitted\nTechnical evaluation\nFinancial evaluation\nL1 — LOA awaited\nAwarded\nLost\nNo bid",
+   "default": "Bid / no-bid",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "bid_decision",
+   "fieldtype": "Select",
+   "label": "Bid decision",
+   "options": "Pending\nBid\nNo bid",
+   "default": "Pending"
+  },
+  {
+   "fieldname": "decided_by",
+   "fieldtype": "Data",
+   "label": "Decided by",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rank",
+   "fieldtype": "Select",
+   "label": "Rank",
+   "options": "\nL1\nL2\nL3\nL4\nL5\nL6+"
+  },
+  {
+   "fieldname": "result_note",
+   "fieldtype": "Small Text",
+   "label": "Result note"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project (on award)",
+   "options": "Project"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "emd_amount",
+   "fieldtype": "Currency",
+   "label": "EMD",
+   "options": "currency"
+  },
+  {
+   "fieldname": "emd_mode",
+   "fieldtype": "Select",
+   "label": "EMD mode",
+   "options": "Online\nBank guarantee\nDemand draft\nExempt (MSE)",
+   "default": "Online"
+  },
+  {
+   "fieldname": "emd_status",
+   "fieldtype": "Select",
+   "label": "EMD status",
+   "options": "Not paid\nHeld by client\nRefund pending\nRefunded\nAdjusted in PBG\nForfeited",
+   "default": "Not paid"
+  },
+  {
+   "fieldname": "emd_bg",
+   "fieldtype": "Link",
+   "label": "EMD bank guarantee",
+   "options": "Bank Guarantee"
+  },
+  {
+   "fieldname": "sb_n",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "sb_chk",
+   "fieldtype": "Section Break",
+   "label": "Submission checklist",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist",
+   "options": "Tender Checklist Item"
+  },
+  {
+   "fieldname": "checklist_done",
+   "fieldtype": "Int",
+   "label": "Ready",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checklist_total",
+   "fieldtype": "Int",
+   "label": "Items",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb_bid",
+   "fieldtype": "Section Break",
+   "label": "Bids opened",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "bidders",
+   "fieldtype": "Table",
+   "label": "Bidders",
+   "options": "Tender Bidder"
+  },
+  {
+   "fieldname": "l1_amount",
+   "fieldtype": "Currency",
+   "label": "L1 bid",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "boq",
+   "fieldtype": "Link",
+   "label": "Priced BOQ",
+   "options": "Project BOQ",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "hidden": 1,
+   "fetch_from": "company.default_currency",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Managing Director"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Project Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Projects Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Quantity Surveyor"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Accounts User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Projects User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Demo Viewer"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "BD Manager"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "editable_grid": 0,
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "title_field": "tender_name",
+ "show_title_field_in_link": 1,
+ "search_fields": "tender_name,client_name",
+ "description": "Construction (India): tender register — bid / no-bid, EMD, result"
+}

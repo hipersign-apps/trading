@@ -1,0 +1,42 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-cn-apps",
+ "page_name": "hipersign-cn-apps",
+ "title": "Site & Worker App",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Managing Director"
+  },
+  {
+   "role": "Project Manager"
+  },
+  {
+   "role": "Projects Manager"
+  },
+  {
+   "role": "Site Engineer"
+  },
+  {
+   "role": "HR & Admin"
+  },
+  {
+   "role": "Safety Officer"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Demo Viewer"
+  }
+ ],
+ "owner": "Administrator",
+ "creation": "2026-11-20 00:00:00",
+ "modified": "2026-11-20 00:00:00"
+}

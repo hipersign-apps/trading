@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "owner": "Administrator",
  "creation": "2026-11-02 12:00:00.000000",
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-21 00:00:00.000000",
  "actions": [],
  "links": [],
  "states": [],
@@ -28,6 +28,8 @@
   "sub_share",
   "plant_share",
   "ovh_share",
+  "rate_analysis",
+  "analysed_rate",
   "cost_rate",
   "cb_progress",
   "certified_pct",
@@ -120,6 +122,18 @@
    "fieldname": "ovh_share",
    "fieldtype": "Percent",
    "label": "Site overheads %"
+  },
+  {
+   "fieldname": "rate_analysis",
+   "fieldtype": "Link",
+   "label": "Rate analysis",
+   "options": "Rate Analysis"
+  },
+  {
+   "fieldname": "analysed_rate",
+   "fieldtype": "Currency",
+   "label": "Analysed rate",
+   "read_only": 1
   },
   {
    "fieldname": "cost_rate",

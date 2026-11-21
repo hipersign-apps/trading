@@ -75,6 +75,52 @@ NAV = [
 		("Project costing", "Page", "hipersign-costing", "chart-column", "projects", {}),
 		("Project Tracker", "Page", "project-tracker", "list-checks", "projects", {}),
 	]),
+	# v1.9.0 A2 (prototype C5): Indian contractors' business side — enquiries, quotations, contracts, claims, collections
+	("Business (India)", "briefcase", [
+		("CRM & Clients", "Page", "hipersign-cn-crm", "users", "cn_biz", {}),
+		("Quotations & Sales", "Page", "hipersign-cn-sales", "file-text", "cn_biz", {}),
+		("Contracts & Claims", "Page", "hipersign-cn-contracts", "signature", "cn_biz", {}),
+	]),
+	# v1.9.0 (prototype C11): Indian contractors — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR
+	("Construction (India)", "hard-hat", [
+		("Construction Projects", "Page", "hipersign-cn-projects", "chart-gantt", "construction", {}),
+		("Tenders & EMD", "Page", "hipersign-cn-tenders", "file-text", "construction", {}),
+		("BOQ & Estimating", "Page", "hipersign-cn-boq", "calculator", "construction", {}),
+		("Measurement Book", "Page", "hipersign-cn-mb", "ruler", "construction", {}),
+		("RA Billing", "Page", "hipersign-cn-billing", "receipt", "construction", {}),
+		("DPR & Hindrances", "Page", "hipersign-cn-site", "hard-hat", "construction", {}),
+		("Project Controls", "Page", "hipersign-cn-controls", "traffic-cone", "cn_ctl", {}),  # v1.9.0 A6
+		("Construction Tracker", "Page", "hipersign-cn-tracker", "list-checks", "construction", {}),  # v1.9.1 B2
+	]),
+	# v1.9.0 A6 (prototype C9): what clients, partners, site engineers and workers see
+	("Portals & Apps (India)", "smartphone", [
+		("Client Portal (India)", "Page", "hipersign-cn-client-portal", "building-2", "cn_portal", {}),
+		("Subcontractor Portal", "Page", "hipersign-cn-partner-portal", "briefcase", "cn_portal", {}),
+		("Site & Worker App", "Page", "hipersign-cn-apps", "smartphone", "cn_portal", {}),
+	]),
+	# v1.9.0 A4 (prototypes C4, C7): quality, safety, drawings and handover
+	("Quality & Handover", "shield-check", [
+		("Quality (QA/QC)", "Page", "hipersign-cn-quality", "clipboard-check", "cn_qhse", {}),
+		("Safety (HSE)", "Page", "hipersign-cn-safety", "hard-hat", "cn_qhse", {}),
+		("Drawings & RFIs", "Page", "hipersign-cn-drawings", "drafting-compass", "cn_qhse", {}),
+		("Handover & DLP", "Page", "hipersign-cn-handover", "folder-check", "cn_qhse", {}),
+	]),
+	# v1.9.0 A5 (prototype C8): finance, tax and payroll for Indian contractors
+	("Finance (India)", "indian-rupee", [
+		("Accounts & Cash (India)", "Page", "hipersign-cn-accounts", "landmark", "cn_fin", {}),
+		("GST & TDS", "Page", "hipersign-cn-tax", "percent", "cn_fin", {}),
+		("Cost Control", "Page", "hipersign-cn-cost", "gauge", "cn_fin", {}),
+		("Payroll & Statutory", "Page", "hipersign-cn-payroll", "wallet", "cn_fin", {}),
+	]),
+	# v1.9.0 A3 (prototypes C3, C6, C7): the resources behind the sites
+	("Site Resources (India)", "package", [
+		("Procurement & Stores", "Page", "hipersign-cn-proc", "shopping-cart", "cn_site", {}),
+		("Vendors", "Page", "hipersign-cn-vendors", "users", "cn_site", {}),
+		("Central Store & Logistics", "Page", "hipersign-cn-store", "warehouse", "cn_site", {}),
+		("Subcontractors (India)", "Page", "hipersign-cn-subcon", "briefcase", "cn_site", {}),
+		("Labour & Workers", "Page", "hipersign-cn-labour", "hard-hat", "cn_site", {}),
+		("Equipment", "Page", "hipersign-cn-equipment", "tractor", "cn_site", {}),
+	]),
 	# v1.8.0 (prototype p19): assemblers and factories — after Projects, before Finance & Tax, as on the prototype
 	("Manufacturing", "factory", [
 		("Production", "Page", "hipersign-production", "wrench", "manufacturing", {}),
@@ -146,6 +192,51 @@ NAV_SUB = {
 		("Document Rules", "DocType", "Hipersign Document Rule", None), ("Editable Lists", "DocType", "Hipersign List Value", None),
 		("Users", "DocType", "User", None), ("System Settings", "DocType", "System Settings", None)],
 	"Document Centre": [("Missing Documents", "Report", "Missing Documents", None), ("Document Waivers", "DocType", "Document Waiver", None)],
+	# v1.9.0 A6
+	"Project Controls": [("Constraints", "DocType", "Project Constraint", None), ("Milestones", "DocType", "Construction Milestone", None), ("Reviews", "DocType", "Project Review", None),
+		("Tasks", "DocType", "Task", None), ("Risks & issues", "DocType", "Project Risk", None), ("Minutes of meeting", "DocType", "Project Meeting", None)],
+	"Client Portal (India)": [("Client messages", "DocType", "Portal Message", None)],
+	"Subcontractor Portal": [("Partner messages", "DocType", "Portal Message", None)],
+	"Site & Worker App": [("Site Photos", "DocType", "Site Photo", None), ("Site Attendance", "DocType", "Site Attendance", None), ("Site Cash", "DocType", "Site Expense", None)],
+	# v1.9.0 A5: Finance (India)
+	"Accounts & Cash (India)": [("Journal Entries", "DocType", "Journal Entry", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Purchase Invoices", "DocType", "Purchase Invoice", None)],
+	"GST & TDS": [("Statutory Payments", "DocType", "Statutory Deposit", None), ("GSTR-3B", "Report", "GSTR-3B Details", None), ("GSTR-1", "DocType", "GSTR-1", None),
+		("2B reconciliation", "DocType", "Purchase Reconciliation Tool", None), ("e-Way bills", "DocType", "e-Waybill Log", None)],
+	"Payroll & Statutory": [("Staff Payroll", "DocType", "Staff Payroll", None), ("Employees", "DocType", "Employee", None), ("Statutory Payments", "DocType", "Statutory Deposit", None),
+		("Attendance", "DocType", "Attendance", None), ("Leave", "DocType", "Leave Application", None), ("Employee advances", "DocType", "Employee Advance", None)],
+	# v1.9.0 A4: Quality & Handover (India)
+	"Quality (QA/QC)": [("Inspection Requests", "DocType", "Inspection Request", None), ("Cube Tests", "DocType", "Cube Test", None), ("NCRs", "DocType", "NCR", None),
+		("Inspection & Test Plan", "DocType", "ITP Item", None)],
+	"Safety (HSE)": [("Incidents", "DocType", "Safety Incident", None), ("Permits to Work", "DocType", "Work Permit", None), ("Toolbox Talks", "DocType", "Toolbox Talk", None),
+		("Safety Audits", "DocType", "Safety Audit", None)],
+	"Drawings & RFIs": [("Drawings", "DocType", "Construction Drawing", None), ("RFIs", "DocType", "RFI", None), ("Transmittals", "DocType", "Transmittal", None),
+		("Controlled documents", "DocType", "Controlled Document", None)],
+	"Handover & DLP": [("Snags", "DocType", "Snag", None), ("Handover Documents", "DocType", "Handover Document", None), ("DLP Defects", "DocType", "DLP Defect", None),
+		("Warranties", "DocType", "Construction Warranty", None)],
+	# v1.9.0 A3: Site Resources (India)
+	"Procurement & Stores": [("Indents", "DocType", "Material Request", None), ("Supplier Quotations", "DocType", "Supplier Quotation", None),
+		("Purchase Orders", "DocType", "Purchase Order", None), ("Receipts", "DocType", "Purchase Receipt", None), ("Material Norms", "DocType", "Material Norm", None)],
+	"Vendors": [("Suppliers", "DocType", "Supplier", None), ("Rate Contracts", "DocType", "Blanket Order", None)],
+	"Central Store & Logistics": [("Transfers & issues", "DocType", "Stock Entry", None), ("Scrap lots", "DocType", "Scrap Lot", None)],
+	"Subcontractors (India)": [("Work Orders", "DocType", "Subcontractor Work Order", None), ("Running Bills", "DocType", "Subcontractor Bill", None),
+		("Labour Compliance", "DocType", "Labour Compliance", None)],
+	"Labour & Workers": [("Workers", "DocType", "Site Worker", None), ("Weekly Musters", "DocType", "Weekly Muster", None), ("Advances", "DocType", "Worker Advance", None),
+		("Minimum Wages", "DocType", "Minimum Wage", None), ("Productivity Norms", "DocType", "Productivity Norm", None), ("Contractor pay proof", "DocType", "Contractor Pay Proof", None)],
+	"Equipment": [("Equipment", "DocType", "Construction Equipment", None), ("Log Sheets", "DocType", "Equipment Log", None), ("Maintenance", "DocType", "Equipment Maintenance", None)],
+	# v1.9.0 A2: Business (India)
+	"CRM & Clients": [("Enquiries", "DocType", "Opportunity", None), ("Client Visits", "DocType", "Client Visit", None), ("Clients", "DocType", "Customer", None)],
+	"Quotations & Sales": [("Quotations", "DocType", "Quotation", None), ("Collection Follow-ups", "DocType", "Collection Follow-up", None),
+		("Development units", "DocType", "Development Unit", None)],
+	"Contracts & Claims": [("Contracts", "DocType", "Construction Contract", None), ("Claims", "DocType", "Contract Claim", None)],
+	# v1.9.0: Construction (India)
+	"Construction Projects": [("Projects", "DocType", "Project", None), ("Bank Guarantees", "DocType", "Bank Guarantee", None)],
+	"Tenders & EMD": [("Tenders", "DocType", "Tender", None)],
+	"BOQ & Estimating": [("Project BOQs", "DocType", "Project BOQ", None), ("Rate Analyses", "DocType", "Rate Analysis", None), ("BOQ Templates", "DocType", "BOQ Template", None),
+		("Extra Items", "DocType", "Extra Item", None)],
+	"Measurement Book": [("Measurement Book", "DocType", "Measurement Book", None)],
+	"RA Billing": [("RA Bills", "DocType", "RA Bill", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Payments", "DocType", "Payment Entry", None)],
+	"DPR & Hindrances": [("Daily Progress Reports", "DocType", "Daily Progress Report", None), ("Hindrances", "DocType", "Hindrance", None),
+		("Site Diary", "DocType", "Site Diary", None)],
 	# v1.8.0: Projects
 	"Projects": [("Projects", "DocType", "Project", None), ("Project Step Log", "DocType", "Project Step Log", None), ("Bank Guarantees (bonds)", "DocType", "Bank Guarantee", None)],
 	"Estimating & BOQ": [("Project BOQs & tenders", "DocType", "Project BOQ", None)],
@@ -203,6 +294,42 @@ SUB_TABS = {
 	("Workflows & Settings", "Document Rules"): ("hipersign-doccentre", "rules"), ("Workflows & Settings", "Editable Lists"): ("hipersign-settings-hub", None),
 	("Workflows & Settings", "Users"): ("hipersign-settings-hub", None), ("Workflows & Settings", "System Settings"): ("hipersign-settings-hub", None),
 	("Document Centre", "Missing Documents"): ("hipersign-doccentre", "missing"), ("Document Centre", "Document Waivers"): ("hipersign-doccentre", "waivers"),
+	("Quality (QA/QC)", "Inspection Requests"): ("hipersign-cn-quality", "ir"), ("Quality (QA/QC)", "Cube Tests"): ("hipersign-cn-quality", "cube"),
+	("Quality (QA/QC)", "NCRs"): ("hipersign-cn-quality", "ncr"), ("Quality (QA/QC)", "Inspection & Test Plan"): ("hipersign-cn-quality", "itp"),
+	("Safety (HSE)", "Incidents"): ("hipersign-cn-safety", "inc"), ("Safety (HSE)", "Permits to Work"): ("hipersign-cn-safety", "ptw"),
+	("Safety (HSE)", "Toolbox Talks"): ("hipersign-cn-safety", "tbt"), ("Safety (HSE)", "Safety Audits"): ("hipersign-cn-safety", "aud"),
+	("Drawings & RFIs", "Controlled documents"): ("hipersign-cn-drawings", "cdoc"), ("Client Portal (India)", "Client messages"): ("hipersign-cn-client-portal", "in"),
+	("Subcontractor Portal", "Partner messages"): ("hipersign-cn-partner-portal", "in"), ("Quotations & Sales", "Development units"): ("hipersign-cn-sales", "unit"),
+	("Labour & Workers", "Contractor pay proof"): ("hipersign-cn-labour", "cpp"),
+	("Drawings & RFIs", "Drawings"): ("hipersign-cn-drawings", "dwg"), ("Drawings & RFIs", "RFIs"): ("hipersign-cn-drawings", "rfi"),
+	("Drawings & RFIs", "Transmittals"): ("hipersign-cn-drawings", "trn"), ("Handover & DLP", "Snags"): ("hipersign-cn-handover", "snag"),
+	("Handover & DLP", "Handover Documents"): ("hipersign-cn-handover", "docs"), ("Handover & DLP", "DLP Defects"): ("hipersign-cn-handover", "def"),
+	("Handover & DLP", "Warranties"): ("hipersign-cn-handover", "wty"),
+	("Project Controls", "Constraints"): ("hipersign-cn-controls", "con"), ("Project Controls", "Milestones"): ("hipersign-cn-controls", "ms"),
+	("Project Controls", "Reviews"): ("hipersign-cn-controls", "rev"), ("Project Controls", "Tasks"): ("hipersign-cn-controls", "task"),
+	("Project Controls", "Risks & issues"): ("hipersign-cn-controls", "risk"), ("Project Controls", "Minutes of meeting"): ("hipersign-cn-controls", "mtg"), ("Site & Worker App", "Site Photos"): ("hipersign-cn-apps", "pho"),
+	("Site & Worker App", "Site Cash"): ("hipersign-cn-apps", "cash"),
+	("GST & TDS", "Statutory Payments"): ("hipersign-cn-tax", "cal"), ("Payroll & Statutory", "Staff Payroll"): ("hipersign-cn-payroll", "run"),
+	("Payroll & Statutory", "Employees"): ("hipersign-cn-payroll", "emp"), ("Payroll & Statutory", "Statutory Payments"): ("hipersign-cn-payroll", "dep"),
+	("Procurement & Stores", "Indents"): ("hipersign-cn-proc", "ind"), ("Procurement & Stores", "Supplier Quotations"): ("hipersign-cn-proc", "cmp"),
+	("Procurement & Stores", "Purchase Orders"): ("hipersign-cn-proc", "po"), ("Procurement & Stores", "Receipts"): ("hipersign-cn-proc", "grn"),
+	("Vendors", "Suppliers"): ("hipersign-cn-vendors", "ven"), ("Vendors", "Rate Contracts"): ("hipersign-cn-vendors", "rc"),
+	("Central Store & Logistics", "Transfers & issues"): ("hipersign-cn-store", "trf"), ("Subcontractors (India)", "Work Orders"): ("hipersign-cn-subcon", "wo"),
+	("Subcontractors (India)", "Running Bills"): ("hipersign-cn-subcon", "bill"), ("Subcontractors (India)", "Labour Compliance"): ("hipersign-cn-subcon", "lc"),
+	("Labour & Workers", "Workers"): ("hipersign-cn-labour", "wkr"), ("Labour & Workers", "Weekly Musters"): ("hipersign-cn-labour", "mus"),
+	("Labour & Workers", "Advances"): ("hipersign-cn-labour", "adv"), ("Labour & Workers", "Minimum Wages"): ("hipersign-cn-labour", "mw"),
+	("Equipment", "Equipment"): ("hipersign-cn-equipment", "reg"), ("Equipment", "Log Sheets"): ("hipersign-cn-equipment", "log"),
+	("Equipment", "Maintenance"): ("hipersign-cn-equipment", "mnt"),
+	("CRM & Clients", "Enquiries"): ("hipersign-cn-crm", "pipe"), ("CRM & Clients", "Client Visits"): ("hipersign-cn-crm", "visit"),
+	("CRM & Clients", "Clients"): ("hipersign-cn-crm", "cli"), ("Quotations & Sales", "Quotations"): ("hipersign-cn-sales", "qt"),
+	("Quotations & Sales", "Collection Follow-ups"): ("hipersign-cn-sales", "fup"), ("Contracts & Claims", "Contracts"): ("hipersign-cn-contracts", "reg"),
+	("Contracts & Claims", "Claims"): ("hipersign-cn-contracts", "clm"),
+	("Construction Projects", "Projects"): ("hipersign-cn-projects", "port"), ("Construction Projects", "Bank Guarantees"): ("hipersign-cn-projects", "bg"),
+	("Tenders & EMD", "Tenders"): ("hipersign-cn-tenders", "tnd"), ("BOQ & Estimating", "Project BOQs"): ("hipersign-cn-boq", "boq"),
+	("BOQ & Estimating", "Extra Items"): ("hipersign-cn-boq", "ei"), ("BOQ & Estimating", "Rate Analyses"): ("hipersign-cn-boq", "lib"), ("BOQ & Estimating", "BOQ Templates"): ("hipersign-cn-boq", "tpl"), ("Measurement Book", "Measurement Book"): ("hipersign-cn-mb", "mb"),
+	("RA Billing", "RA Bills"): ("hipersign-cn-billing", "ra"), ("DPR & Hindrances", "Daily Progress Reports"): ("hipersign-cn-site", "dpr"),
+	("DPR & Hindrances", "Hindrances"): ("hipersign-cn-site", "hin"), ("DPR & Hindrances", "Site Diary"): ("hipersign-cn-site", "diary"),
+	("Central Store & Logistics", "Scrap lots"): ("hipersign-cn-store", "scrap"), ("Labour & Workers", "Productivity Norms"): ("hipersign-cn-labour", "prod"),
 	("Projects", "Projects"): ("hipersign-projects", "port"), ("Projects", "Project Step Log"): ("hipersign-projects", "log"),
 	("Projects", "Bank Guarantees (bonds)"): ("hipersign-lc", "bgs"),
 	("Estimating & BOQ", "Project BOQs & tenders"): ("hipersign-boq", "boq"),
@@ -360,6 +487,10 @@ def sub_items():
 
 	s = _s()
 	out = {}
+	# 9 Nov (site fix, Adipoly): an entry's page already shows these lists as its tabs, so the side menu shows only the main
+	# entries; a sub-item stays only where it opens something the entry's page has no tab for. Site config
+	# `hipersign_side_submenus: 1` brings every sub-item back.
+	all_subs = bool(frappe.conf.get("hipersign_side_submenus"))
 	for entry, rows in NAV_SUB.items():
 		kept = []
 		for label, ltype, target, feature in rows:
@@ -376,10 +507,12 @@ def sub_items():
 			row = {"label": label, "route": _route(ltype, target), "target": target}
 			# v1.8.4 (#34/#37): open the Hipersign page and tab, when the user may open that page
 			to = SUB_TABS.get((entry, label))
+			if to and not all_subs:
+				continue
 			if to and frappe.db.exists("Page", to[0]) and frappe.get_cached_doc("Page", to[0]).is_permitted():
 				row.update({"route": [to[0]], "target": to[0], "tab": to[1], "chip": SUB_CHIPS.get((entry, label))})
 			kept.append(row)
-		if entry in REPORT_GROUP and frappe.db.exists("Page", "hipersign-reports"):
+		if all_subs and entry in REPORT_GROUP and frappe.db.exists("Page", "hipersign-reports"):
 			kept.append({"label": "Reports", "route": ["hipersign-reports"], "target": "hipersign-reports", "group": REPORT_GROUP[entry]})
 		if kept:
 			out[entry] = kept

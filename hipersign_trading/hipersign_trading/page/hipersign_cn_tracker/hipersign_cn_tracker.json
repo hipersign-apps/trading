@@ -1,0 +1,51 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-cn-tracker",
+ "page_name": "hipersign-cn-tracker",
+ "title": "Construction Tracker",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Managing Director"
+  },
+  {
+   "role": "Project Manager"
+  },
+  {
+   "role": "Projects Manager"
+  },
+  {
+   "role": "Quantity Surveyor"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Site Engineer"
+  },
+  {
+   "role": "QA/QC Engineer"
+  },
+  {
+   "role": "Safety Officer"
+  },
+  {
+   "role": "Document Controller"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Demo Viewer"
+  }
+ ],
+ "owner": "Administrator",
+ "creation": "2026-11-22 00:00:00",
+ "modified": "2026-11-22 00:00:00"
+}

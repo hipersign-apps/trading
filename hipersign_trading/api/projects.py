@@ -90,6 +90,8 @@ def _has(*roles):
 
 
 def _need(roles, what):
+	if frappe.flags.get("hs_cn_skip_role"):  # v1.9.0 A6: a portal action already checked who may do it (the client, the partner)
+		return
 	if not _has(*roles):
 		frappe.throw(_("{0} needs the {1}.").format(what, " / ".join(_(r) for r in roles)), frappe.PermissionError)
 
@@ -676,6 +678,8 @@ def project_names(cos=None, include_closed=True):
 	"""Projects of the scope's companies that carry a contract (or tender) value; when the scope has none, every project the user
 	may read (so the Projects pages of a trading company in a group still show the contracting company's projects)."""
 	f = {"hs_contract_value": [">", 0]}
+	if frappe.get_meta("Project").has_field("hs_cn"):  # v1.9.0: Construction (India) projects have their own pages
+		f["hs_cn"] = ["!=", 1]
 	if not include_closed:
 		f["hs_step"] = ["<", 26]
 	fields = ["name", "hs_step", "hs_contract_value"]

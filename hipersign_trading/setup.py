@@ -159,6 +159,7 @@ def v13_defaults(new_site):
 	stock_can_log_warranty_claims()
 	projects_roles_can_work()
 	manufacturing_roles_can_work()
+	construction_roles_can_work()
 
 
 # v1.5.6: ERPNext 16 reads the customer's invoices when the Customer form opens (the dashboard totals) with the user's own
@@ -316,6 +317,57 @@ def manufacturing_roles_can_work():
 
 def projects_roles_can_work():
 	_grant(PROJECT_PERMS)
+
+
+# v1.9.0: Construction (India) — the BD manager runs enquiries and quotations; MD approves; project staff read the client side
+CN_PERMS = {
+	"Opportunity": {"BD Manager": "rwc", "Managing Director": "rwc", "Project Manager": "r", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Quotation": {"BD Manager": "rwcs", "Managing Director": "rwcs", "Project Manager": "rwcs", "Quantity Surveyor": "rwc", "Demo Viewer": "r"},
+	"Customer": {"BD Manager": "rwc", "Managing Director": "rwc", "Demo Viewer": "r"},
+	"Lead": {"BD Manager": "rwc", "Managing Director": "r"},
+	"Prospect": {"BD Manager": "rwc", "Managing Director": "r"},
+	"Address": {"BD Manager": "rwc"}, "Contact": {"BD Manager": "rwc"},
+	"Item": {"BD Manager": "r"}, "Project": {"BD Manager": "r"}, "Sales Invoice": {"BD Manager": "r", "Managing Director": "r"},
+	"Sales Stage": {"BD Manager": "r", "Managing Director": "r"}, "Company": {"BD Manager": "r"},
+	# the BD manager follows the contracts and collections of the jobs won
+	**{dt: {"BD Manager": "r"} for dt in ("Project BOQ", "Bank Guarantee", "Payment Entry")},
+	# what a quotation reads while it is made (taxes, prices, terms, masters)
+	**{dt: {"BD Manager": "r", "Managing Director": "r"} for dt in ("Sales Taxes and Charges Template", "Price List", "Item Price", "Customer Group", "Territory",
+		"Terms and Conditions", "UOM", "Item Group", "Currency", "Sales Person", "Payment Terms Template", "Opportunity Lost Reason", "Quotation Lost Reason",
+		"Competitor", "UTM Source", "Cost Center", "Account", "Address Template", "GST HSN Code", "Item Tax Template", "Opportunity Type")},
+}
+
+
+# v1.9.0 A3: the storekeeper receives, issues and transfers; HR & admin keeps workers; the plant manager runs equipment;
+# project staff work the indents and receipts of their sites
+CN_SITE_PERMS = {
+	"Material Request": {"Storekeeper": "rwc", "Site Engineer": "rwc", "Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Supplier Quotation": {"Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "rwc", "Demo Viewer": "r"},
+	"Request for Quotation": {"Project Manager": "rwcs", "Quantity Surveyor": "rwc", "Demo Viewer": "r"},
+	"Purchase Order": {"Project Manager": "rwc", "Managing Director": "rwcs", "Demo Viewer": "r"},
+	"Purchase Receipt": {"Storekeeper": "rwcs", "Demo Viewer": "r"},
+	"Stock Entry": {"Storekeeper": "rwcs", "Demo Viewer": "r"},
+	"Stock Reconciliation": {"Storekeeper": "rwc", "Project Manager": "rwcs"},
+	"Blanket Order": {"Project Manager": "rwcs", "Managing Director": "rwcs", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Supplier": {"Storekeeper": "r", "Plant Manager": "r", "Demo Viewer": "r", "QA/QC Engineer": "r", "Safety Officer": "r"},
+	"Item": {"Storekeeper": "r", "Plant Manager": "r", "HR & Admin": "r"},
+	"Warehouse": {"Storekeeper": "r", "Quantity Surveyor": "r"},
+	"Bin": {"Storekeeper": "r", "Project Manager": "r", "Site Engineer": "r", "Quantity Surveyor": "r", "Demo Viewer": "r"},
+	"Company": {"Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r", "QA/QC Engineer": "r", "Safety Officer": "r", "Document Controller": "r"},
+	"Purchase Invoice": {"Demo Viewer": "r"}, "Journal Entry": {"Project Manager": "r", "HR & Admin": "r"},
+	"UOM": {"Storekeeper": "r", "Site Engineer": "r"},
+	"Address": {"Project Manager": "r", "Quantity Surveyor": "r", "Site Engineer": "r", "Storekeeper": "r"},
+	"Contact": {"Project Manager": "r", "Storekeeper": "r"},
+	"Purchase Taxes and Charges Template": {"Project Manager": "r", "Quantity Surveyor": "r", "Storekeeper": "r"},
+	# v1.9.0 A4: quality, safety and document control read the projects they work on
+	"Project": {"QA/QC Engineer": "r", "Safety Officer": "r", "Document Controller": "r", "Storekeeper": "r", "HR & Admin": "r", "Plant Manager": "r"},
+	"Project BOQ": {"QA/QC Engineer": "r"},
+}
+
+
+def construction_roles_can_work():
+	_grant(CN_SITE_PERMS)
+	_grant(CN_PERMS)
 
 
 def _grant(table):

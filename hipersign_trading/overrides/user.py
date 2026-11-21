@@ -23,6 +23,15 @@ def home_page(user):
 	roles = set(frappe.get_roles(user))
 	if "Driver" in roles and not (roles - _DRIVER_ONLY):
 		return "driver"
+	# v1.9.0 A6: a client or subcontractor login of a construction company opens its portal
+	if frappe.db.get_value("User", user, "user_type") == "Website User" and frappe.db.exists("DocType", "Site Attendance"):
+		links = frappe.db.sql("""select l.link_doctype, l.link_name from `tabContact` c join `tabDynamic Link` l on l.parent = c.name and l.parenttype = 'Contact'
+			where c.user = %s and l.link_doctype in ('Customer', 'Supplier')""", user)
+		for dt, name in links:
+			if dt == "Customer" and frappe.db.exists("Project", {"customer": name, "hs_cn": 1}):
+				return "cn-client"
+			if dt == "Supplier" and frappe.db.exists("Subcontractor Work Order", {"supplier": name}):
+				return "cn-partner"
 	return None
 
 

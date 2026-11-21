@@ -12,7 +12,7 @@ from hipersign_trading.utils import can_read
 
 RECORD_TYPES = ["Sales Order", "Quotation", "Purchase Order", "Import Shipment", "Sales Invoice", "Delivery Note", "Export Shipment",
 	"Lead", "Customer", "Supplier", "Purchase Invoice", "Payment Entry", "Letter of Credit", "Post Dated Cheque", "Document Waiver",
-	"Hipersign Conversation"]  # v1.8.4 (#32): messages that are not on a record
+	"Hipersign Conversation", "Project"]  # v1.8.4 (#32): messages that are not on a record; v1.9.0 A6: site chat on the project
 CONV = "Hipersign Conversation"
 
 

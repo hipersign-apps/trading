@@ -1,0 +1,383 @@
+{
+ "doctype": "DocType",
+ "name": "Construction Contract",
+ "module": "Hipersign Trading",
+ "custom": 0,
+ "engine": "InnoDB",
+ "owner": "Administrator",
+ "creation": "2026-11-18 22:00:00.000000",
+ "modified": "2026-11-18 22:00:00.000000",
+ "actions": [],
+ "links": [],
+ "states": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "field_order": [
+  "naming_series",
+  "project",
+  "company",
+  "customer",
+  "status",
+  "quotation",
+  "tender",
+  "cb1",
+  "loa_no",
+  "loa_date",
+  "agreement_no",
+  "agreement_date",
+  "sb_v",
+  "original_value",
+  "variations",
+  "claims_awarded",
+  "revised_value",
+  "cb2",
+  "retention_pct",
+  "advance_pct",
+  "price_escalation",
+  "payment_terms",
+  "sb_t",
+  "start_date",
+  "completion_date",
+  "eot_days",
+  "extended_completion",
+  "cb3",
+  "ld_rate_pct",
+  "ld_cap_pct",
+  "dlp_months",
+  "sb_n",
+  "notes",
+  "currency"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CON-.YY.-.###",
+   "default": "CON-.YY.-.###",
+   "reqd": 1,
+   "hidden": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "fetch_from": "project.company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Client",
+   "options": "Customer",
+   "fetch_from": "project.customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nCompleted\nIn DLP\nClosed\nTerminated",
+   "default": "Active",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "quotation",
+   "fieldtype": "Link",
+   "label": "Accepted quotation",
+   "options": "Quotation"
+  },
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "label": "Tender",
+   "options": "Tender"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loa_no",
+   "fieldtype": "Data",
+   "label": "LOA / work order no.",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "loa_date",
+   "fieldtype": "Date",
+   "label": "LOA date"
+  },
+  {
+   "fieldname": "agreement_no",
+   "fieldtype": "Data",
+   "label": "Agreement no."
+  },
+  {
+   "fieldname": "agreement_date",
+   "fieldtype": "Date",
+   "label": "Agreement signed on"
+  },
+  {
+   "fieldname": "sb_v",
+   "fieldtype": "Section Break",
+   "label": "Value"
+  },
+  {
+   "fieldname": "original_value",
+   "fieldtype": "Currency",
+   "label": "Original contract value",
+   "reqd": 1,
+   "in_list_view": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "variations",
+   "fieldtype": "Currency",
+   "label": "Approved extra items",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "claims_awarded",
+   "fieldtype": "Currency",
+   "label": "Claims awarded",
+   "read_only": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "revised_value",
+   "fieldtype": "Currency",
+   "label": "Revised contract value",
+   "read_only": 1,
+   "bold": 1,
+   "options": "currency"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "retention_pct",
+   "fieldtype": "Percent",
+   "label": "Retention %",
+   "default": "5"
+  },
+  {
+   "fieldname": "advance_pct",
+   "fieldtype": "Percent",
+   "label": "Mobilisation advance %",
+   "default": "10"
+  },
+  {
+   "fieldname": "price_escalation",
+   "fieldtype": "Select",
+   "label": "Price escalation",
+   "options": "None — firm price\nPrice variation clause (indices)\nSteel & cement only",
+   "default": "None — firm price"
+  },
+  {
+   "fieldname": "payment_terms",
+   "fieldtype": "Small Text",
+   "label": "Payment terms"
+  },
+  {
+   "fieldname": "sb_t",
+   "fieldtype": "Section Break",
+   "label": "Time & liquidated damages"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Site handed over / start",
+   "reqd": 1
+  },
+  {
+   "fieldname": "completion_date",
+   "fieldtype": "Date",
+   "label": "Contractual completion",
+   "reqd": 1
+  },
+  {
+   "fieldname": "eot_days",
+   "fieldtype": "Int",
+   "label": "EOT granted (days)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "extended_completion",
+   "fieldtype": "Date",
+   "label": "Completion incl. EOT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ld_rate_pct",
+   "fieldtype": "Percent",
+   "label": "LD % of contract per week of delay",
+   "default": "0.5"
+  },
+  {
+   "fieldname": "ld_cap_pct",
+   "fieldtype": "Percent",
+   "label": "LD cap % of contract",
+   "default": "10"
+  },
+  {
+   "fieldname": "dlp_months",
+   "fieldtype": "Int",
+   "label": "Defects liability (months)",
+   "default": "12"
+  },
+  {
+   "fieldname": "sb_n",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "hidden": 1,
+   "fetch_from": "company.default_currency",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Managing Director"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "BD Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Project Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Projects Manager"
+  },
+  {
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "role": "Quantity Surveyor"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Accounts User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Projects User"
+  },
+  {
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "role": "Demo Viewer"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "editable_grid": 0,
+ "autoname": "naming_series:",
+ "naming_rule": "By \"Naming Series\" field",
+ "search_fields": "project,loa_no",
+ "description": "Construction (India): the contract — LOA, agreement, value, retention, advance, time, LD and DLP"
+}

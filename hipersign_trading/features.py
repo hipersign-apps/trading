@@ -53,6 +53,35 @@ FEATURES = {
 		["BOM", "Work Order", "Job Card", "Production Plan", "Workstation", "Routing", "Quality Inspection", "Manufacturing Step Log"], [],
 		["hipersign-production", "hipersign-planning", "hipersign-boms", "hipersign-shopfloor", "hipersign-quality", "hipersign-mfg-costing", "production-tracker"],
 		[], ["Manufacturing"], []),
+	# v1.9.0 (prototype C11): Indian contractors — tenders and EMD, BOQ, measurement book, RA bills with GST, retention, mobilisation
+	# advance recovery, TDS 194C, GST-TDS and BOCW labour cess, DPR and hindrances (api/construction.py)
+	"construction": ("Construction (India)", "Industries", "Tenders and EMD, BOQ and extra items, measurement book, RA bills with GST, retention, TDS, GST-TDS and labour cess, DPR and hindrances", [],
+		["Tender", "Measurement Book", "RA Bill", "Extra Item", "Daily Progress Report", "Hindrance", "Site Diary"], [],
+		["hipersign-cn-projects", "hipersign-cn-tenders", "hipersign-cn-boq", "hipersign-cn-mb", "hipersign-cn-billing", "hipersign-cn-site", "hipersign-cn-tracker"],
+		[], ["Projects"], []),
+	# v1.9.0 A2 (prototype C5): construction CRM, quotations with MD approval and revisions, contracts, claims, LD, collections
+	"cn_biz": ("Construction — business & contracts", "Industries", "CRM for construction enquiries, quotations with MD approval and revisions, contracts (LOA), claims, LD exposure and the collections ladder",
+		["construction"], ["Client Visit", "Construction Contract", "Contract Claim", "Collection Follow-up", "Development Unit"], [],
+		["hipersign-cn-crm", "hipersign-cn-sales", "hipersign-cn-contracts"], [], [], []),
+	# v1.9.0 A3 (prototypes C3, C6, C7): procurement & stores, vendors, central store, subcontractors, workers & wages, equipment
+	"cn_site": ("Construction — site resources", "Industries", "Indents against the BOQ need, quotation comparison on landed cost, site stores and reconciliation, vendors, central store and transfers, subcontractors, workers and weekly wages, plant & equipment",
+		["construction"], ["Material Norm", "Subcontractor Work Order", "Subcontractor Bill", "Labour Compliance", "Minimum Wage", "Site Worker", "Weekly Muster",
+			"Worker Advance", "Construction Equipment", "Equipment Log", "Equipment Maintenance", "Productivity Norm", "Scrap Lot", "Contractor Pay Proof"], [],
+		["hipersign-cn-proc", "hipersign-cn-vendors", "hipersign-cn-store", "hipersign-cn-subcon", "hipersign-cn-labour", "hipersign-cn-equipment"], [], [], []),
+	# v1.9.0 A4 (prototypes C4, C7): QA/QC, HSE, drawings & RFIs, handover & DLP
+	"cn_qhse": ("Construction — quality, safety & handover", "Industries", "Inspection & test plans, inspections, cube tests and NCRs; incidents, permits, toolbox talks and audits; drawings, RFIs and transmittals; snags, handover documents, DLP defects, warranties and retention release",
+		["construction"], ["ITP Item", "Inspection Request", "Cube Test", "NCR", "Safety Incident", "Work Permit", "Toolbox Talk", "Safety Audit", "Construction Drawing", "RFI",
+			"Transmittal", "Snag", "Handover Document", "DLP Defect", "Construction Warranty", "Controlled Document"], [],
+		["hipersign-cn-quality", "hipersign-cn-safety", "hipersign-cn-drawings", "hipersign-cn-handover"], [], [], []),
+	# v1.9.0 A5 (prototype C8): finance, tax and payroll for Indian contractors on ERPNext + India Compliance
+	"cn_fin": ("Construction — finance, tax & payroll", "Industries", "Project P&L, ageing and cash-flow forecast, GST by GSTIN, TDS both ways, BOCW cess, compliance calendar, earned value, staff payroll and the approval matrix for manual journals",
+		["construction"], ["Staff Payroll", "Statutory Deposit"], [], ["hipersign-cn-accounts", "hipersign-cn-tax", "hipersign-cn-cost", "hipersign-cn-payroll"], [], [], []),
+	# v1.9.0 A6 (prototype C9): project controls; the client and subcontractor portals, site app and worker app
+	"cn_ctl": ("Construction — project controls", "Industries", "RAG on eleven dimensions, constraints look-ahead, milestones, portfolio timeline, the weekly review, tasks, risks & issues and minutes of meeting",
+		["construction"], ["Project Constraint", "Construction Milestone", "Project Review", "Project Risk", "Project Meeting"], [], ["hipersign-cn-controls"], [], [], []),
+	"cn_portal": ("Construction — portals & apps", "Industries", "Client portal, subcontractor portal, site app, worker app and site deliveries for the driver app",
+		["construction"], ["Site Photo", "Client Publication", "Site Attendance", "Site Expense", "Portal Activity", "Portal Message"], [],
+		["hipersign-cn-client-portal", "hipersign-cn-partner-portal", "hipersign-cn-apps"], [], [], []),
 }
 GROUPS = ["Sales", "Buying", "Stock", "Finance", "Controls", "Group", "People & assets", "Industries"]
 STANDARD_ON = ["crm", "tracker", "exports", "rfq", "imports", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc"]
@@ -65,7 +94,15 @@ PACKS = {
 	# v1.8.0: assemblers and factories — BOMs, work orders, shop floor, QC, plus serial numbers, HR and assets (prototype p19)
 	"Manufacturer": {"on": STANDARD_ON + ["manufacturing", "serial", "hr", "assets"], "doc_level": "Recommended", "form_mode": "Standard",
 		"desc": "Assemblers and factories — BOMs, work orders, shop floor, QC"},
-	"Enterprise": {"on": list(FEATURES), "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
+	# v1.9.0 (prototype C11): the three Construction (India) editions — later stages add their modules to Structure and Capstone
+	"Foundation": {"on": ["construction", "rfq", "multiwh", "advances", "recon", "approvals"], "doc_level": "Recommended", "form_mode": "Standard",
+		"desc": "Indian contractors starting out — tenders, BOQ, measurement book, RA bills with GST and TDS, DPR"},
+	"Structure": {"on": ["construction", "cn_site", "cn_qhse", "cn_ctl", "rfq", "multiwh", "advances", "pdc", "recon", "approvals", "kyc", "hr", "assets", "codocs"], "doc_level": "Recommended",
+		"form_mode": "Standard", "desc": "Growing contractors — Foundation plus HR, plant and assets, company compliance"},
+	"Capstone": {"on": ["construction", "cn_biz", "cn_site", "cn_qhse", "cn_fin", "cn_ctl", "cn_portal", "rfq", "multiwh", "advances", "pdc", "recon", "fx", "approvals", "kyc", "group", "hr", "assets", "codocs"], "doc_level": "Full",
+		"form_mode": "Detailed", "desc": "Builders and EPC groups — Structure plus several companies and branches"},
+	"Enterprise": {"on": [k for k in FEATURES if not k.startswith("cn_") and k != "construction"],  # v1.9.0: Construction (India) has its own editions
+		 "doc_level": "Full", "form_mode": "Detailed", "desc": "Groups and larger traders — everything"},
 }
 
 

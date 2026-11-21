@@ -1,0 +1,104 @@
+{% extends "templates/base.html" %}
+{% block title %}Hipersign Worker{% endblock %}
+{% block navbar %}{% endblock %}
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "templates/includes/cn_portal_style.html" %}
+<style>
+.ap{max-width:480px;width:100%;box-sizing:border-box;margin:0 auto;padding:0 0 30px;font-size:16px}.ap .hd{border-radius:0 0 18px 18px;margin-bottom:10px}.ap .bd{padding:0 12px;display:flex;flex-direction:column;gap:10px}.ap .card{margin:0}
+.big{display:block;width:100%;padding:15px;border-radius:14px;font-size:17px;margin-top:8px;text-align:center}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:12px}.days div{border-radius:8px;padding:8px 0;background:#f1f5f9}.days div.on{background:#dcfce7;color:#15803d;font-weight:700}
+.sl{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #f1f5f9}.lang{display:flex;gap:6px;flex-wrap:wrap}.lang button{flex:1}
+.in{font-size:17px}
+</style>{% endblock %}
+{% block content %}
+<div class="ap" id="ap"></div>
+<script>
+(() => {
+	const T = {
+		"English": { login: "Log in", mobile: "Mobile number", pin: "PIN (4 digits)", wrong: "Mobile number or PIN is wrong.", hello: "Hello", week: "This week", present: "Mark me present", here: "You are marked present today",
+			slip: "Pay slip", days: "Days", ot: "OT hours", earned: "Earned", pf: "PF", esi: "ESI", adv: "Advance recovered", net: "Net pay", paid: "Paid by UPI", payday: "Next pay day", noslip: "No pay slip yet",
+			ask: "Ask for an advance", amount: "Amount", reason: "Reason", send: "Send", asked: "Your request is sent to the site engineer.", max: "Up to", danger: "Report a danger", what: "What is the danger?",
+			where: "Where?", photo: "Photo (optional)", reported: "Thank you — the safety officer is told.", logout: "Log out", contractor: "Your contractor pays your wages.", back: "Back", status: "Advances" },
+		"മലയാളം": { login: "ലോഗിൻ", mobile: "മൊബൈൽ നമ്പർ", pin: "പിൻ (4 അക്കം)", wrong: "മൊബൈൽ നമ്പറോ പിന്നോ തെറ്റാണ്.", hello: "നമസ്കാരം", week: "ഈ ആഴ്ച", present: "ഹാജർ രേഖപ്പെടുത്തുക", here: "ഇന്ന് ഹാജർ രേഖപ്പെടുത്തി",
+			slip: "ശമ്പള സ്ലിപ്പ്", days: "ദിവസം", ot: "ഓവർടൈം മണിക്കൂർ", earned: "സമ്പാദിച്ചത്", pf: "പിഎഫ്", esi: "ഇഎസ്ഐ", adv: "അഡ്വാൻസ് പിടിച്ചത്", net: "കൈയിൽ കിട്ടുന്നത്", paid: "UPI വഴി നൽകി", payday: "അടുത്ത ശമ്പള ദിവസം", noslip: "ശമ്പള സ്ലിപ്പ് ഇതുവരെ ഇല്ല",
+			ask: "അഡ്വാൻസ് ചോദിക്കുക", amount: "തുക", reason: "കാരണം", send: "അയയ്ക്കുക", asked: "അപേക്ഷ സൈറ്റ് എഞ്ചിനീയർക്ക് അയച്ചു.", max: "പരമാവധി", danger: "അപകടം അറിയിക്കുക", what: "എന്താണ് അപകടം?",
+			where: "എവിടെ?", photo: "ഫോട്ടോ (വേണമെങ്കിൽ)", reported: "നന്ദി — സേഫ്റ്റി ഓഫീസറെ അറിയിച്ചു.", logout: "ലോഗൗട്ട്", contractor: "നിങ്ങളുടെ കോൺട്രാക്ടറാണ് ശമ്പളം നൽകുന്നത്.", back: "തിരികെ", status: "അഡ്വാൻസുകൾ" },
+		"தமிழ்": { login: "உள்நுழை", mobile: "மொபைல் எண்", pin: "பின் (4 இலக்கம்)", wrong: "மொபைல் எண் அல்லது பின் தவறு.", hello: "வணக்கம்", week: "இந்த வாரம்", present: "வருகையைப் பதிவு செய்", here: "இன்று வருகை பதிவாகியுள்ளது",
+			slip: "சம்பளச் சீட்டு", days: "நாட்கள்", ot: "கூடுதல் நேரம்", earned: "சம்பாதித்தது", pf: "பிஎஃப்", esi: "இஎஸ்ஐ", adv: "முன்பணம் பிடித்தம்", net: "கையில் கிடைப்பது", paid: "UPI மூலம் செலுத்தப்பட்டது", payday: "அடுத்த சம்பள நாள்", noslip: "இன்னும் சம்பளச் சீட்டு இல்லை",
+			ask: "முன்பணம் கேள்", amount: "தொகை", reason: "காரணம்", send: "அனுப்பு", asked: "கோரிக்கை தள பொறியாளருக்கு அனுப்பப்பட்டது.", max: "அதிகபட்சம்", danger: "ஆபத்தைத் தெரிவி", what: "என்ன ஆபத்து?",
+			where: "எங்கே?", photo: "புகைப்படம் (விருப்பம்)", reported: "நன்றி — பாதுகாப்பு அலுவலருக்குத் தெரிவிக்கப்பட்டது.", logout: "வெளியேறு", contractor: "உங்கள் ஒப்பந்ததாரர் சம்பளம் தருகிறார்.", back: "பின்", status: "முன்பணங்கள்" },
+		"हिन्दी": { login: "लॉग इन", mobile: "मोबाइल नंबर", pin: "पिन (4 अंक)", wrong: "मोबाइल नंबर या पिन गलत है।", hello: "नमस्ते", week: "इस हफ़्ते", present: "हाज़िरी लगाएँ", here: "आज की हाज़िरी लग गई",
+			slip: "वेतन पर्ची", days: "दिन", ot: "ओवरटाइम घंटे", earned: "कमाई", pf: "पीएफ", esi: "ईएसआई", adv: "एडवांस कटौती", net: "हाथ में", paid: "UPI से भुगतान", payday: "अगला वेतन दिन", noslip: "अभी वेतन पर्ची नहीं",
+			ask: "एडवांस माँगें", amount: "रकम", reason: "कारण", send: "भेजें", asked: "आपका अनुरोध साइट इंजीनियर को भेजा गया।", max: "अधिकतम", danger: "खतरे की सूचना दें", what: "क्या खतरा है?",
+			where: "कहाँ?", photo: "फ़ोटो (चाहें तो)", reported: "धन्यवाद — सेफ़्टी ऑफ़िसर को बता दिया गया।", logout: "लॉग आउट", contractor: "आपका ठेकेदार वेतन देता है।", back: "वापस", status: "एडवांस" },
+	};
+	const LANGS = Object.keys(T);
+	const LOC = { "English": "en-IN", "മലയാളം": "ml-IN", "தமிழ்": "ta-IN", "हिन्दी": "hi-IN" };
+	const ST = { "മലയാളം": { Requested: "അപേക്ഷിച്ചു", Approved: "അംഗീകരിച്ചു", Paid: "നൽകി" }, "தமிழ்": { Requested: "கோரப்பட்டது", Approved: "ஒப்புதல்", Paid: "செலுத்தப்பட்டது" },
+		"हिन्दी": { Requested: "माँगा गया", Approved: "मंज़ूर", Paid: "दिया गया" } };
+	const st = (x) => (ST[lang] || {})[x] || x;
+	const M = "hipersign_trading.api.construction_portal.";
+	const root = document.getElementById("ap");
+	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+	const inr = (v) => "₹" + Math.round(+v || 0).toLocaleString("en-IN");
+	let token = null, lang = "English", D = null, view = "home", gps = {};
+	try { token = sessionStorage.getItem("hs_wa"); lang = localStorage.getItem("hs_wa_lang") || "English"; } catch (e) {}
+	const t = (k) => (T[lang] || T.English)[k] || T.English[k];
+	const call = (m, args) => new Promise((ok, no) => frappe.call({ method: M + m, type: "POST", args: Object.assign({ token }, args || {}), freeze: true, callback: (r) => ok(r.message),
+		error: (e) => { if (e && e.exc_type === "AuthenticationError") { token = null; try { sessionStorage.removeItem("hs_wa"); } catch (x) {} render(); } no(e); } }));
+	navigator.geolocation && navigator.geolocation.getCurrentPosition((p) => (gps = { lat: p.coords.latitude, lng: p.coords.longitude }), () => {});
+	const setLang = (l) => { lang = l; try { localStorage.setItem("hs_wa_lang", l); } catch (e) {} if (token) call("wa_language", { language: l }); render(); };
+	const langBar = () => `<div class="lang">${LANGS.map((l) => `<button class="btn ${l === lang ? "p" : ""}" data-l="${esc(l)}">${esc(l)}</button>`).join("")}</div>`;
+	function render() {
+		if (!token) {
+			root.innerHTML = `<div class="hd"><b>Hipersign Worker</b></div><div class="bd">${langBar()}<div class="card"><small class="mut">${t("mobile")}</small><input class="in" id="m" inputmode="tel" autocomplete="tel">
+				<small class="mut">${t("pin")}</small><input class="in" id="p" type="password" inputmode="numeric" maxlength="4"><button class="btn p big" id="go">${t("login")}</button></div></div>`;
+			root.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => setLang(b.dataset.l)));
+			root.querySelector("#go").onclick = () => frappe.call({ method: M + "wa_login", type: "POST", args: { mobile: root.querySelector("#m").value, pin: root.querySelector("#p").value }, freeze: true,
+				callback: (r) => { token = r.message.token; try { sessionStorage.setItem("hs_wa", token); } catch (e) {} load(); } });
+			return;
+		}
+		if (!D) return;
+		const head = `<div class="hd">${view !== "home" ? `<button class="btn" id="back" style="padding:4px 10px">‹</button>` : ""}<div><small>${t("hello")}</small><b>${esc(D.name)}</b><small>${esc(D.trade)} · ${esc(D.project)}</small></div>
+			<div class="r"><a class="out" href="#" id="lo">${t("logout")}</a></div></div>`;
+		let body = "";
+		if (view === "home") {
+			const ws = frappe.datetime.str_to_obj(D.week_start), have = D.days.map((d) => d.slice(0, 10));
+			const cells = [...Array(7).keys()].map((i) => { const d = new Date(ws); d.setDate(d.getDate() + i); const iso = frappe.datetime.obj_to_str(d).slice(0, 10);
+				return `<div class="${have.includes(iso) ? "on" : ""}">${d.toLocaleDateString(LOC[lang] || "en-IN", { weekday: "short" })}<br>${d.getDate()}</div>`; }).join("");
+			const s = D.slip;
+			body = `${langBar()}<div class="card"><b>${t("week")}</b> · ${D.days.length} ${t("days")}<div class="days" style="margin-top:8px">${cells}</div>
+				${D.today_in ? `<div class="ok" style="margin-top:10px">✓ ${t("here")}</div>` : `<button class="btn g big" id="in">${t("present")}</button>`}</div>
+				<div class="card"><b>${t("slip")}</b>${s ? `<div class="mut">${esc(frappe.datetime.str_to_user(s.week_start))} – ${esc(frappe.datetime.str_to_user(s.week_end))}</div>
+					<div class="sl"><span>${t("days")}</span><b>${s.days}</b></div><div class="sl"><span>${t("ot")}</span><b>${s.ot_hours || 0}</b></div><div class="sl"><span>${t("earned")}</span><b>${inr(s.earned)}</b></div>
+					<div class="sl"><span>${t("pf")}</span><b>− ${inr(s.pf)}</b></div><div class="sl"><span>${t("esi")}</span><b>− ${inr(s.esi)}</b></div><div class="sl"><span>${t("adv")}</span><b>− ${inr(s.advance_recovery)}</b></div>
+					<div class="sl" style="font-size:18px"><span>${t("net")}</span><b>${inr(s.net)}</b></div><div class="mut">${s.status === "Paid" ? t("paid") + (D.upi ? " · " + esc(D.upi) : "") : ""}</div>`
+					: `<p class="mut">${D.contractor ? t("contractor") : t("noslip")}</p>`}<div class="mut">${t("payday")}: ${esc(frappe.datetime.str_to_user(D.pay_day))}</div></div>
+				${D.advances.length ? `<div class="card"><b>${t("status")}</b>${D.advances.map((a) => `<div class="sl"><span>${esc(frappe.datetime.str_to_user(a.requested_on))}</span><b>${inr(a.amount)} · ${esc(st(a.status))}</b></div>`).join("")}</div>` : ""}
+				${D.contractor ? "" : `<button class="btn p big" id="adv">💵 ${t("ask")}</button>`}<button class="btn big" id="dng" style="color:#b91c1c">⚠️ ${t("danger")}</button>`;
+		} else if (view === "adv") {
+			body = `<div class="card"><small class="mut">${t("amount")} (${t("max")} ${inr(D.max_advance)})</small><input class="in" id="a" type="number" inputmode="numeric">
+				<small class="mut">${t("reason")}</small><input class="in" id="r"><button class="btn p big" id="go">${t("send")}</button></div>`;
+		} else if (view === "dng") {
+			body = `<div class="card"><small class="mut">${t("what")}</small><textarea class="in" id="w" rows="3"></textarea><small class="mut">${t("where")}</small><input class="in" id="l">
+				<label class="btn big">📷 ${t("photo")}<input type="file" accept="image/*" capture="environment" id="ph" hidden></label><button class="btn p big" id="go" style="background:#b91c1c;border-color:#b91c1c">${t("send")}</button></div>`;
+		}
+		root.innerHTML = head + `<div class="bd">${body}</div>`;
+		root.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => setLang(b.dataset.l)));
+		root.querySelector("#lo").onclick = (e) => { e.preventDefault(); token = null; try { sessionStorage.removeItem("hs_wa"); } catch (x) {} D = null; render(); };
+		const q = (s) => root.querySelector(s);
+		if (q("#back")) q("#back").onclick = () => { view = "home"; render(); };
+		if (q("#in")) q("#in").onclick = () => call("wa_checkin", { latitude: gps.lat, longitude: gps.lng }).then(load);
+		if (q("#adv")) q("#adv").onclick = () => { view = "adv"; render(); };
+		if (q("#dng")) q("#dng").onclick = () => { view = "dng"; render(); };
+		if (view === "adv") q("#go").onclick = () => call("wa_advance", { amount: q("#a").value, reason: q("#r").value }).then(() => { frappe.msgprint(t("asked")); view = "home"; load(); });
+		if (view === "dng") { let photo = null;
+			q("#ph").onchange = (e) => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, 1200 / Math.max(im.width, im.height)); c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); photo = c.toDataURL("image/jpeg", .75); }; im.src = rd.result; }; rd.readAsDataURL(f); };
+			q("#go").onclick = () => call("wa_danger", { text: q("#w").value, location: q("#l").value, photo }).then(() => { frappe.msgprint(t("reported")); view = "home"; load(); }); }
+	}
+	const load = () => call("wa_me").then((d) => { D = d; let saved = null; try { saved = localStorage.getItem("hs_wa_lang"); } catch (e) {} if (!saved && T[d.language]) lang = d.language; render(); });
+	frappe.ready(() => (token ? load() : render()));
+})();
+</script>
+{% endblock %}

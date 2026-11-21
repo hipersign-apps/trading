@@ -118,9 +118,66 @@ def _hr(company=None):
 	return out
 
 
+def _construction(company=None):
+	"""v1.9.0 A2: construction quotations waiting for the MD (discount above the limit or margin below the floor)."""
+	if not frappe.get_meta("Quotation").has_field("hs_cn_approval"):
+		return []
+	f = {"hs_cn": 1, "hs_cn_approval": "Pending", "docstatus": 0}
+	if company:
+		f["company"] = company
+	return [{"kind": "cn_quote", "type": _("Construction quotation"), "doctype": "Quotation", "name": q.name,
+		"description": _("{0} — {1}").format(q.hs_subject or q.customer_name, q.customer_name),
+		"reason": _("Discount {0:.1f}% · margin {1:.1f}%").format(flt(q.hs_cn_discount_pct), flt(q.hs_estimated_margin)),
+		"value": flt(q.base_net_total), "waiting_for": ["Managing Director"], "actions": ["Approve", "Reject"], "by": q.owner, "since": str(q.modified)[:10]}
+		for q in frappe.get_all("Quotation", filters=f, fields=["name", "hs_subject", "customer_name", "hs_cn_discount_pct", "hs_estimated_margin", "base_net_total", "owner", "modified"])]
+
+
+def _permits(company=None):
+	"""v1.9.0 A4: permits to work waiting for the safety officer."""
+	if not frappe.db.exists("DocType", "Work Permit"):
+		return []
+	f = {"status": "Requested"}
+	if company:
+		f["company"] = company
+	return [{"kind": "cn_permit", "type": _("Permit to work"), "doctype": "Work Permit", "name": w.name,
+		"description": _("{0} — {1} ({2})").format(_(w.kind), w.location, w.project), "reason": (w.work or "")[:120], "value": 0,
+		"waiting_for": ["Safety Officer"], "actions": ["Approve", "Reject"], "by": w.owner, "since": str(w.creation)[:10]}
+		for w in frappe.get_all("Work Permit", filters=f, fields=["name", "kind", "location", "project", "work", "owner", "creation"])]
+
+
+def _journals(company=None):
+	"""v1.9.0 A5: manual journals of a construction company waiting for the Accounts Manager (the MD above the limit)."""
+	from hipersign_trading.api import construction_fin as FN
+
+	cos = FN.companies()
+	if not cos or not frappe.db.exists("DocType", "Staff Payroll"):
+		return []
+	lim = FN.limits().jv_md
+	f = {"docstatus": 0, "voucher_type": "Journal Entry", "company": ["in", [company] if company in cos else cos]}
+	return [{"kind": "cn_jv", "type": _("Manual journal"), "doctype": "Journal Entry", "name": j.name, "description": (j.user_remark or j.title or j.name)[:120],
+		"reason": _("{0} — the MD approves above {1}").format(frappe.format(j.total_debit, {"fieldtype": "Currency", "options": "INR"}), frappe.format(lim, {"fieldtype": "Currency", "options": "INR"}))
+		if flt(j.total_debit) > lim else _("Accounts Manager approves"), "value": flt(j.total_debit), "waiting_for": ["Managing Director"] if flt(j.total_debit) > lim else ["Accounts Manager", "Managing Director"],
+		"actions": ["Approve"], "by": j.owner, "since": str(j.creation)[:10]}
+		for j in frappe.get_all("Journal Entry", filters=f, fields=["name", "user_remark", "title", "total_debit", "owner", "creation"])]
+
+
+def _site_cash(company=None):
+	"""v1.9.0 A6: site cash above the site engineer's limit, waiting for the PM."""
+	if not frappe.db.exists("DocType", "Site Expense"):
+		return []
+	from hipersign_trading.api.construction import project_names
+
+	names = project_names([company] if company else None)
+	return [{"kind": "cn_exp", "type": _("Site cash"), "doctype": "Site Expense", "name": x.name, "description": f"{x.project} — {x.description}"[:120],
+		"reason": _("{0} spent by {1} — above the site limit").format(frappe.format(x.amount, {"fieldtype": "Currency", "options": "INR"}), x.requested_by or x.owner),
+		"value": flt(x.amount), "waiting_for": ["Project Manager", "Managing Director"], "actions": ["Approve", "Reject"], "by": x.owner, "since": str(x.creation)[:10]}
+		for x in frappe.get_all("Site Expense", filters={"status": "Waiting for approval", "project": ["in", names or [""]]},
+			fields=["name", "project", "description", "amount", "requested_by", "owner", "creation"])]
+
+
 def pending(company=None, mine=False):
 	items = []
-	for src in (_workflow_items, _tax_returns, _hr):
+	for src in (_workflow_items, _tax_returns, _hr, _construction, _permits, _journals, _site_cash):
 		try:
 			items.extend(src(company))
 		except Exception:
@@ -168,6 +225,29 @@ def act(kind, doctype, name, action, note=None):
 		doc.save()
 		doc.submit()
 		return {"state": doc.status}
+	if kind == "cn_quote":  # v1.9.0 A2
+		from hipersign_trading.api.construction import act as cn_act
+
+		cn_act("qt_approve" if approve else "qt_reject", name, frappe.as_json({"note": note}))
+		return {"state": frappe.db.get_value("Quotation", name, "hs_cn_approval")}
+	if kind == "cn_permit":  # v1.9.0 A4
+		from hipersign_trading.api.construction import act as cn_act
+
+		cn_act("ptw_issue" if approve else "ptw_reject", name, frappe.as_json({"note": note}))
+		return {"state": frappe.db.get_value("Work Permit", name, "status")}
+	if kind == "cn_exp":  # v1.9.0 A6
+		from hipersign_trading.api.construction import act as cn_act
+
+		cn_act("exp_approve" if approve else "exp_reject", name, "{}")
+		return {"state": "Booked" if approve else "Rejected"}
+	if kind == "cn_jv":  # v1.9.0 A5
+		from hipersign_trading.api.construction import act as cn_act
+
+		if not approve:
+			doc.add_comment("Comment", _("Sent back: {0}").format(note or ""))
+			return {"state": "Draft"}
+		cn_act("jv_approve", name, "{}")
+		return {"state": "Posted"}
 	if kind == "expense":
 		doc.approval_status = "Approved" if approve else "Rejected"
 		doc.save()

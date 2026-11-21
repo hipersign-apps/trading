@@ -7,6 +7,13 @@ hipersign.ui.esc = (s) => frappe.utils.escape_html(s == null ? "" : String(s));
 hipersign.ui.money = function (v, cur, compact) {
 	v = flt(v);
 	cur = cur || (frappe.boot.sysdefaults && frappe.boot.sysdefaults.currency) || "AED";
+	// v1.9.0: Indian amounts in crore and lakh (₹1.86 Cr, ₹45.2 L) and grouped 12,34,567 — as Indian readers count
+	if (cur === "INR") {
+		const a = Math.abs(v), t = (x, d) => x.toFixed(d).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+		if (compact && a >= 1e7) return `₹${t(v / 1e7, 2)} Cr`;
+		if (compact && a >= 1e5) return `₹${t(v / 1e5, 1)} L`;
+		return `₹${format_number(v, "#,##,###.##", compact ? 0 : 2)}`;
+	}
 	if (compact && Math.abs(v) >= 1000) {
 		const units = [[1e9, "B"], [1e6, "M"], [1e3, "K"]];
 		for (const [n, u] of units) {

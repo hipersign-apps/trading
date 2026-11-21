@@ -63,7 +63,24 @@ def my_stops():
 		filters={"docstatus": 1, "hs_delivery_status": "Delivered", "hs_pod_time": [">=", today()], **({} if dispatcher else {"hs_driver": drv.name})},
 		fields=["name", "customer_name", "hs_received_by"],
 	)
-	return {"driver": drv.full_name if drv else _("Dispatcher"), "stops": stops, "done": done}
+	trips = []
+	if drv and frappe.db.exists("DocType", "Site Attendance"):  # v1.9.0 A6: construction transfers to the sites (site OTP on delivery)
+		from hipersign_trading.api.construction_portal import driver_trips
+
+		trips = driver_trips(drv)
+	return {"driver": drv.full_name if drv else _("Dispatcher"), "stops": stops, "done": done, "trips": trips}
+
+
+@frappe.whitelist()
+def trip_deliver(stock_entry, otp):
+	"""v1.9.0 A6: a construction transfer delivered at site — the site engineer gives the driver the OTP from the site app."""
+	drv, dispatcher = _allowed()
+	from hipersign_trading.api.construction_portal import deliver_with_otp, driver_trips
+
+	if not dispatcher and stock_entry not in [t.name for t in driver_trips(drv)]:
+		frappe.throw(_("This transfer is not on your trips."), frappe.PermissionError)
+	deliver_with_otp(stock_entry, otp, drv.full_name if drv else frappe.session.user)
+	return {"message": _("Delivered")}
 
 
 @frappe.whitelist()

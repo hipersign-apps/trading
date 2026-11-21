@@ -31,8 +31,15 @@
 		root.innerHTML = `<div class="hd-bar"><div><b>${esc(data.driver)}</b><small>${frappe.datetime.str_to_user(frappe.datetime.get_today())}</small></div><a href="/?cmd=web_logout" style="margin-left:auto;color:#fff;font-size:13px">Log out</a></div>
 		<div class="hd-body"><div class="hd-card"><b>${data.stops.length}</b> to deliver · <b>${data.done.length}</b> delivered today</div>
 		${data.stops.map((s, i) => `<button class="hd-stop" data-i="${i}"><span class="hd-n">${i + 1}</span><div><b>${esc(s.customer_name)}</b><p class="hd-muted">${esc(s.name)} · ${s.items.length} item(s)</p></div><span class="hd-badge">${esc(s.hs_delivery_status === "Out for Delivery" ? "On trip" : "Load")}</span></button>`).join("") || '<div class="hd-card">No stops — all deliveries are done.</div>'}
-		${data.done.map((d) => `<div class="hd-card">✓ <b>${esc(d.customer_name)}</b><p>${esc(d.name)} · signed by ${esc(d.hs_received_by)}</p></div>`).join("")}</div>`;
+		${data.done.map((d) => `<div class="hd-card">✓ <b>${esc(d.customer_name)}</b><p>${esc(d.name)} · signed by ${esc(d.hs_received_by)}</p></div>`).join("")}
+		${(data.trips || []).length ? `<p class="hd-muted" style="margin:6px 2px 0"><b>Site deliveries</b></p>` : ""}
+		${(data.trips || []).map((t) => `<div class="hd-card"><b>${esc(t.project_name || t.project)}</b><p>${esc(t.name)} · ${esc(t.hs_vehicle || "")} · e-way bill ${esc(t.hs_eway_bill || "—")}</p>
+			${t.items.map((i) => `<p>${esc(i.qty)} ${esc(i.uom)} × ${esc(i.item_name)}</p>`).join("")}
+			<a class="hd-btn" target="_blank" href="https://maps.google.com/?q=${encodeURIComponent([(t.address || {}).address_line1, (t.address || {}).city].filter(Boolean).join(", ") || t.project_name)}">Navigate</a>
+			<button class="hd-btn g hd-trip" data-se="${esc(t.name)}">Delivered — enter site OTP</button></div>`).join("")}</div>`;
 		root.querySelectorAll(".hd-stop").forEach((b) => (b.onclick = () => { stop = data.stops[+b.dataset.i]; sig = photo = null; render(); }));
+		root.querySelectorAll(".hd-trip").forEach((b) => (b.onclick = () => frappe.prompt({ fieldname: "otp", fieldtype: "Data", label: "OTP from the site engineer", reqd: 1 },
+			(v) => call("trip_deliver", { stock_entry: b.dataset.se, otp: v.otp }).then(() => { frappe.show_alert({ message: "Delivered at site", indicator: "green" }); load(); }), "Site delivery")));
 	}
 	function renderStop() {
 		const s = stop, onTrip = s.hs_delivery_status === "Out for Delivery";

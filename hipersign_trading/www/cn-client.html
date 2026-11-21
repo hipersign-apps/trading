@@ -1,0 +1,115 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block navbar %}{% endblock %}
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "templates/includes/cn_portal_style.html" %}{% endblock %}
+{% block content %}
+{% set FILE = "/api/method/hipersign_trading.api.construction_portal.cp_file?publication=" %}
+<div class="cw">
+	{% if preview %}
+	<div class="pv">👁 {{ _("Preview — what the client sees. Actions are switched off here.") }}
+		<select class="sel" onchange="location.href='/cn-client?party='+encodeURIComponent(this.value)" style="margin-left:auto">
+			{% for c in parties %}<option value="{{ c }}" {{ "selected" if c == customer }}>{{ c }}</option>{% endfor %}</select></div>
+	{% endif %}
+	<div class="hd"><div><small>{{ customer }}</small><b>{{ p.project_name }}</b><small>{{ _("Finish planned") }} {{ frappe.format(p.expected_end_date, {"fieldtype": "Date"}) }}</small></div>
+		<div class="r">{% if projects|length > 1 %}<select class="sel" onchange="location.href='/cn-client?party={{ customer|urlencode }}&project='+this.value">
+			{% for x in projects %}<option value="{{ x.name }}" {{ "selected" if x.name == p.name }}>{{ x.project_name }}</option>{% endfor %}</select>{% endif %}
+			{% if not preview %}<a class="out" href="/?cmd=web_logout">{{ _("Log out") }}</a>{% endif %}</div></div>
+	<div class="kp">{% for l, v, s in kpis %}<div><small>{{ l }}</small><b>{{ v }}</b><span>{{ s }}</span></div>{% endfor %}</div>
+	<div class="card"><div style="display:flex;justify-content:space-between"><b>{{ _("Progress") }}</b><b>{{ "%.1f"|format(F.pct) }}%</b></div>
+		<div class="bar" style="margin-top:8px"><i style="width:{{ [F.pct, 100]|min }}%"></i></div></div>
+	<div class="tb">{% for k, l in tabs %}<a class="{{ 'on' if k == tab }}" href="/cn-client?party={{ customer|urlencode }}&project={{ p.name }}&tab={{ k }}">{{ l }}</a>{% endfor %}</div>
+	<div id="msg"></div>
+
+	{% if tab == "progress" %}
+		{% if feat.progress %}<div class="card"><h4>{{ _("Milestones") }}</h4>{% if milestones %}<div class="tw"><table class="t"><tr><th>{{ _("Milestone") }}</th><th>{{ _("Planned") }}</th><th>{{ _("Forecast") }}</th><th>{{ _("Done") }}</th><th></th></tr>
+			{% for m in milestones %}<tr><td><b>{{ m.title }}</b></td><td class="d">{{ frappe.format(m.planned, {"fieldtype": "Date"}) }}</td><td class="d">{{ frappe.format(m.forecast, {"fieldtype": "Date"}) }}</td>
+			<td class="d">{{ frappe.format(m.actual, {"fieldtype": "Date"}) if m.actual else "—" }}</td>
+			<td><span class="pill {{ {'Done': 'green', 'On track': 'blue', 'At risk': 'orange', 'Late': 'red'}.get(m.status, '') }}">{{ _(m.status) }}</span></td></tr>{% endfor %}</table></div>
+			{% else %}<p class="mut">{{ _("No milestones shared yet.") }}</p>{% endif %}</div>{% endif %}
+		{% if feat.photos %}<div class="card"><h4>{{ _("Site photos") }}</h4>{% if photos %}<div class="ph">{% for x in photos %}<figure><a href="{{ FILE }}{{ x.pub }}" target="_blank"><img loading="lazy" src="{{ FILE }}{{ x.pub }}" alt=""></a>
+			<figcaption>{{ x.caption }}<span>{{ x.location or "" }} · {{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</span></figcaption></figure>{% endfor %}</div>
+			{% else %}<p class="mut">{{ _("No photos published yet.") }}</p>{% endif %}</div>{% endif %}
+
+	{% elif tab == "bills" %}
+		<div class="card"><h4>{{ _("RA bills") }}</h4>
+		{% if govt %}<p class="mut">{{ _("Government works: the engineer-in-charge certifies on the measurement book.") }}</p>{% endif %}
+		<div class="tw"><table class="t"><tr><th>{{ _("Bill") }}</th><th>{{ _("Status") }}</th><th class="n">{{ _("Claimed") }}</th><th class="n">{{ _("Certified") }}</th><th class="n">{{ _("Net payable") }}</th><th class="n">{{ _("Paid") }}</th><th>{{ _("Due") }}</th><th></th></tr>
+		{% for b in bills %}<tr><td><b>RA {{ b.bill_no }}</b><div class="mut">{{ _("up to") }} {{ frappe.format(b.period_to, {"fieldtype": "Date"}) }}</div></td>
+			<td><span class="pill {{ {'Paid': 'green', 'Part paid': 'blue', 'Invoiced': 'blue', 'Certified': 'blue', 'Submitted to client': 'orange'}.get(b.status, '') }}">{{ _("With you") if b.status == "Submitted to client" else _(b.status) }}</span></td>
+			<td class="n">{{ frappe.format(b.claimed_amount, {"fieldtype": "Currency", "options": "INR"}) }}</td><td class="n">{{ frappe.format(b.certified_amount, {"fieldtype": "Currency", "options": "INR"}) if b.certified_amount else "—" }}</td>
+			<td class="n">{{ frappe.format(b.net_receivable, {"fieldtype": "Currency", "options": "INR"}) if b.net_receivable else "—" }}</td><td class="n">{{ frappe.format(b.received_amount, {"fieldtype": "Currency", "options": "INR"}) if b.received_amount else "—" }}</td>
+			<td>{{ frappe.format(b.due_date, {"fieldtype": "Date"}) if b.due_date else "—" }}</td>
+			<td style="white-space:nowrap">{% if b.status == "Submitted to client" and feat.certify and not govt %}<button class="btn p" {{ "disabled" if preview }} onclick="cnCertify('{{ b.name }}', {{ b.claimed_amount }}, {{ b.bill_no }})">{{ _("Certify…") }}</button>{% endif %}
+			{% if b.sales_invoice %}<a class="btn" target="_blank" href="/printview?doctype=Sales%20Invoice&name={{ b.sales_invoice|urlencode }}">{{ _("Tax invoice") }}</a>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="8" class="mut">{{ _("No bills yet.") }}</td></tr>{% endfor %}</table></div></div>
+
+	{% elif tab == "documents" %}
+		<div class="card"><h4>{{ _("Drawings for construction (GFC)") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Drawing") }}</th><th>{{ _("Title") }}</th><th>{{ _("Discipline") }}</th><th>{{ _("GFC on") }}</th><th></th></tr>
+		{% for d in drawings %}<tr><td><b>{{ d.drawing_no }}</b> {{ d.revision }}</td><td>{{ d.title }}</td><td>{{ _(d.discipline) }}</td><td>{{ frappe.format(d.gfc_on, {"fieldtype": "Date"}) }}</td>
+			<td>{% if d.file %}<a class="btn" target="_blank" href="{{ FILE }}{{ d.pub }}">{{ _("Open") }}</a>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="5" class="mut">{{ _("No drawings shared yet.") }}</td></tr>{% endfor %}</table></div></div>
+		<div class="card"><h4>{{ _("Weekly progress reports") }}</h4>{% for r in reports %}<div class="rep"><b>{{ r.title }}</b>{{ r.content }}</div>{% else %}<p class="mut">{{ _("No reports yet.") }}</p>{% endfor %}</div>
+
+	{% elif tab == "variations" %}
+		<div class="card"><h4>{{ _("Variations and extra items") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Item") }}</th><th class="n">{{ _("Amount") }}</th><th>{{ _("Sent") }}</th><th>{{ _("Status") }}</th><th></th></tr>
+		{% for e in eis %}<tr><td><b>{{ e.title }}</b><div class="mut">{{ _(e.kind) }}{% if e.reference %} · {{ e.reference }}{% endif %}</div></td><td class="n">{{ frappe.format(e.amount, {"fieldtype": "Currency", "options": "INR"}) }}</td>
+			<td>{{ frappe.format(e.sent_on, {"fieldtype": "Date"}) if e.sent_on else "—" }}</td>
+			<td><span class="pill {{ {'Approved': 'green', 'Rejected': 'red', 'Pending client': 'orange'}.get(e.status, '') }}">{{ _("Waiting for you") if e.status == "Pending client" else _(e.status) }}</span>
+				{% if e.approved_by %}<div class="mut">{{ e.approved_by }}</div>{% endif %}</td>
+			<td style="white-space:nowrap">{% if e.status == "Pending client" %}<button class="btn g" {{ "disabled" if preview }} onclick="cnVo('{{ e.name }}', 1)">{{ _("Approve") }}</button>
+				<button class="btn r" {{ "disabled" if preview }} onclick="cnVo('{{ e.name }}', 0)">{{ _("Reject") }}</button>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="5" class="mut">{{ _("No variations.") }}</td></tr>{% endfor %}</table></div>
+		<p class="mut">{{ _("An approved variation is added to the contract value.") }}</p></div>
+
+	{% elif tab == "snags" %}
+		<div class="card"><h4>{{ _("Raise a snag") }}</h4><div class="row"><div><small class="mut">{{ _("Where") }}</small><input class="in" id="sn-loc" placeholder="{{ _('e.g. Flat 3B — kitchen') }}"></div>
+			<div><small class="mut">{{ _("Trade") }}</small><select class="in" id="sn-trade">{% for t in trades %}<option>{{ t }}</option>{% endfor %}</select></div></div>
+			<small class="mut">{{ _("What is wrong") }}</small><textarea class="in" id="sn-desc" rows="2"></textarea>
+			<button class="btn p" {{ "disabled" if preview }} onclick="cnSnag()">{{ _("Raise snag") }}</button></div>
+		<div class="card"><h4>{{ _("Snags") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Where") }}</th><th>{{ _("What") }}</th><th>{{ _("Raised") }}</th><th>{{ _("Fix by") }}</th><th>{{ _("Status") }}</th></tr>
+		{% for s in snags %}<tr><td><b>{{ s.location }}</b><div class="mut">{{ _(s.trade) }}</div></td><td>{{ s.description }}</td><td>{{ frappe.format(s.raised_on, {"fieldtype": "Date"}) }}</td>
+			<td>{{ frappe.format(s.target, {"fieldtype": "Date"}) if s.target else "—" }}</td><td><span class="pill {{ {'Verified': 'green', 'Fixed': 'blue', 'Open': 'orange'}.get(s.status, '') }}">{{ _(s.status) }}</span></td></tr>
+		{% else %}<tr><td colspan="5" class="mut">{{ _("No snags.") }}</td></tr>{% endfor %}</table></div></div>
+
+	{% elif tab == "messages" %}
+		<div class="card"><h4>{{ _("Write to us") }}</h4><small class="mut">{{ _("Subject") }}</small><input class="in" id="mg-s">
+			<small class="mut">{{ _("Message") }}</small><textarea class="in" id="mg-m" rows="3"></textarea>
+			<button class="btn p" {{ "disabled" if preview }} onclick="cnMsg()">{{ _("Send") }}</button></div>
+		<div class="card"><h4>{{ _("Messages") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Sent") }}</th><th>{{ _("Message") }}</th><th>{{ _("Our reply") }}</th></tr>
+		{% for m in msgs %}<tr><td class="mut" style="white-space:nowrap">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }}<div>{{ m.from_name or "" }}</div></td>
+			<td><b>{{ m.subject or "" }}</b><div>{{ m.message }}</div></td><td>{% if m.reply %}{{ m.reply }}<div class="mut">{{ m.replied_by or "" }}</div>{% else %}<span class="pill orange">{{ _("Waiting for our reply") }}</span>{% endif %}</td></tr>
+		{% else %}<tr><td colspan="3" class="mut">{{ _("No messages yet.") }}</td></tr>{% endfor %}</table></div></div>
+	{% elif tab == "cost" %}
+		<div class="card"><h4>{{ _("Cost & margin") }}</h4><table class="t">
+			<tr><td>{{ _("Revised contract") }}</td><td class="n">{{ frappe.format(cost.revised, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
+			<tr><td>{{ _("Cost to date") }}</td><td class="n">{{ frappe.format(cost.cost, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
+			<tr><td>{{ _("Forecast cost at completion") }}</td><td class="n">{{ frappe.format(cost.fac, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
+			<tr><td>{{ _("Forecast margin") }}</td><td class="n">{{ "%.1f"|format(cost.fc_margin) }}%</td></tr></table></div>
+	{% endif %}
+</div>
+<script>
+const M = "hipersign_trading.api.construction_portal.";
+const done = (r) => { const m = (r && r.message && (r.message.message || r.message)) || "Done"; frappe.msgprint({ message: m, indicator: "green" }); setTimeout(() => location.reload(), 1600); };
+function cnCertify(name, claimed, no) {
+	frappe.prompt([{ fieldname: "amount", fieldtype: "Currency", label: "{{ _('Amount you certify (before GST)') }}", default: claimed, reqd: 1 },
+		{ fieldname: "note", fieldtype: "Small Text", label: "{{ _('Note (optional)') }}" }],
+		(v) => frappe.call({ method: M + "cp_certify", args: { ra_bill: name, amount: v.amount, note: v.note }, callback: done }), "{{ _('Certify RA bill') }} " + no, "{{ _('Certify') }}");
+}
+function cnVo(name, ok) {
+	frappe.prompt([{ fieldname: "note", fieldtype: "Small Text", label: ok ? "{{ _('Note (optional)') }}" : "{{ _('Why do you reject it?') }}", reqd: !ok }],
+		(v) => frappe.call({ method: M + "cp_variation", args: { extra_item: name, approve: ok, note: v.note }, callback: done }), ok ? "{{ _('Approve variation') }}" : "{{ _('Reject variation') }}");
+}
+function cnMsg() {
+	const m = document.getElementById("mg-m").value;
+	if (!m.trim()) return frappe.msgprint("{{ _('Write the message.') }}");
+	frappe.call({ method: "hipersign_trading.api.construction_extra.cp_message", args: { project: "{{ p.name }}", subject: document.getElementById("mg-s").value, message: m }, freeze: true, callback: done });
+}
+function cnSnag() {
+	const loc = document.getElementById("sn-loc").value, desc = document.getElementById("sn-desc").value, trade = document.getElementById("sn-trade").value;
+	if (!loc || !desc) return frappe.msgprint("{{ _('Say where and what.') }}");
+	frappe.call({ method: M + "cp_snag", args: { project: "{{ p.name }}", location: loc, description: desc, trade }, callback: done });
+}
+</script>
+{% endblock %}

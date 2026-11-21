@@ -7,7 +7,24 @@ app_license = "Proprietary"
 from hipersign_trading import __version__ as app_version
 
 # every release gets new asset addresses: the files are served "immutable" for a year and the site's service worker caches them
-_v = f"?v={app_version}"
+# 16 Nov: the Frappe Cloud proxy caches them too (x-proxy-cache: HIT), so a fix applied as a patch kept the old file at the old
+# address. The address now also carries a stamp of the newest JS/CSS file, so it changes with every patch or build
+# (after a bench restart or Clear cache, when Frappe reads the hooks again).
+def _asset_stamp():
+	import os
+
+	base = os.path.join(os.path.dirname(__file__), "public")
+	newest = 0
+	for sub in ("js", "css"):
+		try:
+			for f in os.listdir(os.path.join(base, sub)):
+				newest = max(newest, int(os.path.getmtime(os.path.join(base, sub, f))))
+		except Exception:
+			pass
+	return format(newest, "x")[-6:] if newest else "0"
+
+
+_v = f"?v={app_version}.{_asset_stamp()}"
 
 required_apps = ["erpnext"]
 
@@ -62,6 +79,7 @@ app_include_js = [
 	"/assets/hipersign_trading/js/hs_deal.js" + _v,
 	"/assets/hipersign_trading/js/hs_projects.js" + _v,
 	"/assets/hipersign_trading/js/hs_manufacturing.js" + _v,
+	"/assets/hipersign_trading/js/hs_construction.js" + _v,  # v1.9.0
 ]
 
 website_context = {
@@ -177,11 +195,16 @@ doc_events = {
 		"validate": "hipersign_trading.overrides.purchase_receipt.validate",
 		"on_submit": "hipersign_trading.overrides.purchase_receipt.on_submit",
 	},
-	"Quotation": {"before_validate": "hipersign_trading.overrides.pricing.remember", "validate": "hipersign_trading.overrides.quotation.validate"},
+	"Quotation": {"before_validate": "hipersign_trading.overrides.pricing.remember",
+		"validate": ["hipersign_trading.overrides.quotation.validate", "hipersign_trading.api.construction_biz.quotation_validate"],  # v1.9.0 A2
+		"before_submit": "hipersign_trading.api.construction_biz.quotation_before_submit"},
 	"Lead": {"validate": "hipersign_trading.overrides.lead.validate"},
 	# v1.8.0: project purchase orders and material requests carry the project on the header (Projects pages, cost heads)
 	"Purchase Order": {"validate": "hipersign_trading.api.projects.po_project"},
-	"Material Request": {"validate": "hipersign_trading.api.projects.mr_project"},
+	"Material Request": {"validate": ["hipersign_trading.api.projects.mr_project", "hipersign_trading.api.construction_site.mr_validate"],  # v1.9.0 A3
+		"before_submit": "hipersign_trading.api.construction_site.mr_before_submit"},
+	"Supplier Quotation": {"validate": "hipersign_trading.api.construction_site.sq_validate"},
+	"Journal Entry": {"before_submit": "hipersign_trading.api.construction_fin.je_before_submit"},  # v1.9.0 A5: the approval matrix
 	"User": {"before_insert": "hipersign_trading.overrides.user.before_insert",
 		"validate": "hipersign_trading.licence.check_user"},  # v1.8.3: the licence's user limit
 	"Company": {"before_insert": "hipersign_trading.licence.check_company"},  # v1.8.3: the licence's company limit
