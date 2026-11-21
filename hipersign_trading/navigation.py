@@ -487,6 +487,10 @@ def sub_items():
 
 	s = _s()
 	out = {}
+	# 9 Nov (site fix, Adipoly): an entry's page already shows these lists as its tabs, so the side menu shows only the main
+	# entries; a sub-item stays only where it opens something the entry's page has no tab for. Site config
+	# `hipersign_side_submenus: 1` brings every sub-item back.
+	all_subs = bool(frappe.conf.get("hipersign_side_submenus"))
 	for entry, rows in NAV_SUB.items():
 		kept = []
 		for label, ltype, target, feature in rows:
@@ -503,10 +507,12 @@ def sub_items():
 			row = {"label": label, "route": _route(ltype, target), "target": target}
 			# v1.8.4 (#34/#37): open the Hipersign page and tab, when the user may open that page
 			to = SUB_TABS.get((entry, label))
+			if to and not all_subs:
+				continue
 			if to and frappe.db.exists("Page", to[0]) and frappe.get_cached_doc("Page", to[0]).is_permitted():
 				row.update({"route": [to[0]], "target": to[0], "tab": to[1], "chip": SUB_CHIPS.get((entry, label))})
 			kept.append(row)
-		if entry in REPORT_GROUP and frappe.db.exists("Page", "hipersign-reports"):
+		if all_subs and entry in REPORT_GROUP and frappe.db.exists("Page", "hipersign-reports"):
 			kept.append({"label": "Reports", "route": ["hipersign-reports"], "target": "hipersign-reports", "group": REPORT_GROUP[entry]})
 		if kept:
 			out[entry] = kept

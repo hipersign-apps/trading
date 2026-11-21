@@ -90,7 +90,7 @@ frappe.provide("hipersign.band");
 
 	// column chart (grouped)
 	function bars_svg(o) {
-		const h = o.h || 240, W = 640, pad = { l: 58, r: 14, t: 14, b: 30 }, ih = h - pad.t - pad.b, iw = W - pad.l - pad.r, f = C.fmt(o);
+		const h = o.h || 240, W = Math.round(640 * (o.wide || 1)), pad = { l: 58, r: 14, t: 14, b: 30 }, ih = h - pad.t - pad.b, iw = W - pad.l - pad.r, f = C.fmt(o);
 		const all = o.series.flatMap((s) => s.data.map(flt));
 		const mx = niceMax(Math.max(...all, 0)); let mn = Math.min(0, ...all); if (mn < 0) mn = -niceMax(-mn);
 		const y = (v) => pad.t + ih - ((v - mn) / (mx - mn)) * ih, n = Math.max(1, o.labels.length), gw = iw / n, bw = Math.min(30, (gw * 0.7) / Math.max(1, o.series.length));
@@ -111,15 +111,17 @@ frappe.provide("hipersign.band");
 	}
 	// line / area chart
 	function line_svg(o, area) {
-		const h = o.h || 240, W = 640, pad = { l: 58, r: 16, t: 14, b: 30 }, ih = h - pad.t - pad.b, iw = W - pad.l - pad.r, f = C.fmt(o);
+		const h = o.h || 240, W = Math.round(640 * (o.wide || 1)), pad = { l: 58, r: 16, t: 14, b: 30 }, ih = h - pad.t - pad.b, iw = W - pad.l - pad.r, f = C.fmt(o);
 		const vals = o.series.flatMap((s) => s.data.filter((v) => v != null).map(flt));
 		const mx = niceMax(Math.max(...vals, 0)), n = o.labels.length;
 		const x = (i) => pad.l + (n === 1 ? iw / 2 : (iw * i) / (n - 1)), y = (v) => pad.t + ih - (v / mx) * ih, base = pad.t + ih;
 		const st = C.style(), defs = [], glow = st === "glow" && C.dark();
 		let s = `<svg class="hs-chart" viewBox="0 0 ${W} ${h}" role="img">`;
 		for (let k = 0; k <= 4; k++) { const v = (mx * k) / 4; s += `<line class="gl" x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end">${esc(C.short(v))}</text>`; }
-		const step = Math.ceil(n / 9);
-		o.labels.forEach((lb, i) => { if (i % step === 0 || i === n - 1) s += `<text x="${x(i)}" y="${h - 9}" text-anchor="middle">${esc(lb)}</text>`; });
+		// 9 Nov: more labels when the chart is wider; the last label always shows and the stepped one just before it is
+		// skipped when it would overlap it ("08 Nov" over "09 Nov")
+		const step = Math.ceil(n / Math.round(9 * (o.wide || 1)));
+		o.labels.forEach((lb, i) => { if ((i % step === 0 && n - 1 - i > step / 2) || i === n - 1) s += `<text x="${x(i)}" y="${h - 9}" text-anchor="middle">${esc(lb)}</text>`; });
 		o.series.forEach((se, si) => {
 			const c = C.col(se.color), P = se.data.map((v, i) => (v == null ? null : [+x(i).toFixed(1), +y(flt(v)).toFixed(1)])).filter(Boolean);
 			if (!P.length) return;
@@ -220,10 +222,12 @@ frappe.provide("hipersign.band");
 
 	// ---------------------------------------------------------------- the band
 	const card = (w, body, cls) => `<div class="hsx-card hs-bw ${cls || ""}"><div class="hsx-card-h"><h3>${w.icon ? frappe.utils.icon(w.icon, "sm") : ""} ${esc(w.title)}${w.sub ? ` <small>${esc(w.sub)}</small>` : ""}</h3></div><div class="hsx-card-b">${body}</div></div>`;
-	C.widget = function (w) {
+	// 9 Nov: wide = how many band columns the card spans (1 card = 3, 2 cards = 1.5), so a lone chart is drawn wider instead of
+	// being scaled up (the band draws charts for a third of the page; one card alone made the text and lines 2–3 times too big)
+	C.widget = function (w, wide) {
 		const empty = `<div class="hsx-empty">${esc(w.empty || __("Nothing in this period."))}</div>`;
 		if (w.type === "stages") return card(w, (w.stages || []).length ? C.stages(w.stages) + (w.note ? `<p class="hs-bnote">${esc(w.note)}</p>` : "") : empty);
-		if (w.type === "trend") return card(w, (w.labels || []).length ? C.chart({ labels: w.labels, series: w.series || [], money: w.money, currency: w.currency, kind: w.kind || "line", key: w.title, h: 250 }) : empty);
+		if (w.type === "trend") return card(w, (w.labels || []).length ? C.chart({ labels: w.labels, series: w.series || [], money: w.money, currency: w.currency, kind: w.kind || "line", key: w.title, h: Math.round(250 * Math.min(wide || 1, 1.8)), wide: wide || 1 }) : empty);
 		if (w.type === "bars") return card(w, (w.rows || []).length ? C.hbars(w.rows, w) : empty);
 		if (w.type === "donut") return card(w, (w.rows || []).filter((r) => flt(r.value)).length ? `<div class="hs-dnw">${C.donut(w.rows, w.center, w.center_label, w)}<div class="hs-dnl">${w.rows.map((r) => `<span ${link_attr(r)} class="${r.open || r.route || r.tab ? "hs-click" : ""}"><span><i style="background:${C.col(r.color)}"></i>${esc(r.label)}</span><b>${esc(C.fmt(w)(r.value))}</b></span>`).join("")}</div></div>` : empty);
 		if (w.type === "gauge") return card(w, C.gauge(w.pct, w.big, w.caption, w) + (w.note ? `<p class="hs-bnote c">${esc(w.note)}</p>` : ""));
@@ -233,6 +237,12 @@ frappe.provide("hipersign.band");
 		return "";
 	};
 
+	// how many band columns each card spans: the band's 3 columns are shared by its cards
+	C.band_wide = function (ws) {
+		const n = (ws || []).filter((w) => { try { return !!C.widget(w); } catch (e) { return false; } }).length || 1;
+		// below 1100 px every card keeps its own column (2 or 1 per row), so only the 3-column band widens a lone card
+		return window.innerWidth > 1100 ? 3 / Math.min(3, n) : 1;
+	};
 	// mount the band above a page's content. key = the page key in api/band.py
 	hipersign.band.mount = function ($host, key) {
 		if (!$host || !$host.length || !key) return;
@@ -242,7 +252,8 @@ frappe.provide("hipersign.band");
 		if (!$host.children().length) $host.html(`<div class="hs-band-skel"><i></i><i></i><i></i></div>`);
 		frappe.xcall("hipersign_trading.api.band.get_band", { key }, "GET").then((ws) => {
 			if ($host.data("hs-seq") !== seq) return;
-			const html = (ws || []).map((w) => { try { return C.widget(w); } catch (e) { console.warn("Hipersign band widget", e); return ""; } }).filter(Boolean);
+			const wide = C.band_wide(ws);
+			const html = (ws || []).map((w) => { try { return C.widget(w, wide); } catch (e) { console.warn("Hipersign band widget", e); return ""; } }).filter(Boolean);
 			$host.data("hs-band", ws || []);
 			if (!html.length) return $host.empty().hide();
 			$host.show().css("--bn", Math.min(3, html.length)).html(html.join(""));
@@ -252,7 +263,8 @@ frappe.provide("hipersign.band");
 	hipersign.band.redraw = function () {
 		$(".hs-band").each(function () {
 			const $h = $(this), ws = $h.data("hs-band");
-			if (ws && ws.length) $h.html(ws.map((w) => { try { return C.widget(w); } catch (e) { return ""; } }).join(""));
+			const wide = C.band_wide(ws);
+			if (ws && ws.length) $h.html(ws.map((w) => { try { return C.widget(w, wide); } catch (e) { return ""; } }).join(""));
 		});
 	};
 
@@ -318,4 +330,153 @@ frappe.provide("hipersign.band");
 		$(document).on("startup", quiet_desk);
 	}
 	if (frappe.boot && frappe.boot.hipersign) C.apply();
+})();
+
+// ---------------------------------------------------------------- 16 Nov (site fix, Adipoly): Frappe's report view in the Hipersign look
+// Every report opened from Reports (Sales Analytics, Accounts Receivable, General Ledger …) is Frappe's query report. With the
+// Hipersign theme on: a "‹ All reports" line with what the report is about, the filters cut to the ones in use (the rest behind
+// "More filters"), the report's chart drawn with the Hipersign chart kit in a card (type menu, light/dark, chart style), the
+// summary as KPI cards and the table in the Hipersign table look (CSS in hs_reports.css). Data, filters and exports are Frappe's.
+(function () {
+	const esc = (s) => frappe.utils.escape_html(s == null ? "" : String(s));
+	const on = () => document.documentElement.classList.contains("hs-theme") && window.hipersign && hipersign.chart && hipersign.chart.chart;
+	const PALETTE = ["blue", "violet", "green", "amber", "teal", "red", "navy", "grey"];
+	const KEEP = 6; // filters shown before "More filters"
+
+	function patch() {
+		const QR = frappe.views && frappe.views.QueryReport;
+		if (!QR || QR.prototype.__hs_patched) return !!QR;
+		QR.prototype.__hs_patched = true;
+
+		// the chart: Hipersign chart kit in a card; heatmaps and anything unknown stay Frappe's
+		const frappe_render_chart = QR.prototype.render_chart;
+		QR.prototype.render_chart = function (options) {
+			try {
+				if (on() && hs_chart(this, options)) return;
+			} catch (e) {
+				console.warn("Hipersign report chart", e); // eslint-disable-line no-console
+			}
+			this.$chart && this.$chart.removeClass("hs-rep-chart");
+			return frappe_render_chart.call(this, options);
+		};
+
+		// the filters: the ones in use first, the rest behind "More filters (n)"
+		const frappe_setup_filters = QR.prototype.setup_filters;
+		QR.prototype.setup_filters = function () {
+			const r = frappe_setup_filters.apply(this, arguments);
+			try {
+				// a new report: Frappe keeps the last report's summary cards when the new one has none (Stock Balance after P&L)
+				on() && this.$summary && this.$summary.empty().hide();
+				on() && hs_filters(this);
+				on() && hs_top(this);
+			} catch (e) {
+				console.warn("Hipersign report filters", e); // eslint-disable-line no-console
+			}
+			return r;
+		};
+		return true;
+	}
+
+	function hs_chart(qr, options) {
+		const d = (options && options.data) || {}, labels = d.labels || [], sets = (d.datasets || []).filter((s) => s && s.values);
+		if (!labels.length) return false;
+		const type = String(options.type || "line").toLowerCase(), C = hipersign.chart;
+		const money = (options.fieldtype || "") === "Currency" || /amount|value|outstanding|revenue|sales|purchase|balance/i.test(sets.map((s) => s.name).join(" "));
+		const cur = (frappe.boot.sysdefaults || {}).currency;
+		const name = qr.report_name || "";
+		let body = "";
+		if (!sets.length) {
+			// e.g. Sales Analytics: the chart shows the rows ticked in the table
+			body = `<div class="hsx-empty">${esc(__("Tick rows in the table below to compare them here."))}</div>`;
+		} else if (["line", "bar", "axis-mixed"].includes(type)) {
+			// draw for the card's width (the chart wrapper can still be hidden or narrow while the report loads, so take the
+			// widest of it, the report area and the window less the sidebar)
+			const px = Math.max(qr.$chart.width() || 0, (qr.page && qr.page.main && qr.page.main.width()) || 0, Math.min(window.innerWidth - 320, 1400));
+			const wide = Math.max(1, Math.min(3, px / 480));
+			body = C.chart({
+				labels, kind: type === "bar" ? "bar" : "line", money, currency: cur, key: "rep:" + name, wide, h: Math.round(240 * Math.min(wide, 1.6)),
+				series: sets.map((s, i) => ({ name: s.name || __("Value"), data: s.values.map((v) => flt(v)), color: PALETTE[i % PALETTE.length] })),
+			});
+		} else if (["pie", "donut", "percentage"].includes(type)) {
+			// one dataset per row (Accounts Receivable ageing): add them up per label
+			const rows = labels.map((l, i) => ({ label: l, value: sets.reduce((a, s) => a + flt(s.values[i]), 0), color: PALETTE[i % PALETTE.length] })).filter((r) => r.value);
+			if (!rows.length) return false;
+			const tot = rows.reduce((a, r) => a + r.value, 0), f = C.fmt({ money, currency: cur });
+			body = rows.length > 8
+				? C.hbars(rows.sort((a, b) => b.value - a.value).slice(0, 12), { money, currency: cur })
+				: `<div class="hs-dnw">${C.donut(rows, C.short(tot), __("Total"), { money, currency: cur, size: 170 })}<div class="hs-dnl">${rows.map((r) => `<span><span><i style="background:${C.col(r.color)}"></i>${esc(r.label)}</span><b>${esc(f(r.value))}</b></span>`).join("")}</div></div>`;
+		} else {
+			return false;
+		}
+		const sub = ["pie", "donut", "percentage"].includes(type) ? "" : sets.length > 1 ? sets.map((s) => s.name).filter(Boolean).slice(0, 4).join(" · ") : (sets[0] && sets[0].name) || "";
+		// reports read and redraw frappe.query_report.chart (Sales Analytics adds a ticked row to chart.data): keep that shape
+		const noop = () => {};
+		qr.chart = { data: { labels, datasets: (d.datasets || []).slice() }, hs: true, update: noop, updateDatasets: noop, export: noop, destroy: noop, unbindWindowEvents: noop };
+		qr.$chart.empty().show().addClass("hs-rep-chart").html(
+			`<div class="hsx-card-h"><h3>${frappe.utils.icon("es-line-chart", "sm")} ${esc(__(options.title || name))}${sub ? ` <small>${esc(__(sub))}</small>` : ""}</h3></div><div class="hsx-card-b">${body}</div>`);
+		return true;
+	}
+
+	function hs_filters(qr) {
+		const $form = qr.page && qr.page.page_form;
+		if (!$form) return;
+		// the filter area is reused by every report: start closed, without the last report's button
+		$form.addClass("hs-rep-form").removeClass("hs-rep-open").find(".hs-rep-more").remove();
+		// reports with Frappe's own collapse (General Ledger …): "More filters" replaces its chevron
+		if (qr.$collapse_button) {
+			qr.$collapse_button.remove();
+			qr.$collapse_button = null;
+			(qr.filters || []).forEach((f) => f && f.wrapper && $(f.wrapper).removeClass("hidden"));
+			qr.check_filter_area && qr.check_filter_area.css("display", "");
+		}
+		const fs = (qr.filters || []).filter((f) => f && f.df && f.df.fieldtype !== "Break" && !f.df.hidden);
+		$(fs.map((f) => f.wrapper)).removeClass("hs-rep-hide");
+		if (fs.length <= KEEP + 1) return;
+		const used = (f) => { const v = f.get_value && f.get_value(); return f.df.reqd || (v !== undefined && v !== null && v !== "" && v !== 0 && !(Array.isArray(v) && !v.length)); };
+		const shown = new Set();
+		fs.forEach((f) => { if (used(f) && f.df.fieldtype !== "Check") shown.add(f); });
+		fs.forEach((f) => { if (shown.size < KEEP && f.df.fieldtype !== "Check") shown.add(f); });
+		const rest = fs.filter((f) => !shown.has(f));
+		if (!rest.length) return;
+		rest.forEach((f) => $(f.wrapper).addClass("hs-rep-hide"));
+		const $b = $(`<div class="hs-rep-more"><button type="button" class="btn btn-default btn-sm">${frappe.utils.icon("filter", "xs")} <span>${esc(__("More filters"))}</span> <b>${rest.length}</b></button></div>`).appendTo($form);
+		$b.find("button").on("click", () => {
+			const open = !$form.hasClass("hs-rep-open");
+			$form.toggleClass("hs-rep-open", open);
+			$b.find("span").text(open ? __("Fewer filters") : __("More filters"));
+		});
+	}
+
+	function hs_top(qr) {
+		const $main = qr.page && qr.page.main;
+		if (!$main) return;
+		$main.find(".hs-rep-top").remove();
+		const doc = qr.report_doc || {}, bits = [doc.ref_doctype && __(doc.ref_doctype), doc.module && __(doc.module)].filter(Boolean);
+		const $top = $(`<div class="hs-rep-top"><a class="hs-rep-back">${frappe.utils.icon("left", "xs")} ${esc(__("All reports"))}</a>${bits.length ? `<span>${esc(bits.join(" · "))}</span>` : ""}</div>`);
+		$top.find(".hs-rep-back").on("click", () => frappe.set_route("hipersign-reports"));
+		const $form = qr.page.page_form;
+		$form && $form.length ? $top.insertBefore($form) : $main.prepend($top);
+	}
+
+	// frappe.views.QueryReport is defined when the report view's bundle (report.bundle.js) loads through frappe.require:
+	// patch at once if it is there, else as soon as a require finishes, before its callback builds the page
+	function late() {
+		// patched after a report was already drawn: redraw its chart and filters once
+		const qr = frappe.query_report;
+		if (!qr || !qr.page || !on()) return;
+		try {
+			qr.filters && qr.filters.length && (hs_filters(qr), hs_top(qr));
+			qr.chart_options && qr.$chart && qr.render_chart(qr.chart_options);
+		} catch (e) {} // eslint-disable-line no-empty
+	}
+	if (!patch()) {
+		const req = frappe.require;
+		frappe.require = function (items, callback) {
+			const wrapped = typeof callback === "function" ? function () { patch(); return callback.apply(this, arguments); } : callback;
+			const r = req.call(this, items, wrapped);
+			r && r.then && r.then(() => patch() && late());
+			return r;
+		};
+		$(document).on("page-change", () => { if (patch()) late(); });
+	}
 })();

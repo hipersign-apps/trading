@@ -7,7 +7,24 @@ app_license = "Proprietary"
 from hipersign_trading import __version__ as app_version
 
 # every release gets new asset addresses: the files are served "immutable" for a year and the site's service worker caches them
-_v = f"?v={app_version}"
+# 16 Nov: the Frappe Cloud proxy caches them too (x-proxy-cache: HIT), so a fix applied as a patch kept the old file at the old
+# address. The address now also carries a stamp of the newest JS/CSS file, so it changes with every patch or build
+# (after a bench restart or Clear cache, when Frappe reads the hooks again).
+def _asset_stamp():
+	import os
+
+	base = os.path.join(os.path.dirname(__file__), "public")
+	newest = 0
+	for sub in ("js", "css"):
+		try:
+			for f in os.listdir(os.path.join(base, sub)):
+				newest = max(newest, int(os.path.getmtime(os.path.join(base, sub, f))))
+		except Exception:
+			pass
+	return format(newest, "x")[-6:] if newest else "0"
+
+
+_v = f"?v={app_version}.{_asset_stamp()}"
 
 required_apps = ["erpnext"]
 

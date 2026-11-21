@@ -93,3 +93,55 @@ html.hs-theme[data-theme="dark"] .page-container[data-page-route^="query-report"
 html.hs-theme[data-theme="dark"] .page-container[data-page-route^="query-report"] .dt-instance-1 { background-color: var(--x-surface); }
 html.hs-theme[data-theme="dark"] .page-container[data-page-route^="query-report"] .dt-cell--highlight,
 html.hs-theme[data-theme="dark"] .page-container[data-page-route^="query-report"] .dt-row:hover .dt-cell { background-color: rgba(91, 140, 255, .12) !important; }
+
+/* ---------------------------------------------------------------- 16 Nov (site fix): report view closer to the Hipersign pages */
+html.hs-theme .page-container[data-page-route^="query-report"] .page-head .page-title .title-text { font-size: 20px; letter-spacing: -.01em; }
+html.hs-theme .hs-rep-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 12px; font-size: 13px; color: var(--x-muted); }
+html.hs-theme .hs-rep-back { display: inline-flex; align-items: center; gap: 4px; color: var(--x-blue) !important; font-weight: 600; cursor: pointer; text-decoration: none; }
+html.hs-theme .hs-rep-back:hover { text-decoration: underline; }
+html.hs-theme .hs-rep-back .icon { stroke: currentColor; }
+html.hs-theme .hs-rep-top > span::before { content: "·"; margin-inline-end: 10px; color: var(--x-line); }
+/* filters: a tidy row of rounded fields; checks as pills; the rest behind "More filters" */
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form.hs-rep-form { align-items: flex-end; row-gap: 2px; }
+html.hs-theme .page-form.hs-rep-form .frappe-control.hs-rep-hide { display: none !important; }
+html.hs-theme .page-form.hs-rep-form.hs-rep-open .frappe-control.hs-rep-hide:not(.hide-control) { display: block !important; }
+html.hs-theme .page-form.hs-rep-form.hs-rep-open .frappe-control[data-fieldtype="Check"].hs-rep-hide:not(.hide-control) { display: flex !important; }
+html.hs-theme .hs-rep-more { display: flex; align-items: center; margin: 0 0 10px; padding: 0 6px; }
+html.hs-theme .hs-rep-more .btn { height: 36px; border-radius: 999px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;
+	background: var(--x-surface-2); border: 1px solid var(--x-line); color: var(--x-ink); }
+html.hs-theme .hs-rep-more .btn b { min-width: 20px; height: 20px; border-radius: 999px; background: var(--x-blue); color: #fff; font-size: 11px; display: inline-grid; place-items: center; padding: 0 6px; }
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .frappe-control[data-fieldtype="Check"] .checkbox { margin: 0; }
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .frappe-control[data-fieldtype="Check"] label {
+	display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 1px solid var(--x-line); border-radius: 999px;
+	background: var(--x-surface-2); font-size: 12.5px; color: var(--x-ink); white-space: nowrap; cursor: pointer; }
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .frappe-control[data-fieldtype="Check"] label:has(input:checked) {
+	border-color: var(--x-blue); background: var(--x-blue-bg); color: var(--x-blue); }
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .form-control:focus,
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .awesomplete input:focus { border-color: var(--x-blue); box-shadow: 0 0 0 3px var(--x-blue-bg); }
+/* the chart card drawn with the Hipersign chart kit */
+html.hs-theme .page-container[data-page-route^="query-report"] .chart-wrapper.hs-rep-chart { padding: 0; border-radius: 20px; overflow: hidden; }
+html.hs-theme .chart-wrapper.hs-rep-chart .hsx-card-h { padding: 16px 20px 6px; }
+html.hs-theme .chart-wrapper.hs-rep-chart .hsx-card-h h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; margin: 0; color: var(--x-ink); }
+html.hs-theme .chart-wrapper.hs-rep-chart .hsx-card-h h3 small { font-size: 12px; font-weight: 500; color: var(--x-muted); }
+html.hs-theme .chart-wrapper.hs-rep-chart .hsx-card-b { padding: 4px 20px 16px; }
+html.hs-theme .chart-wrapper.hs-rep-chart .hs-dnw { justify-content: center; gap: 28px; }
+/* the table: a card with the Hipersign row look */
+html.hs-theme .page-container[data-page-route^="query-report"] .dt-row .dt-cell { height: 40px; }
+html.hs-theme .page-container[data-page-route^="query-report"] .dt-header .dt-cell { height: 42px; }
+html.hs-theme .page-container[data-page-route^="query-report"] .dt-cell__content a { color: var(--x-blue); font-weight: 600; }
+html.hs-theme .page-container[data-page-route^="query-report"] .dt-footer .dt-cell { background: var(--x-surface-2) !important; font-weight: 700; }
+html.hs-theme .page-container[data-page-route^="query-report"] .dt-toast__message { border-radius: 12px; }
+@media (max-width: 700px) {
+	html.hs-theme .hs-rep-more { width: 100%; }
+}
+html.hs-theme .page-container[data-page-route^="query-report"] { --x-green: var(--hs-green, #12945e); --x-amber: var(--hs-amber, #c97a06); --x-red: var(--hs-red, #d23447); }
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .frappe-control[data-fieldtype="Check"] { width: auto !important; max-width: 100%; flex: 0 0 auto; padding-inline: 6px; }
+html.hs-theme .page-container[data-page-route^="query-report"] .page-form .frappe-control[data-fieldtype="Check"] label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* the summary as KPI cards (Frappe gives them a fixed 62 px height and a 16 px line height, which cut the text) */
+html.hs-theme .page-container[data-page-route^="query-report"] .report-summary .summary-item {
+	height: auto !important; max-width: none; justify-content: flex-start; place-content: flex-start; gap: 6px; }
+html.hs-theme .page-container[data-page-route^="query-report"] .report-summary .summary-label { text-align: start; line-height: 1.35; }
+html.hs-theme .page-container[data-page-route^="query-report"] .report-summary .summary-value { line-height: 1.2; padding: 0 !important; text-align: start; }
+html.hs-theme .page-container[data-page-route^="query-report"] .report-summary .summary-value.green { color: var(--hs-green); }
+html.hs-theme .page-container[data-page-route^="query-report"] .report-summary .summary-value.red { color: var(--hs-red); }
+html.hs-theme .page-container[data-page-route^="query-report"] .report-summary .summary-value.blue { color: var(--hs-blue); }

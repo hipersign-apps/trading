@@ -32,6 +32,9 @@ INDUSTRIES = ("Trading group", "Construction (India)")
 def load_from_button(user=None, industry=None):
 	"""Background job behind Hipersign Settings → Load demo data (v1.9.0: the Trading group, or Construction (India))."""
 	frappe.flags.hs_force_demo = True
+	# v1.8.4: the loader creates masters (items, exchange rates, accounts) that a System Manager alone may not write;
+	# the button is already limited to System Managers on a demo site, so the job itself runs as Administrator.
+	frappe.set_user("Administrator")
 	cn = industry == "Construction (India)"
 	try:
 		load_construction() if cn else load()
@@ -66,6 +69,9 @@ def load():
 	frappe.flags.mute_emails = True
 	frappe.flags.hs_skip_doc_rules = True  # documents are attached in v13_documents; history is not blocked
 	frappe.flags.hs_demo_loading = True  # history is created in any order: a re-run must not trip over today's KYC blocks
+	# v1.8.4: once the demo companies are group members, saving a company lets HRMS add an "Expense Claims" account to it,
+	# which ERPNext refuses for a child company unless the group's root company has it — the demo allows it, as company setup does
+	frappe.local.flags.ignore_root_company_validation = True
 	paused = pause_workflows()
 	try:
 		for step in (
@@ -119,6 +125,7 @@ def load():
 		frappe.flags.hs_apply_credit_limit = False
 		frappe.flags.hs_skip_doc_rules = False
 		frappe.flags.hs_demo_loading = False
+		frappe.local.flags.ignore_root_company_validation = False
 	run(set_pending_states, ctx)
 	frappe.db.commit()
 	print("\n".join(LOG))
