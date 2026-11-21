@@ -2,7 +2,7 @@
  "doctype": "Page",
  "name": "hipersign-cn-client-portal",
  "page_name": "hipersign-cn-client-portal",
- "title": "Client Portal (India)",
+ "title": "Client App",
  "module": "Hipersign Trading",
  "standard": "Yes",
  "system_page": 0,
@@ -29,5 +29,5 @@
  ],
  "owner": "Administrator",
  "creation": "2026-11-20 00:00:00",
- "modified": "2026-11-20 00:00:00"
+ "modified": "2026-11-21 18:00:00"
 }

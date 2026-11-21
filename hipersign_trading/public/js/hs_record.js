@@ -10,6 +10,7 @@ frappe.provide("hipersign.record");
 	const ic = (n, s) => frappe.utils.icon(n, s || "sm");
 	R.types = () => ((frappe.boot && frappe.boot.hipersign) || {}).record_types || [];
 	R.has = (dt) => R.types().includes(dt);
+	R.view_only = (dt) => (((frappe.boot && frappe.boot.hipersign) || {}).record_view_only || []).includes(dt);  // made by the pages' actions
 	R.open = (dt, name) => frappe.set_route("Form", dt, name);
 	R.new = (dt, values) => { frappe.route_options = Object.assign({}, values || {}); frappe.set_route("hipersign-record", dt, "new"); };
 	const money = (v, cur) => (hipersign.ui && hipersign.ui.money ? hipersign.ui.money(v, cur, true) : format_currency(v, cur));
@@ -277,19 +278,19 @@ frappe.provide("hipersign.record");
 			const parse = frappe.router.parse;
 			frappe.router.parse = async function () {
 				const r = await parse.apply(this, arguments);
-				if (r && r[0] === "Form" && r[1] && r[2] && R.has(r[1])) return ["hipersign-record", r[1], r.slice(2).join("/")];
+				if (r && r[0] === "Form" && r[1] && r[2] && R.has(r[1]) && !(R.view_only(r[1]) && String(r[2]).startsWith("new-"))) return ["hipersign-record", r[1], r.slice(2).join("/")];
 				return r;
 			};
 			frappe.router.parse.__hr = true;
 		}
 		if (frappe.new_doc && !frappe.new_doc.__hr) {
 			const nd = frappe.new_doc;
-			frappe.new_doc = function (dt, opts) { if (R.has(dt)) return R.new(dt, opts && typeof opts === "object" ? opts : {}); return nd.apply(this, arguments); };
+			frappe.new_doc = function (dt, opts) { if (R.has(dt) && !R.view_only(dt)) return R.new(dt, opts && typeof opts === "object" ? opts : {}); return nd.apply(this, arguments); };
 			frappe.new_doc.__hr = true;
 		}
 		if (hipersign.fm && hipersign.fm.new && !hipersign.fm.new.__hr) {
 			const fn = hipersign.fm.new;
-			hipersign.fm.new = function (dt, v) { if (R.has(dt)) return R.new(dt, v || {}); return fn.apply(this, arguments); };
+			hipersign.fm.new = function (dt, v) { if (R.has(dt) && !R.view_only(dt)) return R.new(dt, v || {}); return fn.apply(this, arguments); };
 			hipersign.fm.new.__hr = true;
 		}
 	};

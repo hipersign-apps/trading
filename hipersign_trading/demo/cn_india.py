@@ -216,7 +216,19 @@ def _address(title, link_dt, link_name, state, city, line1, pin, gst, company_ad
 
 
 # ---------------------------------------------------------------- 1. company, GST registrations, accounts
+def _placeholder_photo():
+	"""v1.9.2: demo site photos and pay proofs point to /files/placeholder.png — a fresh site has no such file, so make it."""
+	import os
+
+	if frappe.db.exists("File", {"file_url": "/files/placeholder.png"}):
+		return
+	path = os.path.join(frappe.get_app_path("hipersign_trading"), "public", "images", "demo-site-photo.png")
+	with open(path, "rb") as f:
+		frappe.get_doc({"doctype": "File", "file_name": "placeholder.png", "is_private": 0, "content": f.read(), "folder": "Home"}).insert(ignore_permissions=True)
+
+
 def cn_company(c):
+	_placeholder_photo()
 	if not frappe.db.exists("Company", CO):
 		frappe.get_doc({"doctype": "Company", "company_name": CO, "abbr": ABBR, "default_currency": "INR", "country": "India",
 			"create_chart_of_accounts_based_on": "Standard Template", "chart_of_accounts": "Standard"}).insert(ignore_permissions=True)

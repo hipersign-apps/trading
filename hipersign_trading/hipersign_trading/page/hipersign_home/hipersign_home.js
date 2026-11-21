@@ -3,7 +3,9 @@ frappe.pages["hipersign-home"].on_page_load = function (wrapper) {
 	const ui = hipersign.ui;
 	const v = ui.page(wrapper, { band: "home",
 		title: __("Hipersign Home"),
-		desc: __("One view of purchasing, imports, stock, sales and finance — every number below opens the records behind it."),
+		desc: (frappe.boot.hipersign || {}).construction_only
+			? __("One view of tenders, sites, billing and collections — every number below opens the records behind it.")
+			: __("One view of purchasing, imports, stock, sales and finance — every number below opens the records behind it."),
 	});
 	// v1.5.6: scope (group, country, company) and period come from the top bar, as in the prototype
 	const st = {};
@@ -68,7 +70,7 @@ frappe.pages["hipersign-home"].on_page_load = function (wrapper) {
 		});
 	}
 
-	function lifecycle(stages, cur) {
+	function lifecycle(stages, cur, cn) {
 		if (!stages.length) return ""; // v1.8.0: a user with no trading screens (the QC Inspector) gets no empty strip
 		const html = stages
 			.map((s) => {
@@ -78,6 +80,9 @@ frappe.pages["hipersign-home"].on_page_load = function (wrapper) {
 				<h4>${ui.esc(s.title)}</h4><b>${big}</b><span>${small}</span></button>`;
 			})
 			.join("");
+		// v1.9.2 U5: a construction edition shows the contract lifecycle
+		if (cn) return ui.card(__("The contract lifecycle"), `<div class="hsx-stages">${html}</div>`, { icon: "branch", sub: __("From tender to defects liability — click a stage"),
+			actions: `<button class="btn btn-xs btn-default" data-hs-route='["hipersign-cn-tracker"]'>${__("Construction Tracker")}</button>` });
 		return ui.card(__("The connected trading lifecycle"), `<div class="hsx-stages">${html}</div>`, {
 			icon: "branch",
 			sub: __("From international purchase to customer delivery — click a stage"),
@@ -160,7 +165,7 @@ frappe.pages["hipersign-home"].on_page_load = function (wrapper) {
 		v.$body.html(
 			group(d.group) +
 				(first ? modules(d.modules) : "") +
-				lifecycle(d.lifecycle, cur) +
+				lifecycle(d.lifecycle, cur, d.cn) +
 				`<div class="hsx-grid2">${work(d.work)}${alerts(d.alerts)}</div>` +
 				(k.length ? `<div class="hsx-kpis">${k.map(ui.kpi).join("")}</div>` : "") +
 				(first ? "" : modules(d.modules)) +

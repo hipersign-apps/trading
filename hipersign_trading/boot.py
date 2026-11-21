@@ -55,9 +55,14 @@ def boot_session(bootinfo):
 			frappe.log_error(title="Hipersign licence (boot)")
 		# v1.9.2 U3: the record types that open the Hipersign record page instead of ERPNext's form (when construction is on)
 		try:
+			from hipersign_trading.api.record import VIEW_ONLY
 			from hipersign_trading.api.record import types as record_types
 
 			info["record_types"] = record_types() if s.get("feat_construction") else []
+			info["record_view_only"] = list(VIEW_ONLY) if s.get("feat_construction") else []
+			from hipersign_trading.navigation import construction_only
+
+			info["construction_only"] = construction_only(s)
 		except Exception:
 			frappe.log_error(title="Hipersign record page (boot)")
 		bootinfo.hipersign = info

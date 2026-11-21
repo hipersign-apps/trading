@@ -165,7 +165,7 @@ def cn_cpo_module():
 	U = _portal_users("Customer", C)
 	A = frappe.db.count("Portal Activity", {"party_type": "Customer", "creation": [">=", add_days(today(), -7)]}) if _perm("Portal Activity") else 0
 	return {
-		"title": _("Client Portal"),
+		"title": _("Client App"),
 		"desc": _("What each client sees of their project — progress and milestones, published photos, RA bills (certified online by private clients), documents and weekly reports, variations to approve and snags. Photos, reports and drawings wait here for the PM."),
 		"new": [],
 		"kpis": [
@@ -271,7 +271,7 @@ def cn_spo_module():
 	S = _partners()
 	U = _portal_users("Supplier", S)
 	return {
-		"title": _("Subcontractor Portal"),
+		"title": _("Subcontractor App"),
 		"desc": _("What partners see — their work orders, running bills (submitted online, never above the last cumulative or the work order + 10%), payments with TDS and retention, labour documents and progress photos. Everything they send waits here."),
 		"kpis": [
 			kpi(_("To verify"), len(Q), _("{0} bills · {1} documents · {2} photos").format(len([x for x in Q if x.kind == "Running bill"]), len([x for x in Q if x.kind == "Labour documents"]),

@@ -316,7 +316,7 @@ def work_today(company):
 	n = len(__import__("hipersign_trading.api.approvals", fromlist=["x"]).pending(company, mine=True))
 	if n:
 		rows.append({"n": n, "label": _("approvals waiting for you"), "route": ["hipersign-approvals"], "options": {}})
-	add("Notification Log", {"for_user": u, "read": 0}, _("unread notifications"), ["List", "Notification Log"])
+	add("Notification Log", {"for_user": u, "read": 0}, _("unread notifications"), ["hipersign-messages"])  # v1.9.2: the Messages page, not the log list
 	if frappe.get_meta("Lead").has_field("hs_next_follow_up"):
 		add("Lead", {"hs_next_follow_up": ["<=", today()], "hs_pipeline_stage": ["not in", ["Won", "Lost"]]}, _("lead follow-ups due"), ["List", "Lead"], feature="crm")
 	add("Post Dated Cheque", _co({"status": "In Hand", "direction": "Received", "cheque_date": ["<=", today()]}, company), _("cheques ready to deposit"),
@@ -402,18 +402,75 @@ def get_home(period=None, company=None, country=None):
 	n_companies = len(_companies())
 	scope_label = company or (_("{0} · {1} companies").format(_(country), n_companies) if country else _("Whole group"))
 	finance = bool(FINANCE_ROLES & set(frappe.get_roles()))
+	from hipersign_trading.navigation import construction_only
+
+	cn_only = construction_only()  # v1.9.2 U5: a construction edition gets the contract lifecycle and construction figures
 	return {
 		"period": {"key": period, "label": label, "start": str(start), "end": str(end)},
 		"scope_label": scope_label,
 		"company": company, "companies": _companies(), "currency": frappe.get_cached_value("Company", company or _companies()[0], "default_currency") if _companies() else "AED",
 		"group": group_view(period, company) if finance and _group_on() and not company and (n_companies > 1 or frappe.db.count("Hipersign Group Member", {"active": 1}) > 1) else None,
-		"lifecycle": _feature_filter([s for s in lifecycle(company, start, end) if _route_ok(s["route"])], "n", STAGE_FEATURE),
+		"cn": cn_only,
+		"lifecycle": [s for s in cn_lifecycle(company) if _route_ok(s["route"])] if cn_only else _feature_filter([s for s in lifecycle(company, start, end) if _route_ok(s["route"])], "n", STAGE_FEATURE),
 		"work": [w for w in work_today(company) if _route_ok(w["route"])],
 		"alerts": top_alerts(company),
-		"kpis": _feature_filter([k for k in kpis(company, start, end, label) if _route_ok(k.get("route"))], "label", KPI_FEATURE),
+		"kpis": [k for k in cn_kpis(company) if _route_ok(k.get("route"))] if cn_only else _feature_filter([k for k in kpis(company, start, end, label) if _route_ok(k.get("route"))], "label", KPI_FEATURE),
 		"pl": pl_block(company, start, end) if finance else None,
 		"monthly": monthly(company) if finance or _route_ok(["List", "Sales Invoice"]) else None,
 		"target_margin": flt(settings().get("target_margin")) or 20,
 		# v1.8.0 (prototype p19): the Projects / Manufacturing cards (Quality for the QC Inspector)
 		"modules": __import__("hipersign_trading.api.home_modules", fromlist=["x"]).modules(),
 	}
+
+
+
+# ---------------------------------------------------------------- v1.9.2 U5: Home on a construction edition
+def _cn_projects():
+	return frappe.get_all("Project", filters={"hs_cn": 1, "status": ["!=", "Cancelled"]}, pluck="name") if frappe.get_meta("Project").has_field("hs_cn") else []
+
+
+def cn_lifecycle(company):
+	"""The contract lifecycle instead of the trading one: tender → contract → site → billing → collections → handover & DLP."""
+	from hipersign_trading.api import construction as CN
+
+	F = [CN.fig(n) for n in _cn_projects()]
+	open_t = frappe.db.count("Tender", {"status": ["not in", ["Awarded", "Lost", "No bid"]]}) if frappe.db.exists("DocType", "Tender") else 0
+	bid_t = frappe.db.count("Tender", {"status": ["in", ["Submitted", "Technical evaluation", "Financial evaluation", "L1 — LOA awaited"]]}) if open_t else 0
+	dpr = frappe.db.count("Daily Progress Report", {"report_date": today()}) if frappe.db.exists("DocType", "Daily Progress Report") and frappe.get_meta("Daily Progress Report").has_field("report_date") else 0
+	with_client = sum(f.pending_cert for f in F)
+	return [
+		{"n": "01", "icon": "file-search", "title": _("Tenders"), "big": _("{0} open").format(open_t), "small": _("{0} bids with the client").format(bid_t), "route": ["hipersign-cn-tenders"]},
+		{"n": "02", "icon": "file-text", "title": _("Contract & mobilise"), "big": _("{0} projects").format(len([f for f in F if 7 <= f.step < 11])),
+			"small": _("advances due {0}").format(money(sum(max(f.adv_total - f.adv_recovered, 0) for f in F if f.step < 11), precision=0)), "route": ["hipersign-cn-projects"]},
+		{"n": "03", "icon": "hard-hat", "title": _("On site"), "big": _("{0} projects").format(len([f for f in F if 11 <= f.step < 22])), "small": _("{0} DPRs today").format(dpr),
+			"route": ["hipersign-cn-site"]},
+		{"n": "04", "icon": "receipt", "title": _("RA billing"), "big": with_client, "big_is_money": 1, "big_suffix": _("with clients"),
+			"small": _("{0} certified to date").format(money(sum(f.billed for f in F), precision=0)), "route": ["hipersign-cn-billing"]},
+		{"n": "05", "icon": "banknote", "title": _("Collections"), "big": sum(f.outstanding for f in F), "big_is_money": 1, "big_suffix": _("receivable"),
+			"small": _("{0} overdue").format(money(sum(f.overdue for f in F), precision=0)), "route": ["hipersign-cn-accounts"]},
+		{"n": "06", "icon": "key-round", "title": _("Handover & DLP"), "big": _("{0} projects").format(len([f for f in F if f.step >= 22])),
+			"small": _("{0} retention held").format(money(sum(f.retention for f in F), precision=0)), "route": ["hipersign-cn-handover"]},
+	]
+
+
+def cn_kpis(company):
+	from hipersign_trading.api import construction as CN
+	from hipersign_trading.api.approvals import pending
+
+	names = _cn_projects()
+	F = [CN.fig(n) for n in names]
+	rev, cert = sum(f.revised for f in F), sum(f.billed for f in F)
+	flags = 0
+	try:
+		flags = sum(len(CN.flags(n)) for n in names)
+	except Exception:
+		pass
+	return [
+		{"label": _("Order book"), "icon": "file-text", "value": rev, "money": 1, "sub": _("{0} projects · incl. approved extra items").format(len(names)), "tone": "blue", "route": ["hipersign-cn-tracker"]},
+		{"label": _("Work done"), "icon": "trending-up", "value": sum(f.work for f in F), "money": 1, "sub": _("{0}% of the order book").format(round(sum(f.work for f in F) / rev * 100) if rev else 0), "tone": "violet", "route": ["hipersign-cn-cost"]},
+		{"label": _("Certified"), "icon": "check", "value": cert, "money": 1, "sub": _("{0} still with clients").format(money(sum(f.pending_cert for f in F), precision=0)), "tone": "green", "route": ["hipersign-cn-billing"]},
+		{"label": _("Received"), "icon": "banknote", "value": sum(f.received for f in F), "money": 1, "sub": _("{0} retention held").format(money(sum(f.retention for f in F), precision=0)), "tone": "green", "route": ["hipersign-cn-accounts"]},
+		{"label": _("Overdue receivables"), "icon": "circle-alert", "value": sum(f.overdue for f in F), "money": 1, "sub": _("of {0} outstanding").format(money(sum(f.outstanding for f in F), precision=0)), "tone": "red", "route": ["hipersign-cn-accounts"]},
+		{"label": _("Red flags"), "icon": "flag", "value": flags, "sub": _("on the Construction Tracker"), "tone": "red" if flags else "green", "route": ["hipersign-cn-tracker"]},
+		{"label": _("Pending approvals"), "icon": "inbox", "value": len(pending(company)), "sub": _("quotations, permits, site cash, bills"), "tone": "amber", "route": ["hipersign-approvals"]},
+	]

@@ -17,7 +17,10 @@ from hipersign_trading.features import FEATURES
 CN_FEATURES = ("construction", "cn_biz", "cn_site", "cn_qhse", "cn_fin", "cn_ctl", "cn_portal")
 # construction records that are not in a feature's list (masters and records the pages create)
 EXTRA = ("Project BOQ", "Rate Analysis", "BOQ Template", "Bank Guarantee", "Material Norm", "Development Unit", "Scrap Bid", "Site Diary",
-	"Productivity Norm", "Project Review", "Construction Milestone", "Client Visit", "Project", "Task")
+	"Productivity Norm", "Project Review", "Construction Milestone", "Client Visit", "Project", "Task",
+	"Employee", "Attendance", "Leave Application", "Employee Advance", "Opportunity", "Blanket Order", "Supplier Quotation", "Material Request")
+# ERPNext transactions the construction pages list: shown on the record page, made by the pages' actions (not typed in here)
+VIEW_ONLY = ("Journal Entry", "Purchase Invoice", "Payment Entry", "Stock Entry")
 LAYOUT = ("Section Break", "Column Break", "Tab Break", "Fold")
 SKIP = ("HTML", "Button", "Heading", "Image", "Geolocation", "Signature", "Barcode", "HTML Editor", "Code", "Markdown Editor", "JSON")
 NUMBER = ("Currency", "Float", "Int", "Percent")
@@ -38,7 +41,7 @@ def types():
 		f = FEATURES.get(key)
 		if f:
 			out += f[4]
-	out += EXTRA
+	out += EXTRA + VIEW_ONLY
 	seen, res = set(), []
 	for dt in out:
 		if dt not in seen and frappe.db.exists("DocType", dt) and not frappe.get_meta(dt).istable:
@@ -221,9 +224,10 @@ def get(doctype, name):
 			f.update({"file": v, "image": df.fieldtype == "Attach Image" or str(v).lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif"))})
 		cur_sec["fields"].append(f)
 	sections = [s for s in sections if s["fields"] or s["tables"]]
-	can = {"write": doc.docstatus == 0 and frappe.has_permission(doctype, "write", doc), "submit": bool(meta.is_submittable) and doc.docstatus == 0 and frappe.has_permission(doctype, "submit", doc),
+	vo = doctype in VIEW_ONLY
+	can = {"write": not vo and doc.docstatus == 0 and frappe.has_permission(doctype, "write", doc), "submit": bool(meta.is_submittable) and doc.docstatus == 0 and frappe.has_permission(doctype, "submit", doc),
 		"cancel": doc.docstatus == 1 and frappe.has_permission(doctype, "cancel", doc), "delete": doc.docstatus != 1 and frappe.has_permission(doctype, "delete", doc),
-		"create": frappe.has_permission(doctype, "create")}
+		"create": not vo and frappe.has_permission(doctype, "create")}
 	files = frappe.get_all("File", filters={"attached_to_doctype": doctype, "attached_to_name": name}, fields=["name", "file_name", "file_url", "is_private", "creation"],
 		order_by="creation desc", limit=30)
 	return {
@@ -268,7 +272,7 @@ def _schema(meta):
 
 @frappe.whitelist()
 def form(doctype, name=None, values=None):
-	if doctype not in types():
+	if doctype not in types() or doctype in VIEW_ONLY:
 		frappe.throw(_("This record type has no Hipersign form."))
 	meta = frappe.get_meta(doctype)
 	if name:

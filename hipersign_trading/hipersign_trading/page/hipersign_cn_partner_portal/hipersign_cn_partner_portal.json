@@ -2,7 +2,7 @@
  "doctype": "Page",
  "name": "hipersign-cn-partner-portal",
  "page_name": "hipersign-cn-partner-portal",
- "title": "Subcontractor Portal",
+ "title": "Subcontractor App",
  "module": "Hipersign Trading",
  "standard": "Yes",
  "system_page": 0,
@@ -38,5 +38,5 @@
  ],
  "owner": "Administrator",
  "creation": "2026-11-20 00:00:00",
- "modified": "2026-11-20 00:00:00"
+ "modified": "2026-11-21 18:00:00"
 }
