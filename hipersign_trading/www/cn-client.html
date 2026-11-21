@@ -3,113 +3,117 @@
 {% block navbar %}{% endblock %}
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "templates/includes/cn_portal_style.html" %}{% endblock %}
+{% block style %}{% include "templates/includes/hs_app_head.html" %}{% endblock %}
 {% block content %}
+{#- v1.9.2 U2: the client app on the Hipersign app shell (was a portal page) — same data and server calls -#}
 {% set FILE = "/api/method/hipersign_trading.api.construction_portal.cp_file?publication=" %}
-<div class="cw">
-	{% if preview %}
-	<div class="pv">👁 {{ _("Preview — what the client sees. Actions are switched off here.") }}
-		<select class="sel" onchange="location.href='/cn-client?party='+encodeURIComponent(this.value)" style="margin-left:auto">
-			{% for c in parties %}<option value="{{ c }}" {{ "selected" if c == customer }}>{{ c }}</option>{% endfor %}</select></div>
-	{% endif %}
-	<div class="hd"><div><small>{{ customer }}</small><b>{{ p.project_name }}</b><small>{{ _("Finish planned") }} {{ frappe.format(p.expected_end_date, {"fieldtype": "Date"}) }}</small></div>
-		<div class="r">{% if projects|length > 1 %}<select class="sel" onchange="location.href='/cn-client?party={{ customer|urlencode }}&project='+this.value">
-			{% for x in projects %}<option value="{{ x.name }}" {{ "selected" if x.name == p.name }}>{{ x.project_name }}</option>{% endfor %}</select>{% endif %}
-			{% if not preview %}<a class="out" href="/?cmd=web_logout">{{ _("Log out") }}</a>{% endif %}</div></div>
-	<div class="kp">{% for l, v, s in kpis %}<div><small>{{ l }}</small><b>{{ v }}</b><span>{{ s }}</span></div>{% endfor %}</div>
-	<div class="card"><div style="display:flex;justify-content:space-between"><b>{{ _("Progress") }}</b><b>{{ "%.1f"|format(F.pct) }}%</b></div>
-		<div class="bar" style="margin-top:8px"><i style="width:{{ [F.pct, 100]|min }}%"></i></div></div>
-	<div class="tb">{% for k, l in tabs %}<a class="{{ 'on' if k == tab }}" href="/cn-client?party={{ customer|urlencode }}&project={{ p.name }}&tab={{ k }}">{{ l }}</a>{% endfor %}</div>
-	<div id="msg"></div>
-
-	{% if tab == "progress" %}
-		{% if feat.progress %}<div class="card"><h4>{{ _("Milestones") }}</h4>{% if milestones %}<div class="tw"><table class="t"><tr><th>{{ _("Milestone") }}</th><th>{{ _("Planned") }}</th><th>{{ _("Forecast") }}</th><th>{{ _("Done") }}</th><th></th></tr>
-			{% for m in milestones %}<tr><td><b>{{ m.title }}</b></td><td class="d">{{ frappe.format(m.planned, {"fieldtype": "Date"}) }}</td><td class="d">{{ frappe.format(m.forecast, {"fieldtype": "Date"}) }}</td>
-			<td class="d">{{ frappe.format(m.actual, {"fieldtype": "Date"}) if m.actual else "—" }}</td>
-			<td><span class="pill {{ {'Done': 'green', 'On track': 'blue', 'At risk': 'orange', 'Late': 'red'}.get(m.status, '') }}">{{ _(m.status) }}</span></td></tr>{% endfor %}</table></div>
-			{% else %}<p class="mut">{{ _("No milestones shared yet.") }}</p>{% endif %}</div>{% endif %}
-		{% if feat.photos %}<div class="card"><h4>{{ _("Site photos") }}</h4>{% if photos %}<div class="ph">{% for x in photos %}<figure><a href="{{ FILE }}{{ x.pub }}" target="_blank"><img loading="lazy" src="{{ FILE }}{{ x.pub }}" alt=""></a>
-			<figcaption>{{ x.caption }}<span>{{ x.location or "" }} · {{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</span></figcaption></figure>{% endfor %}</div>
-			{% else %}<p class="mut">{{ _("No photos published yet.") }}</p>{% endif %}</div>{% endif %}
-
+{% set INR = {"fieldtype": "Currency", "options": "INR"} %}
+{% set base = "/cn-client?party=" ~ (customer|urlencode) ~ "&project=" ~ p.name %}
+{% set ICONS = {"progress": "progress", "bills": "bill", "documents": "file", "variations": "layers", "snags": "wrench", "cost": "cash", "messages": "chat", "more": "more"} %}
+{% set main = tabs[:4] if tabs|length > 5 else tabs %}
+{% set rest = tabs[4:] if tabs|length > 5 else [] %}
+{% set cur = tab if (tab == "more" or tab in (main|map(attribute=0)|list)) else "more" %}
+{% macro pill(t, tone) %}<span class="ha-pill {{ tone }}">{{ t }}</span>{% endmacro %}
+<div class="ha-app wide" id="ap">
+	{% if preview %}<div class="ha-preview">👁 {{ _("Preview — what the client sees. Actions are switched off.") }}
+		<select onchange="location.href='/cn-client?party='+encodeURIComponent(this.value)">{% for c in parties %}<option value="{{ c }}" {{ "selected" if c == customer }}>{{ c }}</option>{% endfor %}</select></div>{% endif %}
+	<div class="ha-top hero"><span class="ha-av">{{ (customer or "?")[:1] }}</span><div class="t"><small>{{ customer }}</small><b>{{ p.project_name }}</b><small>{{ _("Finish planned") }} {{ frappe.format(p.expected_end_date, {"fieldtype": "Date"}) }}</small></div>
+		{% if not preview %}<a class="ha-ib" href="/?cmd=web_logout" aria-label="{{ _('Log out') }}"><span data-i="logout"></span></a>{% endif %}
+		<div class="x">{% if projects|length > 1 %}<select class="ha-sel" onchange="location.href='/cn-client?party={{ customer|urlencode }}&project='+this.value">{% for x in projects %}<option value="{{ x.name }}" {{ "selected" if x.name == p.name }}>{{ x.project_name }}</option>{% endfor %}</select>{% endif %}
+			<div class="ha-hstats"><div><b>{{ "%.0f"|format(F.pct) }}%</b><small>{{ _("work done") }}</small></div><div><b>{{ F.bills }}</b><small>{{ _("RA bills") }}</small></div><div><b>{{ kpis[4][1] }}</b><small>{{ _("due to us") }}</small></div></div>
+			<div class="ha-bar" style="margin-top:12px;background:rgba(255,255,255,.18)"><i style="width:{{ [F.pct, 100]|min }}%;background:#4ade80"></i></div></div></div>
+	<nav class="ha-tabs">{% for k, l in main %}<a class="ha-tab {{ 'on' if k == cur }}" href="{{ base }}&tab={{ k }}"><span data-i="{{ ICONS.get(k, 'more') }}"></span><span>{{ l }}</span></a>{% endfor %}
+		{% for k, l in rest %}<a class="ha-tab w {{ 'on' if k == tab }}" href="{{ base }}&tab={{ k }}"><span data-i="{{ ICONS.get(k, 'more') }}"></span><span>{{ l }}</span></a>{% endfor %}
+		{% if rest %}<a class="ha-tab mo {{ 'on' if cur == 'more' }}" href="{{ base }}&tab=more"><span data-i="more"></span><span>{{ _("More") }}</span></a>{% endif %}</nav>
+	<main class="ha-body">
+	{% if tab == "more" %}
+		<section class="ha-card ha-list">{% for k, l in rest %}<a class="ha-item" href="{{ base }}&tab={{ k }}"><span class="ic c-blue" data-i="{{ ICONS.get(k, 'more') }}"></span><span class="m"><b>{{ l }}</b></span><span class="chev" data-i="chev"></span></a>{% endfor %}</section>
+	{% elif tab == "progress" %}
+		<div class="ha-stats">{% for l, v, s in kpis %}<div class="ha-stat {{ 'red' if loop.index == 5 and F.overdue > 1 else '' }}"><small>{{ l }}</small><b>{{ v }}</b>{% if s %}<span>{{ s }}</span>{% endif %}</div>{% endfor %}</div>
+		<div class="ha-cols">
+		{% if feat.progress %}<section class="ha-card"><h4><span data-i="calendar"></span>{{ _("Milestones") }}</h4>{% if milestones %}<div class="ha-list">
+			{% for m in milestones %}{% set tone = {'Done': 'green', 'On track': 'blue', 'At risk': 'orange', 'Late': 'red'}.get(m.status, '') %}
+			<div class="ha-item"><span class="ic {{ {'green': 'c-green', 'blue': 'c-blue', 'orange': 'c-amber', 'red': 'c-red'}.get(tone, 'c-grey') }}" data-i="{{ 'check' if m.status == 'Done' else 'calendar' }}"></span>
+				<span class="m"><b>{{ m.title }}</b><span>{{ _("Planned") }} {{ frappe.format(m.planned, {"fieldtype": "Date"}) }}{% if m.actual %} · {{ _("done") }} {{ frappe.format(m.actual, {"fieldtype": "Date"}) }}{% elif m.forecast %} · {{ _("forecast") }} {{ frappe.format(m.forecast, {"fieldtype": "Date"}) }}{% endif %}</span></span>
+				<span class="v">{{ pill(_(m.status), tone) }}</span></div>{% endfor %}</div>
+			{% else %}<div class="ha-empty">{{ _("No milestones shared yet.") }}</div>{% endif %}</section>{% endif %}
+		{% if feat.photos %}<section class="ha-card"><h4><span data-i="image"></span>{{ _("Site photos") }}</h4>{% if photos %}<div class="ha-photos">{% for x in photos %}<figure><a href="{{ FILE }}{{ x.pub }}" target="_blank" rel="noopener"><img loading="lazy" src="{{ FILE }}{{ x.pub }}" alt=""></a>
+			<figcaption>{{ x.caption }}<br>{{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</figcaption></figure>{% endfor %}</div>
+			{% else %}<div class="ha-empty">{{ _("No photos published yet.") }}</div>{% endif %}</section>{% endif %}
+		</div>
 	{% elif tab == "bills" %}
-		<div class="card"><h4>{{ _("RA bills") }}</h4>
-		{% if govt %}<p class="mut">{{ _("Government works: the engineer-in-charge certifies on the measurement book.") }}</p>{% endif %}
-		<div class="tw"><table class="t"><tr><th>{{ _("Bill") }}</th><th>{{ _("Status") }}</th><th class="n">{{ _("Claimed") }}</th><th class="n">{{ _("Certified") }}</th><th class="n">{{ _("Net payable") }}</th><th class="n">{{ _("Paid") }}</th><th>{{ _("Due") }}</th><th></th></tr>
-		{% for b in bills %}<tr><td><b>RA {{ b.bill_no }}</b><div class="mut">{{ _("up to") }} {{ frappe.format(b.period_to, {"fieldtype": "Date"}) }}</div></td>
-			<td><span class="pill {{ {'Paid': 'green', 'Part paid': 'blue', 'Invoiced': 'blue', 'Certified': 'blue', 'Submitted to client': 'orange'}.get(b.status, '') }}">{{ _("With you") if b.status == "Submitted to client" else _(b.status) }}</span></td>
-			<td class="n">{{ frappe.format(b.claimed_amount, {"fieldtype": "Currency", "options": "INR"}) }}</td><td class="n">{{ frappe.format(b.certified_amount, {"fieldtype": "Currency", "options": "INR"}) if b.certified_amount else "—" }}</td>
-			<td class="n">{{ frappe.format(b.net_receivable, {"fieldtype": "Currency", "options": "INR"}) if b.net_receivable else "—" }}</td><td class="n">{{ frappe.format(b.received_amount, {"fieldtype": "Currency", "options": "INR"}) if b.received_amount else "—" }}</td>
-			<td>{{ frappe.format(b.due_date, {"fieldtype": "Date"}) if b.due_date else "—" }}</td>
-			<td style="white-space:nowrap">{% if b.status == "Submitted to client" and feat.certify and not govt %}<button class="btn p" {{ "disabled" if preview }} onclick="cnCertify('{{ b.name }}', {{ b.claimed_amount }}, {{ b.bill_no }})">{{ _("Certify…") }}</button>{% endif %}
-			{% if b.sales_invoice %}<a class="btn" target="_blank" href="/printview?doctype=Sales%20Invoice&name={{ b.sales_invoice|urlencode }}">{{ _("Tax invoice") }}</a>{% endif %}</td></tr>
-		{% else %}<tr><td colspan="8" class="mut">{{ _("No bills yet.") }}</td></tr>{% endfor %}</table></div></div>
-
+		{% if govt %}<div class="ha-note info"><span data-i="shield"></span>{{ _("Government works: the engineer-in-charge certifies on the measurement book.") }}</div>{% endif %}
+		{% for b in bills %}{% set tone = {'Paid': 'green', 'Part paid': 'blue', 'Invoiced': 'blue', 'Certified': 'blue', 'Submitted to client': 'orange'}.get(b.status, '') %}
+		<section class="ha-card"><h4><span data-i="bill"></span>RA {{ b.bill_no }}<small>{{ pill(_("With you") if b.status == "Submitted to client" else _(b.status), tone) }}</small></h4>
+			<div class="ha-mut">{{ _("Work up to") }} {{ frappe.format(b.period_to, {"fieldtype": "Date"}) }}{% if b.due_date %} · {{ _("due") }} {{ frappe.format(b.due_date, {"fieldtype": "Date"}) }}{% endif %}</div>
+			<div style="margin-top:6px">
+			<div class="ha-kv"><span>{{ _("Claimed") }}</span><b>{{ frappe.format(b.claimed_amount, INR) }}</b></div>
+			<div class="ha-kv"><span>{{ _("Certified") }}</span><b>{{ frappe.format(b.certified_amount, INR) if b.certified_amount else "—" }}</b></div>
+			<div class="ha-kv"><span>{{ _("Paid") }}</span><b>{{ frappe.format(b.received_amount, INR) if b.received_amount else "—" }}</b></div>
+			<div class="ha-kv tot"><span>{{ _("Net payable") }}</span><b>{{ frappe.format(b.net_receivable, INR) if b.net_receivable else "—" }}</b></div></div>
+			<div class="ha-row">{% if b.status == "Submitted to client" and feat.certify and not govt %}<button class="ha-btn p" {{ "disabled" if preview }} data-act="certify" data-arg="{{ b.name }}|{{ b.claimed_amount }}|{{ b.bill_no }}"><span data-i="check"></span>{{ _("Certify") }}</button>{% endif %}
+			{% if b.sales_invoice %}<a class="ha-btn" target="_blank" rel="noopener" href="/printview?doctype=Sales%20Invoice&name={{ b.sales_invoice|urlencode }}"><span data-i="file"></span>{{ _("Tax invoice") }}</a>{% endif %}</div></section>
+		{% else %}<section class="ha-card"><div class="ha-empty">{{ _("No bills yet.") }}</div></section>{% endfor %}
 	{% elif tab == "documents" %}
-		<div class="card"><h4>{{ _("Drawings for construction (GFC)") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Drawing") }}</th><th>{{ _("Title") }}</th><th>{{ _("Discipline") }}</th><th>{{ _("GFC on") }}</th><th></th></tr>
-		{% for d in drawings %}<tr><td><b>{{ d.drawing_no }}</b> {{ d.revision }}</td><td>{{ d.title }}</td><td>{{ _(d.discipline) }}</td><td>{{ frappe.format(d.gfc_on, {"fieldtype": "Date"}) }}</td>
-			<td>{% if d.file %}<a class="btn" target="_blank" href="{{ FILE }}{{ d.pub }}">{{ _("Open") }}</a>{% endif %}</td></tr>
-		{% else %}<tr><td colspan="5" class="mut">{{ _("No drawings shared yet.") }}</td></tr>{% endfor %}</table></div></div>
-		<div class="card"><h4>{{ _("Weekly progress reports") }}</h4>{% for r in reports %}<div class="rep"><b>{{ r.title }}</b>{{ r.content }}</div>{% else %}<p class="mut">{{ _("No reports yet.") }}</p>{% endfor %}</div>
-
+		<div class="ha-cols"><section class="ha-card"><h4><span data-i="layers"></span>{{ _("Drawings for construction (GFC)") }}</h4><div class="ha-list">
+		{% for d in drawings %}<{{ 'a' if d.file else 'div' }} class="ha-item" {% if d.file %}href="{{ FILE }}{{ d.pub }}" target="_blank" rel="noopener"{% endif %}><span class="ic c-violet" data-i="file"></span>
+			<span class="m"><b>{{ d.drawing_no }} {{ d.revision }}</b><span>{{ d.title }} · {{ _(d.discipline) }} · {{ frappe.format(d.gfc_on, {"fieldtype": "Date"}) }}</span></span>{% if d.file %}<span class="chev" data-i="chev"></span>{% endif %}</{{ 'a' if d.file else 'div' }}>
+		{% else %}<div class="ha-empty">{{ _("No drawings shared yet.") }}</div>{% endfor %}</div></section>
+		<section class="ha-card"><h4><span data-i="clipboard"></span>{{ _("Weekly progress reports") }}</h4>{% for r in reports %}<div class="ha-kv" style="display:block"><b style="display:block;text-align:left">{{ r.title }}</b><div class="ha-mut" style="margin-top:4px">{{ r.content }}</div></div>
+			{% else %}<div class="ha-empty">{{ _("No reports yet.") }}</div>{% endfor %}</section></div>
 	{% elif tab == "variations" %}
-		<div class="card"><h4>{{ _("Variations and extra items") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Item") }}</th><th class="n">{{ _("Amount") }}</th><th>{{ _("Sent") }}</th><th>{{ _("Status") }}</th><th></th></tr>
-		{% for e in eis %}<tr><td><b>{{ e.title }}</b><div class="mut">{{ _(e.kind) }}{% if e.reference %} · {{ e.reference }}{% endif %}</div></td><td class="n">{{ frappe.format(e.amount, {"fieldtype": "Currency", "options": "INR"}) }}</td>
-			<td>{{ frappe.format(e.sent_on, {"fieldtype": "Date"}) if e.sent_on else "—" }}</td>
-			<td><span class="pill {{ {'Approved': 'green', 'Rejected': 'red', 'Pending client': 'orange'}.get(e.status, '') }}">{{ _("Waiting for you") if e.status == "Pending client" else _(e.status) }}</span>
-				{% if e.approved_by %}<div class="mut">{{ e.approved_by }}</div>{% endif %}</td>
-			<td style="white-space:nowrap">{% if e.status == "Pending client" %}<button class="btn g" {{ "disabled" if preview }} onclick="cnVo('{{ e.name }}', 1)">{{ _("Approve") }}</button>
-				<button class="btn r" {{ "disabled" if preview }} onclick="cnVo('{{ e.name }}', 0)">{{ _("Reject") }}</button>{% endif %}</td></tr>
-		{% else %}<tr><td colspan="5" class="mut">{{ _("No variations.") }}</td></tr>{% endfor %}</table></div>
-		<p class="mut">{{ _("An approved variation is added to the contract value.") }}</p></div>
-
+		{% for e in eis %}{% set tone = {'Approved': 'green', 'Rejected': 'red', 'Pending client': 'orange'}.get(e.status, '') %}
+		<section class="ha-card"><h4><span data-i="layers"></span>{{ e.title }}<small>{{ pill(_("Waiting for you") if e.status == "Pending client" else _(e.status), tone) }}</small></h4>
+			<div class="ha-mut">{{ _(e.kind) }}{% if e.reference %} · {{ e.reference }}{% endif %}{% if e.sent_on %} · {{ _("sent") }} {{ frappe.format(e.sent_on, {"fieldtype": "Date"}) }}{% endif %}{% if e.approved_by %} · {{ e.approved_by }}{% endif %}</div>
+			<div class="ha-kv tot" style="margin-top:6px"><span>{{ _("Amount") }}</span><b>{{ frappe.format(e.amount, INR) }}</b></div>
+			{% if e.status == "Pending client" %}<div class="ha-row"><button class="ha-btn g" {{ "disabled" if preview }} data-act="vo" data-arg="{{ e.name }}|1"><span data-i="check"></span>{{ _("Approve") }}</button>
+				<button class="ha-btn r" {{ "disabled" if preview }} data-act="vo" data-arg="{{ e.name }}|0">{{ _("Reject") }}</button></div>{% endif %}</section>
+		{% else %}<section class="ha-card"><div class="ha-empty">{{ _("No variations.") }}</div></section>{% endfor %}
+		<p class="ha-mut" style="text-align:center">{{ _("An approved variation is added to the contract value.") }}</p>
 	{% elif tab == "snags" %}
-		<div class="card"><h4>{{ _("Raise a snag") }}</h4><div class="row"><div><small class="mut">{{ _("Where") }}</small><input class="in" id="sn-loc" placeholder="{{ _('e.g. Flat 3B — kitchen') }}"></div>
-			<div><small class="mut">{{ _("Trade") }}</small><select class="in" id="sn-trade">{% for t in trades %}<option>{{ t }}</option>{% endfor %}</select></div></div>
-			<small class="mut">{{ _("What is wrong") }}</small><textarea class="in" id="sn-desc" rows="2"></textarea>
-			<button class="btn p" {{ "disabled" if preview }} onclick="cnSnag()">{{ _("Raise snag") }}</button></div>
-		<div class="card"><h4>{{ _("Snags") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Where") }}</th><th>{{ _("What") }}</th><th>{{ _("Raised") }}</th><th>{{ _("Fix by") }}</th><th>{{ _("Status") }}</th></tr>
-		{% for s in snags %}<tr><td><b>{{ s.location }}</b><div class="mut">{{ _(s.trade) }}</div></td><td>{{ s.description }}</td><td>{{ frappe.format(s.raised_on, {"fieldtype": "Date"}) }}</td>
-			<td>{{ frappe.format(s.target, {"fieldtype": "Date"}) if s.target else "—" }}</td><td><span class="pill {{ {'Verified': 'green', 'Fixed': 'blue', 'Open': 'orange'}.get(s.status, '') }}">{{ _(s.status) }}</span></td></tr>
-		{% else %}<tr><td colspan="5" class="mut">{{ _("No snags.") }}</td></tr>{% endfor %}</table></div></div>
-
+		<section class="ha-card"><h4><span data-i="wrench"></span>{{ _("Raise a snag") }}</h4>
+			<label class="ha-f"><span>{{ _("Where") }}</span><input class="ha-in" id="sn-loc" placeholder="{{ _('e.g. Flat 3B — kitchen') }}"></label>
+			<label class="ha-f"><span>{{ _("Trade") }}</span><select class="ha-in" id="sn-trade">{% for t in trades %}<option>{{ t }}</option>{% endfor %}</select></label>
+			<label class="ha-f"><span>{{ _("What is wrong") }}</span><textarea class="ha-in" id="sn-desc" rows="2"></textarea></label>
+			<button class="ha-btn p" {{ "disabled" if preview }} data-act="snag"><span data-i="send"></span>{{ _("Raise snag") }}</button></section>
+		<div class="ha-sec">{{ _("Snags") }}</div><section class="ha-card ha-list">
+		{% for s in snags %}{% set tone = {'Verified': 'green', 'Fixed': 'blue', 'Open': 'orange'}.get(s.status, '') %}
+			<div class="ha-item"><span class="ic {{ {'green': 'c-green', 'blue': 'c-blue', 'orange': 'c-amber'}.get(tone, 'c-grey') }}" data-i="wrench"></span><span class="m"><b>{{ s.location }}</b><span>{{ s.description }} · {{ _(s.trade) }} · {{ frappe.format(s.raised_on, {"fieldtype": "Date"}) }}</span></span><span class="v">{{ pill(_(s.status), tone) }}</span></div>
+		{% else %}<div class="ha-empty">{{ _("No snags.") }}</div>{% endfor %}</section>
 	{% elif tab == "messages" %}
-		<div class="card"><h4>{{ _("Write to us") }}</h4><small class="mut">{{ _("Subject") }}</small><input class="in" id="mg-s">
-			<small class="mut">{{ _("Message") }}</small><textarea class="in" id="mg-m" rows="3"></textarea>
-			<button class="btn p" {{ "disabled" if preview }} onclick="cnMsg()">{{ _("Send") }}</button></div>
-		<div class="card"><h4>{{ _("Messages") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Sent") }}</th><th>{{ _("Message") }}</th><th>{{ _("Our reply") }}</th></tr>
-		{% for m in msgs %}<tr><td class="mut" style="white-space:nowrap">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }}<div>{{ m.from_name or "" }}</div></td>
-			<td><b>{{ m.subject or "" }}</b><div>{{ m.message }}</div></td><td>{% if m.reply %}{{ m.reply }}<div class="mut">{{ m.replied_by or "" }}</div>{% else %}<span class="pill orange">{{ _("Waiting for our reply") }}</span>{% endif %}</td></tr>
-		{% else %}<tr><td colspan="3" class="mut">{{ _("No messages yet.") }}</td></tr>{% endfor %}</table></div></div>
+		<section class="ha-card"><h4><span data-i="chat"></span>{{ _("Write to us") }}</h4><label class="ha-f"><span>{{ _("Subject") }}</span><input class="ha-in" id="mg-s"></label>
+			<label class="ha-f"><span>{{ _("Message") }}</span><textarea class="ha-in" id="mg-m" rows="3"></textarea></label>
+			<button class="ha-btn p" {{ "disabled" if preview }} data-act="msg"><span data-i="send"></span>{{ _("Send") }}</button></section>
+		<div class="ha-sec">{{ _("Messages") }}</div>
+		{% for m in msgs %}<section class="ha-card"><div class="ha-mut">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }} · {{ m.from_name or "" }}</div><b style="display:block;margin-top:4px">{{ m.subject or "" }}</b><div style="margin-top:2px">{{ m.message }}</div>
+			{% if m.reply %}<div class="ha-note info" style="margin-top:10px;display:block;font-weight:500"><b style="display:block">{{ m.replied_by or _("Our reply") }}</b>{{ m.reply }}</div>{% else %}<div style="margin-top:8px">{{ pill(_("Waiting for our reply"), "orange") }}</div>{% endif %}</section>
+		{% else %}<section class="ha-card"><div class="ha-empty">{{ _("No messages yet.") }}</div></section>{% endfor %}
 	{% elif tab == "cost" %}
-		<div class="card"><h4>{{ _("Cost & margin") }}</h4><table class="t">
-			<tr><td>{{ _("Revised contract") }}</td><td class="n">{{ frappe.format(cost.revised, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
-			<tr><td>{{ _("Cost to date") }}</td><td class="n">{{ frappe.format(cost.cost, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
-			<tr><td>{{ _("Forecast cost at completion") }}</td><td class="n">{{ frappe.format(cost.fac, {"fieldtype": "Currency", "options": "INR"}) }}</td></tr>
-			<tr><td>{{ _("Forecast margin") }}</td><td class="n">{{ "%.1f"|format(cost.fc_margin) }}%</td></tr></table></div>
+		<section class="ha-card"><h4><span data-i="cash"></span>{{ _("Cost & margin") }}</h4>
+			<div class="ha-kv"><span>{{ _("Revised contract") }}</span><b>{{ frappe.format(cost.revised, INR) }}</b></div><div class="ha-kv"><span>{{ _("Cost to date") }}</span><b>{{ frappe.format(cost.cost, INR) }}</b></div>
+			<div class="ha-kv"><span>{{ _("Forecast cost at completion") }}</span><b>{{ frappe.format(cost.fac, INR) }}</b></div><div class="ha-kv tot"><span>{{ _("Forecast margin") }}</span><b>{{ "%.1f"|format(cost.fc_margin) }}%</b></div></section>
 	{% endif %}
+	</main>
 </div>
+{% include "templates/includes/hs_app_js.html" %}
 <script>
-const M = "hipersign_trading.api.construction_portal.";
-const done = (r) => { const m = (r && r.message && (r.message.message || r.message)) || "Done"; frappe.msgprint({ message: m, indicator: "green" }); setTimeout(() => location.reload(), 1600); };
-function cnCertify(name, claimed, no) {
-	frappe.prompt([{ fieldname: "amount", fieldtype: "Currency", label: "{{ _('Amount you certify (before GST)') }}", default: claimed, reqd: 1 },
-		{ fieldname: "note", fieldtype: "Small Text", label: "{{ _('Note (optional)') }}" }],
-		(v) => frappe.call({ method: M + "cp_certify", args: { ra_bill: name, amount: v.amount, note: v.note }, callback: done }), "{{ _('Certify RA bill') }} " + no, "{{ _('Certify') }}");
-}
-function cnVo(name, ok) {
-	frappe.prompt([{ fieldname: "note", fieldtype: "Small Text", label: ok ? "{{ _('Note (optional)') }}" : "{{ _('Why do you reject it?') }}", reqd: !ok }],
-		(v) => frappe.call({ method: M + "cp_variation", args: { extra_item: name, approve: ok, note: v.note }, callback: done }), ok ? "{{ _('Approve variation') }}" : "{{ _('Reject variation') }}");
-}
-function cnMsg() {
-	const m = document.getElementById("mg-m").value;
-	if (!m.trim()) return frappe.msgprint("{{ _('Write the message.') }}");
-	frappe.call({ method: "hipersign_trading.api.construction_extra.cp_message", args: { project: "{{ p.name }}", subject: document.getElementById("mg-s").value, message: m }, freeze: true, callback: done });
-}
-function cnSnag() {
-	const loc = document.getElementById("sn-loc").value, desc = document.getElementById("sn-desc").value, trade = document.getElementById("sn-trade").value;
-	if (!loc || !desc) return frappe.msgprint("{{ _('Say where and what.') }}");
-	frappe.call({ method: M + "cp_snag", args: { project: "{{ p.name }}", location: loc, description: desc, trade }, callback: done });
-}
+(() => {
+	const A = HSApp, M = "hipersign_trading.api.construction_portal.", root = document.getElementById("ap");
+	root.querySelectorAll("[data-i]").forEach((s) => (s.innerHTML = A.icon(s.dataset.i)));
+	const back = () => setTimeout(() => location.reload(), 1200);
+	A.wire(root, { act: {
+		certify: (arg) => { const [name, claimed, no] = arg.split("|");
+			A.ask("{{ _('Certify RA bill') }} " + no, [{ name: "amount", label: "{{ _('Amount you certify (before GST)') }}", type: "money", value: claimed, req: 1 }, { name: "note", label: "{{ _('Note (optional)') }}", type: "textarea" }], "{{ _('Certify') }}")
+				.then((v) => v && A.call(M + "cp_certify", { ra_bill: name, amount: v.amount, note: v.note }).then((r) => { A.done(r); back(); })).catch(() => {}); },
+		vo: (arg) => { const [name, ok] = arg.split("|");
+			A.ask(+ok ? "{{ _('Approve variation') }}" : "{{ _('Reject variation') }}", [{ name: "note", label: +ok ? "{{ _('Note (optional)') }}" : "{{ _('Why do you reject it?') }}", type: "textarea", req: !+ok }], +ok ? "{{ _('Approve') }}" : "{{ _('Reject') }}", +ok ? "g" : "rr")
+				.then((v) => v && A.call(M + "cp_variation", { extra_item: name, approve: +ok, note: v.note }).then((r) => { A.done(r); back(); })).catch(() => {}); },
+		msg: () => { const m = document.getElementById("mg-m").value; if (!m.trim()) return A.toast("{{ _('Write the message.') }}", 1);
+			A.call("hipersign_trading.api.construction_extra.cp_message", { project: "{{ p.name }}", subject: document.getElementById("mg-s").value, message: m }).then((r) => { A.done(r); back(); }).catch(() => {}); },
+		snag: () => { const loc = document.getElementById("sn-loc").value, desc = document.getElementById("sn-desc").value, trade = document.getElementById("sn-trade").value;
+			if (!loc || !desc) return A.toast("{{ _('Say where and what.') }}", 1);
+			A.call(M + "cp_snag", { project: "{{ p.name }}", location: loc, description: desc, trade }).then((r) => { A.done(r); back(); }).catch(() => {}); },
+	} });
+})();
 </script>
 {% endblock %}

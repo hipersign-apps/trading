@@ -14,8 +14,9 @@ TABS = [("orders", "Work orders"), ("bills", "Running bills"), ("payments", "Pay
 
 def get_context(context):
 	supplier, suppliers, preview = PT.portal_party("Supplier")
-	context.no_header = 1
-	context.no_breadcrumbs = 1
+	from hipersign_trading import apps_web
+
+	apps_web.context(context, "partner")  # v1.9.2 U2: on the Hipersign app shell, installable
 	context.preview, context.parties, context.supplier = preview, suppliers, supplier
 	context.title = _("{0} — partner portal").format(supplier)
 	from hipersign_trading.api import construction_extra as X  # v1.9.1 B4: what this subcontractor may see and do
@@ -24,6 +25,8 @@ def get_context(context):
 	context.tabs = [(k, _(l)) for k, l in TABS if k == "orders" or feat.get(k)]
 	tab = frappe.form_dict.get("tab")
 	context.tab = tab if tab in dict(context.tabs) else "orders"
+	if tab == "more":  # v1.9.2 U2: the app's "More" tab lists the sections the phone tab bar has no room for
+		context.tab = "more"
 	context.today = today()
 	wos = frappe.get_all("Subcontractor Work Order", filters={"supplier": supplier, "status": ["!=", "Draft"]}, fields=["name", "project", "scope", "kind", "status", "value",
 		"retention_pct", "tds_pct", "start_date", "end_date"], order_by="wo_date desc")

@@ -28,6 +28,9 @@ _v = f"?v={app_version}.{_asset_stamp()}"
 
 required_apps = ["erpnext"]
 
+# v1.9.2 U1: the phone apps' manifests and service worker (/hs-app/<app>.webmanifest, /hs-app-sw.js)
+page_renderer = ["hipersign_trading.apps_web.AppAssets"]
+
 # ---------------------------------------------------------------- branding
 app_logo_url = "/assets/hipersign_trading/images/hipersign-logo.png"
 

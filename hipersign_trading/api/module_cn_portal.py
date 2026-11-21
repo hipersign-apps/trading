@@ -340,13 +340,20 @@ def cn_app_module():
 			kpi(_("Dangers reported"), frappe.db.count("Safety Incident", {"project": ["in", names or [""]], "description": ["like", "%worker app%"], "status": "Open"}),
 				_("open, from the worker app"), "red", "siren", tab="dng"),
 		],
-		"tabs": [{"key": "att", "label": _("Today on site"), "chips": []}, {"key": "cash", "label": _("Site cash"), "chips": [["Waiting for approval", _("To approve")], ["Booked", _("Booked")]]},
+		"tabs": [{"key": "apps", "label": _("The apps"), "chips": []}, {"key": "att", "label": _("Today on site"), "chips": []}, {"key": "cash", "label": _("Site cash"), "chips": [["Waiting for approval", _("To approve")], ["Booked", _("Booked")]]},
 			{"key": "pho", "label": _("Photos"), "chips": []}, {"key": "wrk", "label": _("Worker app"), "chips": [[n, _proj(n).project_name.split(" — ")[0]] for n in names]},
 			{"key": "dng", "label": _("Dangers reported"), "chips": []}],
 	}
 
 
 def cn_app_rows(tab, chip, q=None):
+	if tab == "apps":  # v1.9.2 U1: the five phone apps — live preview, QR code to install, address
+		from hipersign_trading import apps_web
+
+		apps = apps_web.install_links()
+		for a in apps:
+			a["preview"] = {"worker": "/cn-worker", "client": "/cn-client", "partner": "/cn-partner"}.get(a["key"], a["path"])
+		return {"blocks": [{"type": "apps", "span": 3, "apps": apps}]}
 	names = _live()
 	t = today()
 	cur = _cur()
