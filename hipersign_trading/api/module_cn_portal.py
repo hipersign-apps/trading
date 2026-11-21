@@ -165,7 +165,7 @@ def cn_cpo_module():
 	U = _portal_users("Customer", C)
 	A = frappe.db.count("Portal Activity", {"party_type": "Customer", "creation": [">=", add_days(today(), -7)]}) if _perm("Portal Activity") else 0
 	return {
-		"title": _("Client Portal"),
+		"title": _("Client App"),
 		"desc": _("What each client sees of their project — progress and milestones, published photos, RA bills (certified online by private clients), documents and weekly reports, variations to approve and snags. Photos, reports and drawings wait here for the PM."),
 		"new": [],
 		"kpis": [
@@ -271,7 +271,7 @@ def cn_spo_module():
 	S = _partners()
 	U = _portal_users("Supplier", S)
 	return {
-		"title": _("Subcontractor Portal"),
+		"title": _("Subcontractor App"),
 		"desc": _("What partners see — their work orders, running bills (submitted online, never above the last cumulative or the work order + 10%), payments with TDS and retention, labour documents and progress photos. Everything they send waits here."),
 		"kpis": [
 			kpi(_("To verify"), len(Q), _("{0} bills · {1} documents · {2} photos").format(len([x for x in Q if x.kind == "Running bill"]), len([x for x in Q if x.kind == "Labour documents"]),
@@ -340,13 +340,20 @@ def cn_app_module():
 			kpi(_("Dangers reported"), frappe.db.count("Safety Incident", {"project": ["in", names or [""]], "description": ["like", "%worker app%"], "status": "Open"}),
 				_("open, from the worker app"), "red", "siren", tab="dng"),
 		],
-		"tabs": [{"key": "att", "label": _("Today on site"), "chips": []}, {"key": "cash", "label": _("Site cash"), "chips": [["Waiting for approval", _("To approve")], ["Booked", _("Booked")]]},
+		"tabs": [{"key": "apps", "label": _("The apps"), "chips": []}, {"key": "att", "label": _("Today on site"), "chips": []}, {"key": "cash", "label": _("Site cash"), "chips": [["Waiting for approval", _("To approve")], ["Booked", _("Booked")]]},
 			{"key": "pho", "label": _("Photos"), "chips": []}, {"key": "wrk", "label": _("Worker app"), "chips": [[n, _proj(n).project_name.split(" — ")[0]] for n in names]},
 			{"key": "dng", "label": _("Dangers reported"), "chips": []}],
 	}
 
 
 def cn_app_rows(tab, chip, q=None):
+	if tab == "apps":  # v1.9.2 U1: the five phone apps — live preview, QR code to install, address
+		from hipersign_trading import apps_web
+
+		apps = apps_web.install_links()
+		for a in apps:
+			a["preview"] = {"worker": "/cn-worker", "client": "/cn-client", "partner": "/cn-partner"}.get(a["key"], a["path"])
+		return {"blocks": [{"type": "apps", "span": 3, "apps": apps}]}
 	names = _live()
 	t = today()
 	cur = _cur()

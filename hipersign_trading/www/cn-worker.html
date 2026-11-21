@@ -3,18 +3,24 @@
 {% block navbar %}{% endblock %}
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "templates/includes/cn_portal_style.html" %}
+{% block style %}{% include "templates/includes/hs_app_head.html" %}
 <style>
-.ap{max-width:480px;width:100%;box-sizing:border-box;margin:0 auto;padding:0 0 30px;font-size:16px}.ap .hd{border-radius:0 0 18px 18px;margin-bottom:10px}.ap .bd{padding:0 12px;display:flex;flex-direction:column;gap:10px}.ap .card{margin:0}
-.big{display:block;width:100%;padding:15px;border-radius:14px;font-size:17px;margin-top:8px;text-align:center}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:12px}.days div{border-radius:8px;padding:8px 0;background:#f1f5f9}.days div.on{background:#dcfce7;color:#15803d;font-weight:700}
-.sl{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #f1f5f9}.lang{display:flex;gap:6px;flex-wrap:wrap}.lang button{flex:1}
-.in{font-size:17px}
+.ha-app{font-size:16px}.wk-days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;font-size:12px;margin-top:10px}
+.wk-days div{border-radius:12px;padding:8px 0;background:#f1f5f9;color:#64748b;font-weight:600}.wk-days div b{display:block;font-size:16px;color:#0f172a}
+.wk-days div.on{background:#dcfce7;color:#15803d}.wk-days div.on b{color:#15803d}.wk-days div.td{box-shadow:inset 0 0 0 2px var(--ha-c)}
+.wk-net{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:4px 0 2px}
+.wk-lang{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.wk-lang button{border:0;border-radius:12px;padding:10px 4px;font:inherit;font-weight:700;font-size:14px;background:#fff;box-shadow:0 0 0 1px #e5e9f2;color:#334155;cursor:pointer}
+.wk-lang button.on{background:var(--ha-c);color:#fff;box-shadow:none}
+.wk-login{padding:calc(40px + var(--ha-top)) 18px 24px;background:linear-gradient(160deg,var(--ha-c),#16a34a);color:#fff;border-radius:0 0 28px 28px}
+.wk-login img{width:64px;height:64px;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.2)}.wk-login h1{font-size:24px;margin:14px 0 4px}.wk-login p{margin:0;opacity:.85}
+.wk-pin{letter-spacing:.6em;text-align:center;font-size:24px;font-weight:700}
 </style>{% endblock %}
 {% block content %}
-<div class="ap" id="ap"></div>
+<div class="ha-app" id="ap"></div>
+{% include "templates/includes/hs_app_js.html" %}
 <script>
 (() => {
+	// v1.9.2 U1: the worker app on the Hipersign app shell — same server calls as before (construction_portal.wa_*)
 	const T = {
 		"English": { login: "Log in", mobile: "Mobile number", pin: "PIN (4 digits)", wrong: "Mobile number or PIN is wrong.", hello: "Hello", week: "This week", present: "Mark me present", here: "You are marked present today",
 			slip: "Pay slip", days: "Days", ot: "OT hours", earned: "Earned", pf: "PF", esi: "ESI", adv: "Advance recovered", net: "Net pay", paid: "Paid by UPI", payday: "Next pay day", noslip: "No pay slip yet",
@@ -38,67 +44,71 @@
 	const ST = { "മലയാളം": { Requested: "അപേക്ഷിച്ചു", Approved: "അംഗീകരിച്ചു", Paid: "നൽകി" }, "தமிழ்": { Requested: "கோரப்பட்டது", Approved: "ஒப்புதல்", Paid: "செலுத்தப்பட்டது" },
 		"हिन्दी": { Requested: "माँगा गया", Approved: "मंज़ूर", Paid: "दिया गया" } };
 	const st = (x) => (ST[lang] || {})[x] || x;
-	const M = "hipersign_trading.api.construction_portal.";
-	const root = document.getElementById("ap");
-	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-	const inr = (v) => "₹" + Math.round(+v || 0).toLocaleString("en-IN");
-	let token = null, lang = "English", D = null, view = "home", gps = {};
-	try { token = sessionStorage.getItem("hs_wa"); lang = localStorage.getItem("hs_wa_lang") || "English"; } catch (e) {}
-	const t = (k) => (T[lang] || T.English)[k] || T.English[k];
-	const call = (m, args) => new Promise((ok, no) => frappe.call({ method: M + m, type: "POST", args: Object.assign({ token }, args || {}), freeze: true, callback: (r) => ok(r.message),
-		error: (e) => { if (e && e.exc_type === "AuthenticationError") { token = null; try { sessionStorage.removeItem("hs_wa"); } catch (x) {} render(); } no(e); } }));
-	navigator.geolocation && navigator.geolocation.getCurrentPosition((p) => (gps = { lat: p.coords.latitude, lng: p.coords.longitude }), () => {});
-	const setLang = (l) => { lang = l; try { localStorage.setItem("hs_wa_lang", l); } catch (e) {} if (token) call("wa_language", { language: l }); render(); };
-	const langBar = () => `<div class="lang">${LANGS.map((l) => `<button class="btn ${l === lang ? "p" : ""}" data-l="${esc(l)}">${esc(l)}</button>`).join("")}</div>`;
+	const X = { "English": { tHome: "Home", tPay: "Pay", tAdv: "Advance", tSafe: "Safety", today: "Today", lang: "Language", welcome: "Your attendance, pay slip and advances — in your language." },
+		"മലയാളം": { tHome: "ഹോം", tPay: "ശമ്പളം", tAdv: "അഡ്വാൻസ്", tSafe: "സുരക്ഷ", today: "ഇന്ന്", lang: "ഭാഷ", welcome: "ഹാജർ, ശമ്പള സ്ലിപ്പ്, അഡ്വാൻസ് — നിങ്ങളുടെ ഭാഷയിൽ." },
+		"தமிழ்": { tHome: "முகப்பு", tPay: "சம்பளம்", tAdv: "முன்பணம்", tSafe: "பாதுகாப்பு", today: "இன்று", lang: "மொழி", welcome: "வருகை, சம்பளச் சீட்டு, முன்பணம் — உங்கள் மொழியில்." },
+		"हिन्दी": { tHome: "होम", tPay: "वेतन", tAdv: "एडवांस", tSafe: "सुरक्षा", today: "आज", lang: "भाषा", welcome: "हाज़िरी, वेतन पर्ची और एडवांस — आपकी भाषा में।" } };
+	const A = HSApp, M = "hipersign_trading.api.construction_portal.", root = document.getElementById("ap"), esc = A.esc, I = A.icon;
+	let token = null, lang = "English", D = null, tab = "home";
+	try { token = localStorage.getItem("hs_wa") || sessionStorage.getItem("hs_wa"); lang = localStorage.getItem("hs_wa_lang") || "English"; } catch (e) {}
+	const t = (k) => (X[lang] || {})[k] || (T[lang] || T.English)[k] || X.English[k] || T.English[k];
+	const out = () => { token = null; D = null; try { localStorage.removeItem("hs_wa"); sessionStorage.removeItem("hs_wa"); } catch (x) {} render(); };
+	const call = (m, args) => A.call(M + m, Object.assign({ token }, args || {})).catch((e) => { if (e.type === "AuthenticationError") out(); throw e; });
+	const setLang = (l) => { lang = l; try { localStorage.setItem("hs_wa_lang", l); } catch (e) {} if (token) call("wa_language", { language: l }).catch(() => {}); render(); };
+	const langBar = () => `<div class="wk-lang">${LANGS.map((l) => `<button class="${l === lang ? "on" : ""}" data-act="lang" data-arg="${esc(l)}">${esc(l)}</button>`).join("")}</div>`;
+	const q = (s) => root.querySelector(s);
+	A.wire(root, { tab: (k) => { tab = k; render(); }, act: { lang: (l) => setLang(l), out, go: (k) => { tab = k; render(); } } });
 	function render() {
+		root.classList.toggle("notabs", !token);
 		if (!token) {
-			root.innerHTML = `<div class="hd"><b>Hipersign Worker</b></div><div class="bd">${langBar()}<div class="card"><small class="mut">${t("mobile")}</small><input class="in" id="m" inputmode="tel" autocomplete="tel">
-				<small class="mut">${t("pin")}</small><input class="in" id="p" type="password" inputmode="numeric" maxlength="4"><button class="btn p big" id="go">${t("login")}</button></div></div>`;
-			root.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => setLang(b.dataset.l)));
-			root.querySelector("#go").onclick = () => frappe.call({ method: M + "wa_login", type: "POST", args: { mobile: root.querySelector("#m").value, pin: root.querySelector("#p").value }, freeze: true,
-				callback: (r) => { token = r.message.token; try { sessionStorage.setItem("hs_wa", token); } catch (e) {} load(); } });
-			return;
+			root.innerHTML = `<div class="wk-login"><img src="/assets/hipersign_trading/images/apps/worker-192.png" alt=""><h1>Hipersign Worker</h1><p>${t("welcome")}</p></div>
+				<main class="ha-body">${langBar()}<section class="ha-card"><label class="ha-f" style="margin-top:0"><span>${t("mobile")}</span><input class="ha-in" id="m" inputmode="tel" autocomplete="tel"></label>
+				<label class="ha-f"><span>${t("pin")}</span><input class="ha-in wk-pin" id="p" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code"></label>
+				<button class="ha-btn g" id="go">${I("check")} ${t("login")}</button></section>${A.installCard()}</main>`;
+			q("#go").onclick = () => A.call(M + "wa_login", { mobile: q("#m").value, pin: q("#p").value }, { silent: true })
+				.then((r) => { token = r.token; try { localStorage.setItem("hs_wa", token); } catch (e) {} load(); }).catch(() => A.toast(t("wrong"), 1));
+			A.wireInstall(); return;
 		}
 		if (!D) return;
-		const head = `<div class="hd">${view !== "home" ? `<button class="btn" id="back" style="padding:4px 10px">‹</button>` : ""}<div><small>${t("hello")}</small><b>${esc(D.name)}</b><small>${esc(D.trade)} · ${esc(D.project)}</small></div>
-			<div class="r"><a class="out" href="#" id="lo">${t("logout")}</a></div></div>`;
-		let body = "";
-		if (view === "home") {
-			const ws = frappe.datetime.str_to_obj(D.week_start), have = D.days.map((d) => d.slice(0, 10));
-			const cells = [...Array(7).keys()].map((i) => { const d = new Date(ws); d.setDate(d.getDate() + i); const iso = frappe.datetime.obj_to_str(d).slice(0, 10);
-				return `<div class="${have.includes(iso) ? "on" : ""}">${d.toLocaleDateString(LOC[lang] || "en-IN", { weekday: "short" })}<br>${d.getDate()}</div>`; }).join("");
-			const s = D.slip;
-			body = `${langBar()}<div class="card"><b>${t("week")}</b> · ${D.days.length} ${t("days")}<div class="days" style="margin-top:8px">${cells}</div>
-				${D.today_in ? `<div class="ok" style="margin-top:10px">✓ ${t("here")}</div>` : `<button class="btn g big" id="in">${t("present")}</button>`}</div>
-				<div class="card"><b>${t("slip")}</b>${s ? `<div class="mut">${esc(frappe.datetime.str_to_user(s.week_start))} – ${esc(frappe.datetime.str_to_user(s.week_end))}</div>
-					<div class="sl"><span>${t("days")}</span><b>${s.days}</b></div><div class="sl"><span>${t("ot")}</span><b>${s.ot_hours || 0}</b></div><div class="sl"><span>${t("earned")}</span><b>${inr(s.earned)}</b></div>
-					<div class="sl"><span>${t("pf")}</span><b>− ${inr(s.pf)}</b></div><div class="sl"><span>${t("esi")}</span><b>− ${inr(s.esi)}</b></div><div class="sl"><span>${t("adv")}</span><b>− ${inr(s.advance_recovery)}</b></div>
-					<div class="sl" style="font-size:18px"><span>${t("net")}</span><b>${inr(s.net)}</b></div><div class="mut">${s.status === "Paid" ? t("paid") + (D.upi ? " · " + esc(D.upi) : "") : ""}</div>`
-					: `<p class="mut">${D.contractor ? t("contractor") : t("noslip")}</p>`}<div class="mut">${t("payday")}: ${esc(frappe.datetime.str_to_user(D.pay_day))}</div></div>
-				${D.advances.length ? `<div class="card"><b>${t("status")}</b>${D.advances.map((a) => `<div class="sl"><span>${esc(frappe.datetime.str_to_user(a.requested_on))}</span><b>${inr(a.amount)} · ${esc(st(a.status))}</b></div>`).join("")}</div>` : ""}
-				${D.contractor ? "" : `<button class="btn p big" id="adv">💵 ${t("ask")}</button>`}<button class="btn big" id="dng" style="color:#b91c1c">⚠️ ${t("danger")}</button>`;
-		} else if (view === "adv") {
-			body = `<div class="card"><small class="mut">${t("amount")} (${t("max")} ${inr(D.max_advance)})</small><input class="in" id="a" type="number" inputmode="numeric">
-				<small class="mut">${t("reason")}</small><input class="in" id="r"><button class="btn p big" id="go">${t("send")}</button></div>`;
-		} else if (view === "dng") {
-			body = `<div class="card"><small class="mut">${t("what")}</small><textarea class="in" id="w" rows="3"></textarea><small class="mut">${t("where")}</small><input class="in" id="l">
-				<label class="btn big">📷 ${t("photo")}<input type="file" accept="image/*" capture="environment" id="ph" hidden></label><button class="btn p big" id="go" style="background:#b91c1c;border-color:#b91c1c">${t("send")}</button></div>`;
-		}
-		root.innerHTML = head + `<div class="bd">${body}</div>`;
-		root.querySelectorAll("[data-l]").forEach((b) => (b.onclick = () => setLang(b.dataset.l)));
-		root.querySelector("#lo").onclick = (e) => { e.preventDefault(); token = null; try { sessionStorage.removeItem("hs_wa"); } catch (x) {} D = null; render(); };
-		const q = (s) => root.querySelector(s);
-		if (q("#back")) q("#back").onclick = () => { view = "home"; render(); };
-		if (q("#in")) q("#in").onclick = () => call("wa_checkin", { latitude: gps.lat, longitude: gps.lng }).then(load);
-		if (q("#adv")) q("#adv").onclick = () => { view = "adv"; render(); };
-		if (q("#dng")) q("#dng").onclick = () => { view = "dng"; render(); };
-		if (view === "adv") q("#go").onclick = () => call("wa_advance", { amount: q("#a").value, reason: q("#r").value }).then(() => { frappe.msgprint(t("asked")); view = "home"; load(); });
-		if (view === "dng") { let photo = null;
-			q("#ph").onchange = (e) => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, 1200 / Math.max(im.width, im.height)); c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); photo = c.toDataURL("image/jpeg", .75); }; im.src = rd.result; }; rd.readAsDataURL(f); };
-			q("#go").onclick = () => call("wa_danger", { text: q("#w").value, location: q("#l").value, photo }).then(() => { frappe.msgprint(t("reported")); view = "home"; load(); }); }
+		const TABS = [{ key: "home", label: t("tHome"), icon: "home" }, { key: "pay", label: t("tPay"), icon: "cash" }, ...(D.contractor ? [] : [{ key: "adv", label: t("tAdv"), icon: "wallet" }]), { key: "safe", label: t("tSafe"), icon: "shield" }];
+		const head = tab === "home" ? A.top({ hero: 1, avatar: D.name, kicker: t("hello"), title: D.name, sub: D.trade + " · " + D.project, right: `<button class="ha-ib" data-act="out" aria-label="${t("logout")}">${I("logout")}</button>` })
+			: A.top({ title: (TABS.find((x) => x.key === tab) || {}).label, sub: D.name, right: `<button class="ha-ib" data-act="out" aria-label="${t("logout")}">${I("logout")}</button>` });
+		root.innerHTML = head + `<main class="ha-body">${V[tab]()}</main>` + A.tabs(TABS, tab);
+		B[tab] && B[tab](); A.wireInstall(); window.scrollTo(0, 0);
 	}
-	const load = () => call("wa_me").then((d) => { D = d; let saved = null; try { saved = localStorage.getItem("hs_wa_lang"); } catch (e) {} if (!saved && T[d.language]) lang = d.language; render(); });
-	frappe.ready(() => (token ? load() : render()));
+	const slip = () => { const s = D.slip; if (!s) return `<section class="ha-card">${A.empty(D.contractor ? t("contractor") : t("noslip"), "cash")}<div class="ha-mut" style="text-align:center">${t("payday")}: ${A.date(D.pay_day)}</div></section>`;
+		return `<section class="ha-card"><h4>${I("cash")} ${t("slip")}<small>${A.date(s.week_start)} – ${A.date(s.week_end)}</small></h4><div class="ha-mut">${t("net")}</div><div class="wk-net">${A.inr(s.net)}</div>
+			${s.status === "Paid" ? `<div class="ha-note">${I("check")} ${t("paid")}${D.upi ? " · " + esc(D.upi) : ""}</div>` : ""}
+			<div style="margin-top:10px">${A.kv([[t("days"), s.days], [t("ot"), s.ot_hours || 0], [t("earned"), A.inr(s.earned)], [t("pf"), "− " + A.inr(s.pf)], [t("esi"), "− " + A.inr(s.esi)], [t("adv"), "− " + A.inr(s.advance_recovery)], [t("net"), A.inr(s.net), "tot"]])}</div>
+			<div class="ha-mut" style="margin-top:8px">${t("payday")}: ${A.date(D.pay_day)}</div></section>`; };
+	const V = {
+		home: () => { const ws = new Date(String(D.week_start).replace(" ", "T")), have = D.days.map((d) => d.slice(0, 10)), today = new Date().toISOString().slice(0, 10);
+			const cells = [...Array(7).keys()].map((i) => { const d = new Date(ws); d.setDate(d.getDate() + i); const iso = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+				return `<div class="${have.includes(iso) ? "on" : ""} ${iso === today ? "td" : ""}">${d.toLocaleDateString(LOC[lang] || "en-IN", { weekday: "short" })}<b>${d.getDate()}</b></div>`; }).join("");
+			return `${A.installCard()}<section class="ha-card"><h4>${I("calendar")} ${t("week")}<small>${D.days.length} ${t("days")}</small></h4><div class="wk-days">${cells}</div>
+				${D.today_in ? `<div class="ha-note" style="margin-top:12px">${I("check")} ${t("here")}</div>` : `<button class="ha-btn g" id="in">${I("pin")} ${t("present")}</button>`}</section>
+				<div class="ha-tiles" style="grid-template-columns:repeat(${D.contractor ? 2 : 3},1fr)"><button class="ha-tile" data-act="go" data-arg="pay"><i class="c-green">${I("cash")}</i><b>${t("tPay")}</b><span>${D.slip ? A.inr(D.slip.net) : "—"}</span></button>
+				${D.contractor ? "" : `<button class="ha-tile" data-act="go" data-arg="adv"><i class="c-blue">${I("wallet")}</i><b>${t("tAdv")}</b><span>${t("max")} ${A.inr(D.max_advance)}</span></button>`}
+				<button class="ha-tile" data-act="go" data-arg="safe"><i class="c-red">${I("alert")}</i><b>${t("tSafe")}</b><span>${t("danger")}</span></button></div>
+				<div class="ha-sec">${t("lang")}</div>${langBar()}`; },
+		pay: () => slip(),
+		adv: () => `<section class="ha-card"><h4>${I("wallet")} ${t("ask")}</h4><label class="ha-f"><span>${t("amount")} (${t("max")} ${A.inr(D.max_advance)})</span><input class="ha-in" id="a" type="number" inputmode="numeric"></label>
+			<label class="ha-f"><span>${t("reason")}</span><input class="ha-in" id="r"></label><button class="ha-btn p" id="go">${I("send")} ${t("send")}</button></section>
+			${D.advances.length ? `<div class="ha-sec">${t("status")}</div><section class="ha-card ha-list">${D.advances.map((a) => A.item({ icon: "wallet", tone: a.status === "Paid" ? "c-green" : a.status === "Approved" ? "c-blue" : "c-amber", title: A.inr(a.amount), sub: A.date(a.requested_on), value: A.pill(st(a.status), a.status === "Paid" ? "green" : a.status === "Approved" ? "blue" : "orange") })).join("")}</section>` : ""}`,
+		safe: () => `<section class="ha-card"><h4>${I("alert")} ${t("danger")}</h4><label class="ha-f"><span>${t("what")}</span><textarea class="ha-in" id="w" rows="3"></textarea></label>
+			<label class="ha-f"><span>${t("where")}</span><input class="ha-in" id="l"></label><label class="ha-btn">${I("camera")} <span id="phl">${t("photo")}</span><input type="file" accept="image/*" capture="environment" id="ph" hidden></label>
+			<button class="ha-btn rr" id="go">${I("send")} ${t("send")}</button></section>`,
+	};
+	const B = {
+		home: () => { const b = q("#in"); if (b) b.onclick = () => call("wa_checkin", { latitude: A.gps.lat, longitude: A.gps.lng }).then(load).catch(() => {}); },
+		adv: () => { q("#go").onclick = () => call("wa_advance", { amount: q("#a").value, reason: q("#r").value }).then(() => { A.toast(t("asked")); load(); }).catch(() => {}); },
+		safe: () => { let ph = null; q("#ph").onchange = async (e) => { ph = await A.photo(e.target, 1200); q("#phl").textContent = "✓ " + t("photo"); };
+			q("#go").onclick = () => { if (!q("#w").value.trim()) return A.toast(t("what"), 1); call("wa_danger", { text: q("#w").value, location: q("#l").value, photo: ph }).then(() => { A.alert(t("reported")); tab = "home"; load(); }).catch(() => {}); }; },
+	};
+	const load = () => call("wa_me").then((d) => { D = d; let saved = null; try { saved = localStorage.getItem("hs_wa_lang"); } catch (e) {} if (!saved && T[d.language]) lang = d.language; render(); }).catch(() => {});
+	A.locate();
+	const start = () => (token ? load() : render());
+	document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start();
 })();
 </script>
 {% endblock %}

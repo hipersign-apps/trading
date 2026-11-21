@@ -16,8 +16,9 @@ TABS = [("progress", "Progress", "progress"), ("bills", "RA bills", "bills"), ("
 
 def get_context(context):
 	customer, customers, preview = PT.portal_party("Customer")
-	context.no_header = 1
-	context.no_breadcrumbs = 1
+	from hipersign_trading import apps_web
+
+	apps_web.context(context, "client")  # v1.9.2 U2: on the Hipersign app shell, installable
 	context.preview = preview
 	context.parties = customers
 	context.customer = customer
@@ -36,6 +37,8 @@ def get_context(context):
 	context.tabs = tabs
 	tab = frappe.form_dict.get("tab")
 	context.tab = tab if tab in [k for k, _l in tabs] else (tabs[0][0] if tabs else None)
+	if tab == "more":  # v1.9.2 U2: the app's "More" tab lists the sections the phone tab bar has no room for
+		context.tab = "more"
 	F = CN.fig(p.name)
 	context.F = F
 	context.kpis = [(_("Contract (revised)"), CN.inr(F.revised), _("incl. approved variations")), (_("Work done"), f"{F.pct:.1f}%", CN.inr(F.work)),

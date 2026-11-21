@@ -34,6 +34,26 @@ GROUPS = [
 		"BOM Operations Time"]),
 ]
 
+# v1.9.2 U5: a construction edition (Foundation, Structure, Capstone) — an Indian contractor's reports, no UAE VAT or factory
+GROUPS_CN = [
+	("billing", "Billing & receivables", "receipt", ["Accounts Receivable", "Accounts Receivable Summary", "Sales Register", "Customer Ledger Summary",
+		"Payment Period Based On Invoice Date"]),
+	("procurement", "Procurement & stores", "shopping-cart", ["Purchase Order Analysis", "Purchase Register", "Supplier Quotation Comparison", "Accounts Payable",
+		"Accounts Payable Summary", "Supplier Ledger Summary", "Stock Balance", "Stock Ledger", "Purchase Receipt Trends", "Procurement Tracker"]),
+	("finance", "Finance", "banknote", ["General Ledger", "Trial Balance", "Profit and Loss Statement", "Balance Sheet", "Cash Flow", "Bank Reconciliation Statement",
+		"Budget Variance Report", "Consolidated Financial Statement"]),
+	("gst", "GST & TDS", "percent", ["GSTR-1", "GSTR-3B Details", "GST Sales Register Beta", "GST Purchase Register", "GST Itemised Sales Register",
+		"GST Itemised Purchase Register", "GST Balance", "Tax Withholding Details", "TDS Computation Summary"]),
+	("hr", "HR & payroll", "user", ["Monthly Attendance Sheet", "Employee Leave Balance", "Employee Leave Balance Summary", "Salary Register", "Employee Advance Summary"]),
+	("projects", "Projects", "hard-hat", ["Project Summary", "Project wise Stock Tracking", "Delayed Tasks Summary"]),
+]
+
+
+def _groups():
+	from hipersign_trading.navigation import construction_only
+
+	return GROUPS_CN if construction_only() else GROUPS
+
 
 def _favs():
 	try:
@@ -44,7 +64,8 @@ def _favs():
 
 @frappe.whitelist()
 def get_reports():
-	names = {n for g in GROUPS for n in g[3]}
+	G = _groups()
+	names = {n for g in G for n in g[3]}
 	meta = {r.name: r for r in frappe.get_all("Report", filters={"name": ["in", list(names)], "disabled": 0},
 		fields=["name", "ref_doctype", "report_type", "module", "add_total_row"])}
 	allowed = {}
@@ -55,7 +76,7 @@ def get_reports():
 		except Exception:
 			pass
 	groups = []
-	for key, label, icon, reps in GROUPS:
+	for key, label, icon, reps in G:
 		items = [{"name": n, "label": _(n), "doctype": _(allowed[n].ref_doctype or ""), "type": allowed[n].report_type} for n in reps if n in allowed]
 		if items:
 			groups.append({"key": key, "label": _(label), "icon": icon, "reports": items})

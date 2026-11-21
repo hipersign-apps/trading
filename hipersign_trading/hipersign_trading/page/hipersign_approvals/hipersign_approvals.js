@@ -59,8 +59,8 @@ frappe.pages["hipersign-approvals"].on_page_load = function (wrapper) {
 				ui.card(
 					__("Routing rules in force"),
 					`<p class="text-muted" style="margin:0 0 8px">${__("Thresholds, approvers and the rule that routes each document are kept in Hipersign Settings and the workflows.")}</p>
-					<button class="btn btn-xs btn-default" data-hs-route='["Form","Hipersign Settings"]'>${__("Hipersign Settings")}</button>
-					<button class="btn btn-xs btn-default" data-hs-route='["List","Workflow"]'>${__("Workflows")}</button>`,
+					<button class="btn btn-xs btn-default" data-hs-route='["hipersign-settings-hub"]'>${__("Hipersign Settings")}</button>
+					<button class="btn btn-xs btn-default" data-hs-route='["hipersign-settings-hub"]'>${__("Workflows")}</button>`,
 					{ icon: "workflow" }
 				)
 		);

@@ -16,7 +16,7 @@ from hipersign_trading.utils import can_read, settings
 SEV_ORDER = {"High": 0, "Medium": 1, "Low": 2}
 CATEGORIES = [
 	"Customs documents", "Stock", "Slow-moving stock", "Receivables", "Cheques", "VAT", "Margin", "Employee documents",
-	"Letters of credit", "Bank guarantees", "Company compliance", "KYC & licences", "Document exceptions",
+	"Letters of credit", "Bank guarantees", "Company compliance", "KYC & licences", "Document exceptions", "Construction",
 ]
 
 
@@ -286,8 +286,24 @@ def rule_waivers(company):
 	return out
 
 
+def rule_construction(company):
+	"""v1.9.2 U5: the Construction Tracker's red flags (advance not received, risks past review, overdue tasks, gaps …) as alerts."""
+	from hipersign_trading.api import construction as CN
+
+	out = []
+	for p in frappe.get_all("Project", filters={"hs_cn": 1, "status": ["!=", "Cancelled"]}, fields=["name", "project_name"]) if frappe.get_meta("Project").has_field("hs_cn") else []:
+		for i, f in enumerate(CN.flags(p.name)):
+			dt, dn = (f.get("open") or [None, None])[:2]
+			out.append(dict(key=f"cn:{p.name}:{dt}:{dn}:{i}", severity="High" if f.get("lvl") == "red" else "Medium", category="Construction",
+				title=f"{p.project_name} — {f['text']}", evidence=[[_("Project"), p.name]], consequence=_("The contract is off its plan at this step."),
+				recommendation=_("Open the record and act, or note why it can wait."), doctype=dt or "Project", name=dn or p.name))
+	return out
+
+
 RULES = [rule_customs, rule_stock, rule_slow_moving, rule_receivables, rule_cheques, rule_vat, rule_margin, rule_employee_docs,
-	rule_lc, rule_bg, rule_company_docs, rule_kyc, rule_waivers]
+	rule_lc, rule_bg, rule_company_docs, rule_kyc, rule_waivers, rule_construction]
+# v1.9.2 U5: rules for a trading company, left out on a construction edition (and the construction rule only there)
+CN_SKIP = ("rule_customs", "rule_stock", "rule_slow_moving", "rule_vat", "rule_margin", "rule_lc", "rule_waivers")
 
 
 # v1.5.6 (SET-05): a switched-off feature raises no alerts
@@ -298,9 +314,14 @@ RULE_FEATURE = {"rule_customs": "imports", "rule_cheques": "pdc", "rule_lc": "lc
 def evaluate(company=None):
 	from hipersign_trading.features import feature_on
 
+	from hipersign_trading.navigation import construction_only
+
+	cn = construction_only()
 	out = []
 	for rule in RULES:
 		if RULE_FEATURE.get(rule.__name__) and not feature_on(RULE_FEATURE[rule.__name__]):
+			continue
+		if (cn and rule.__name__ in CN_SKIP) or (not cn and rule.__name__ == "rule_construction"):
 			continue
 		frappe.db.savepoint("hs_alert_rule")
 		try:

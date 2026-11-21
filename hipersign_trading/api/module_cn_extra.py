@@ -210,9 +210,12 @@ def evm_rows(tab, chip, q=None):
 
 
 # ================================================================ Accounts › Approval matrix, Notification rules, more standard screens
+# v1.9.2 U5: the India Compliance filing tools stay tools; the staff lists open the Payroll page's Attendance & leave tab
 EXTRA_LINKS = [("GSTR-1 (India Compliance)", "GSTR-1", "app/gstr-1"), ("GSTR-2B reconciliation", "Purchase Reconciliation Tool", "app/purchase-reconciliation-tool"),
-	("e-Way bills", "e-Waybill Log", "app/e-waybill-log"), ("GST return log", "GST Return Log", "app/gst-return-log"), ("Leave applications", "Leave Application", "app/leave-application"),
-	("Attendance", "Attendance", "app/attendance"), ("Employee advances (loans)", "Employee Advance", "app/employee-advance"), ("Salary slips", "Salary Slip", "app/salary-slip")]
+	("GST return log", "GST Return Log", "app/gst-return-log")]
+EXTRA_TABS = [("e-Way bills", "e-Waybill Log", ["hipersign-cn-tax"], {"hs_tab": "einv"}), ("Leave applications", "Leave Application", ["hipersign-cn-payroll"], {"hs_tab": "att", "hs_chip": "leave"}),
+	("Attendance", "Attendance", ["hipersign-cn-payroll"], {"hs_tab": "att", "hs_chip": "att"}), ("Employee advances (loans)", "Employee Advance", ["hipersign-cn-payroll"], {"hs_tab": "att", "hs_chip": "adv"}),
+	("Staff payroll", "Staff Payroll", ["hipersign-cn-payroll"], {"hs_tab": "run"})]
 
 
 def acc_m(m):
@@ -227,9 +230,11 @@ def acc_rows_wrap(base):
 		if tab == "rep":
 			r = base(tab, chip, q)
 			r["rows"] = [x for x in r["rows"] if x["cells"][0] != _("Approval")]
-			r["rows"] += [{"cells": [_("Statement"), _(n), {"url": "/" + route, "label": _("Open")}]} for n, dt, route in EXTRA_LINKS if frappe.db.exists("DocType", dt)
+			r["rows"] += [{"cells": [_("Filing tool"), _(n), {"url": "/" + route, "label": _("Open")}]} for n, dt, route in EXTRA_LINKS if frappe.db.exists("DocType", dt)
 				and frappe.has_permission(dt, "read")]
-			r["title"] = _("Statements — ERPNext, India Compliance and HRMS screens")
+			r["rows"] += [{"cells": [_("Staff & logistics"), _(n), {"buttons": [{"label": _("Open"), "route": route, "options": opts}]}]} for n, dt, route, opts in EXTRA_TABS
+				if frappe.db.exists("DocType", dt) and frappe.has_permission(dt, "read")]
+			r["title"] = _("Statements, filing tools and staff lists")
 			return r
 		if tab not in ("am", "nt"):
 			return base(tab, chip, q)
@@ -251,7 +256,7 @@ def acc_rows_wrap(base):
 		for n in X.notifications():
 			ch = [x for x, on in ((_("In-app"), n.send_system_notification or n.channel == "System Notification"), (_("E-mail"), n.channel == "Email"), (_("SMS"), n.channel == "SMS"),
 				(_("Slack"), n.channel == "Slack")) if on]
-			rows.append({"dt": "Notification", "name": n.name, "cells": [{"main": n.subject or n.name, "sub": f"{n.document_type} · {_(n.event)}"}, ", ".join(ch) or "—",
+			rows.append({"cells": [{"main": n.subject or n.name, "sub": f"{n.document_type} · {_(n.event)}"}, ", ".join(ch) or "—",
 				{"buttons": [M._btn(_("On") if n.enabled else _("Off"), "nt_toggle", n.name, bool(n.enabled))]}]})
 		return {"title": _("Notification rules — which events notify whom, on which channel"), "cols": COLS(_("Event"), _("Channels"), _("On")), "rows": rows, "nototal": 1,
 			"actions": [{"label": _("New rule"), "new": "Notification", "primary": 1}], "empty": _("No notification rules for the construction records yet.")}

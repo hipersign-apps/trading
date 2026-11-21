@@ -3,107 +3,118 @@
 {% block navbar %}{% endblock %}
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "templates/includes/cn_portal_style.html" %}{% endblock %}
+{% block style %}{% include "templates/includes/hs_app_head.html" %}{% endblock %}
 {% block content %}
+{#- v1.9.2 U2: the subcontractor app on the Hipersign app shell (was a portal page) — same data and server calls -#}
 {% set INR = {"fieldtype": "Currency", "options": "INR"} %}
-<div class="cw">
-	{% if preview %}<div class="pv">👁 {{ _("Preview — what the subcontractor sees. Actions are switched off here.") }}
-		<select class="sel" onchange="location.href='/cn-partner?party='+encodeURIComponent(this.value)" style="margin-left:auto">
-		{% for c in parties %}<option value="{{ c }}" {{ "selected" if c == supplier }}>{{ c }}</option>{% endfor %}</select></div>{% endif %}
-	<div class="hd"><div><small>{{ _("Partner portal") }}</small><b>{{ supplier }}</b></div><div class="r">{% if not preview %}<a class="out" href="/?cmd=web_logout">{{ _("Log out") }}</a>{% endif %}</div></div>
-	<div class="kp">{% for l, v, s in kpis %}<div><small>{{ l }}</small><b>{{ v }}</b><span>{{ s }}</span></div>{% endfor %}</div>
-	{% if held %}<div class="card" style="border-color:#fecaca;background:#fff7f7"><b style="color:#b91c1c">{{ _("{0} bill(s) on hold").format(held|length) }}</b>
-		<div class="mut">{{ _("Upload last month's wage register, PF ECR and ESI challan under Labour documents — the hold is released once they are verified.") }}</div></div>{% endif %}
-	<div class="tb">{% for k, l in tabs %}<a class="{{ 'on' if k == tab }}" href="/cn-partner?party={{ supplier|urlencode }}&tab={{ k }}">{{ l }}</a>{% endfor %}</div>
-
-	{% if tab == "orders" %}
-	<div class="card"><h4>{{ _("Work orders") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Order") }}</th><th>{{ _("Project") }}</th><th>{{ _("Kind") }}</th><th class="n">{{ _("Value") }}</th><th>{{ _("Terms") }}</th><th>{{ _("Status") }}</th></tr>
-	{% for w in wos %}<tr><td><b>{{ w.name }}</b><div class="mut">{{ w.scope }}</div></td><td>{{ w.project_name }}</td><td>{{ _(w.kind) }}</td><td class="n">{{ frappe.format(w.value, INR) }}</td>
-		<td class="mut">{{ _("Retention {0}% · TDS {1}%").format(w.retention_pct|round(1), w.tds_pct|round(1)) }}</td><td><span class="pill {{ 'green' if w.status == 'Active' else '' }}">{{ _(w.status) }}</span></td></tr>
-	{% else %}<tr><td colspan="6" class="mut">{{ _("No work orders.") }}</td></tr>{% endfor %}</table></div></div>
-
+{% set base = "/cn-partner?party=" ~ (supplier|urlencode) %}
+{% set ICONS = {"orders": "clipboard", "bills": "bill", "payments": "cash", "labour": "users", "photos": "camera", "messages": "chat", "more": "more"} %}
+{% set SHORT = {"orders": _("Orders"), "bills": _("Bills"), "payments": _("Payments"), "labour": _("Labour"), "photos": _("Photos"), "messages": _("Messages")} %}
+{% set main = tabs[:4] if tabs|length > 5 else tabs %}
+{% set rest = tabs[4:] if tabs|length > 5 else [] %}
+{% set cur = tab if (tab == "more" or tab in (main|map(attribute=0)|list)) else "more" %}
+{% macro pill(t, tone) %}<span class="ha-pill {{ tone }}">{{ t }}</span>{% endmacro %}
+<div class="ha-app wide" id="ap">
+	{% if preview %}<div class="ha-preview">👁 {{ _("Preview — what the subcontractor sees. Actions are switched off.") }}
+		<select onchange="location.href='/cn-partner?party='+encodeURIComponent(this.value)">{% for c in parties %}<option value="{{ c }}" {{ "selected" if c == supplier }}>{{ c }}</option>{% endfor %}</select></div>{% endif %}
+	<div class="ha-top hero"><span class="ha-av">{{ (supplier or "?")[:1] }}</span><div class="t"><small>{{ _("Partner app") }}</small><b>{{ supplier }}</b></div>
+		{% if not preview %}<a class="ha-ib" href="/?cmd=web_logout" aria-label="{{ _('Log out') }}"><span data-i="logout"></span></a>{% endif %}
+		<div class="x"><div class="ha-hstats">{% for l, v, s in kpis[:3] %}<div><b>{{ v }}</b><small>{{ l }}</small></div>{% endfor %}</div></div></div>
+	<nav class="ha-tabs">{% for k, l in main %}<a class="ha-tab {{ 'on' if k == cur }}" href="{{ base }}&tab={{ k }}"><span data-i="{{ ICONS.get(k, 'more') }}"></span><span>{{ SHORT.get(k, l) }}</span></a>{% endfor %}
+		{% for k, l in rest %}<a class="ha-tab w {{ 'on' if k == tab }}" href="{{ base }}&tab={{ k }}"><span data-i="{{ ICONS.get(k, 'more') }}"></span><span>{{ SHORT.get(k, l) }}</span></a>{% endfor %}
+		{% if rest %}<a class="ha-tab mo {{ 'on' if cur == 'more' }}" href="{{ base }}&tab=more"><span data-i="more"></span><span>{{ _("More") }}</span></a>{% endif %}</nav>
+	<main class="ha-body">
+	{% if held %}<div class="ha-note bad"><span data-i="alert"></span><span>{{ _("{0} bill(s) on hold").format(held|length) }} — {{ _("upload last month's wage register, PF ECR and ESI challan under Labour documents; the hold is released once they are verified.") }}</span></div>{% endif %}
+	{% if tab == "more" %}
+		<section class="ha-card ha-list">{% for k, l in rest %}<a class="ha-item" href="{{ base }}&tab={{ k }}"><span class="ic c-violet" data-i="{{ ICONS.get(k, 'more') }}"></span><span class="m"><b>{{ l }}</b></span><span class="chev" data-i="chev"></span></a>{% endfor %}</section>
+	{% elif tab == "orders" %}
+		<div class="ha-stats">{% for l, v, s in kpis %}<div class="ha-stat"><small>{{ l }}</small><b>{{ v }}</b>{% if s %}<span>{{ s }}</span>{% endif %}</div>{% endfor %}</div>
+		<div class="ha-sec">{{ _("Work orders") }}</div>
+		{% for w in wos %}<section class="ha-card"><h4><span data-i="clipboard"></span>{{ w.name }}<small>{{ pill(_(w.status), 'green' if w.status == 'Active' else '') }}</small></h4>
+			<div style="font-weight:600">{{ w.scope }}</div><div class="ha-mut">{{ w.project_name }} · {{ _(w.kind) }}</div>
+			<div style="margin-top:6px"><div class="ha-kv"><span>{{ _("Terms") }}</span><b>{{ _("Retention {0}% · TDS {1}%").format(w.retention_pct|round(1), w.tds_pct|round(1)) }}</b></div>
+			<div class="ha-kv tot"><span>{{ _("Value") }}</span><b>{{ frappe.format(w.value, INR) }}</b></div></div>
+			{% if w.status == "Active" and "bills" in (tabs|map(attribute=0)|list) %}<a class="ha-btn p" href="{{ base }}&tab=bills&wo={{ w.name }}"><span data-i="plus"></span>{{ _("New running bill") }}</a>{% endif %}</section>
+		{% else %}<section class="ha-card"><div class="ha-empty">{{ _("No work orders.") }}</div></section>{% endfor %}
 	{% elif tab == "bills" %}
-	{% if form_wo %}
-	<div class="card"><h4>{{ _("New running bill — {0}").format(form_wo.name) }}</h4><p class="mut">{{ _("Enter the quantity done in this period. The total cannot go above the work order + 10%.") }}</p>
-		<div class="tw"><table class="t"><tr><th>{{ _("Item") }}</th><th class="n">{{ _("Rate") }}</th><th class="n">{{ _("WO qty") }}</th><th class="n">{{ _("Billed so far") }}</th><th class="n">{{ _("This bill") }}</th></tr>
-		{% for i in form_items %}<tr><td><b>{{ i.item_no }}</b> {{ i.description }}</td><td class="n">{{ frappe.format(i.rate, INR) }}</td><td class="n">{{ i.qty }} {{ i.unit }}</td><td class="n">{{ i.prev }}</td>
-			<td class="n"><input type="number" step="any" min="0" max="{{ i.left }}" class="in q" data-item="{{ i.item_no }}" style="width:110px;text-align:right"></td></tr>{% endfor %}</table></div>
-		<div class="row"><div><small class="mut">{{ _("Your invoice no.") }}</small><input class="in" id="inv"></div><div><small class="mut">{{ _("Work up to") }}</small><input class="in" type="date" id="upto" value="{{ today }}"></div></div>
-		<button class="btn p" {{ "disabled" if preview }} onclick="spBill('{{ form_wo.name }}')">{{ _("Submit bill") }}</button> <a class="btn" href="/cn-partner?party={{ supplier|urlencode }}&tab=bills">{{ _("Cancel") }}</a></div>
-	{% else %}
-	<div class="card"><b>{{ _("New running bill") }}</b> {% for w in active %}<a class="btn" style="margin:4px" href="/cn-partner?party={{ supplier|urlencode }}&tab=bills&wo={{ w.name }}">{{ w.name }} · {{ w.project_name }}</a>{% else %}<span class="mut">{{ _("No active work order.") }}</span>{% endfor %}</div>
-	{% endif %}
-	<div class="card"><h4>{{ _("Running bills") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Bill") }}</th><th>{{ _("Status") }}</th><th class="n">{{ _("Gross") }}</th><th class="n">{{ _("GST") }}</th><th class="n">{{ _("TDS") }}</th><th class="n">{{ _("Retention") }}</th><th class="n">{{ _("Net") }}</th></tr>
-	{% for b in bills %}<tr><td><b>{{ b.work_order }} / {{ b.bill_no }}</b><div class="mut">{{ frappe.format(b.bill_date, {"fieldtype": "Date"}) }}{% if b.supplier_invoice_no %} · {{ b.supplier_invoice_no }}{% endif %}</div></td>
-		<td>{% if b.status == "Draft" %}<span class="pill orange">{{ _("Verified — with the QS") if b.partner_verified else _("Submitted — being verified") }}</span>{% else %}<span class="pill {{ 'green' if b.status == 'Paid' else 'blue' }}">{{ _(b.status) }}</span>{% endif %}
-			{% if b.compliance_hold %}<div><span class="pill red">{{ _("On hold — labour documents") }}</span></div>{% endif %}</td>
-		<td class="n">{{ frappe.format(b.gross, INR) }}</td><td class="n">{{ frappe.format(b.gst_amount, INR) }}</td><td class="n">{{ frappe.format(b.tds, INR) }}</td><td class="n">{{ frappe.format(b.retention, INR) }}</td><td class="n"><b>{{ frappe.format(b.net_payable, INR) }}</b></td></tr>
-	{% else %}<tr><td colspan="7" class="mut">{{ _("No bills yet.") }}</td></tr>{% endfor %}</table></div></div>
-
+		{% if form_wo %}
+		<section class="ha-card"><h4><span data-i="bill"></span>{{ _("New running bill") }}<small>{{ form_wo.name }}</small></h4><p class="ha-mut" style="margin-top:0">{{ _("Enter the quantity done in this period. The total cannot go above the work order + 10%.") }}</p>
+			{% for i in form_items %}<div class="ha-kv" style="display:block;padding:10px 0"><b style="display:block;text-align:left">{{ i.item_no }} · {{ i.description }}</b>
+				<div class="ha-mut">{{ frappe.format(i.rate, INR) }} / {{ i.unit }} · {{ _("WO") }} {{ i.qty }} · {{ _("billed so far") }} {{ i.prev }}</div>
+				<input type="number" step="any" min="0" max="{{ i.left }}" inputmode="decimal" class="ha-in q" data-item="{{ i.item_no }}" placeholder="{{ _('Quantity this bill') }} ({{ i.unit }})" style="margin-top:6px"></div>{% endfor %}
+			<div class="ha-row"><label class="ha-f"><span>{{ _("Your invoice no.") }}</span><input class="ha-in" id="inv"></label><label class="ha-f"><span>{{ _("Work up to") }}</span><input class="ha-in" type="date" id="upto" value="{{ today }}"></label></div>
+			<button class="ha-btn p" {{ "disabled" if preview }} data-act="bill" data-arg="{{ form_wo.name }}"><span data-i="send"></span>{{ _("Submit bill") }}</button><a class="ha-btn" href="{{ base }}&tab=bills">{{ _("Cancel") }}</a></section>
+		{% else %}
+		<section class="ha-card"><h4><span data-i="plus"></span>{{ _("New running bill") }}</h4><div class="ha-list">{% for w in active %}<a class="ha-item" href="{{ base }}&tab=bills&wo={{ w.name }}"><span class="ic c-violet" data-i="clipboard"></span><span class="m"><b>{{ w.name }}</b><span>{{ w.project_name }}</span></span><span class="chev" data-i="chev"></span></a>
+			{% else %}<div class="ha-empty">{{ _("No active work order.") }}</div>{% endfor %}</div></section>
+		{% endif %}
+		<div class="ha-sec">{{ _("Running bills") }}</div>
+		{% for b in bills %}<section class="ha-card"><h4><span data-i="bill"></span>{{ b.work_order }} / {{ b.bill_no }}<small>{% if b.status == "Draft" %}{{ pill(_("With the QS") if b.partner_verified else _("Being verified"), "orange") }}{% else %}{{ pill(_(b.status), 'green' if b.status == 'Paid' else 'blue') }}{% endif %}</small></h4>
+			<div class="ha-mut">{{ frappe.format(b.bill_date, {"fieldtype": "Date"}) }}{% if b.supplier_invoice_no %} · {{ b.supplier_invoice_no }}{% endif %}</div>
+			{% if b.compliance_hold %}<div style="margin-top:6px">{{ pill(_("On hold — labour documents"), "red") }}</div>{% endif %}
+			<div style="margin-top:6px"><div class="ha-kv"><span>{{ _("Gross") }}</span><b>{{ frappe.format(b.gross, INR) }}</b></div><div class="ha-kv"><span>{{ _("GST") }}</span><b>{{ frappe.format(b.gst_amount, INR) }}</b></div>
+			<div class="ha-kv"><span>{{ _("TDS") }}</span><b>− {{ frappe.format(b.tds, INR) }}</b></div><div class="ha-kv"><span>{{ _("Retention") }}</span><b>− {{ frappe.format(b.retention, INR) }}</b></div>
+			<div class="ha-kv tot"><span>{{ _("Net") }}</span><b>{{ frappe.format(b.net_payable, INR) }}</b></div></div></section>
+		{% else %}<section class="ha-card"><div class="ha-empty">{{ _("No bills yet.") }}</div></section>{% endfor %}
 	{% elif tab == "payments" %}
-	<div class="card"><h4>{{ _("Payments") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Date") }}</th><th>{{ _("Reference") }}</th><th>{{ _("Mode") }}</th><th class="n">{{ _("Amount") }}</th></tr>
-	{% for p in payments %}<tr><td>{{ frappe.format(p.posting_date, {"fieldtype": "Date"}) }}</td><td>{{ p.reference_no or p.name }}</td><td>{{ p.mode_of_payment or "—" }}</td><td class="n">{{ frappe.format(p.paid_amount, INR) }}</td></tr>
-	{% else %}<tr><td colspan="4" class="mut">{{ _("No payments yet.") }}</td></tr>{% endfor %}</table></div>
-	<p class="mut">{{ _("TDS under section 194C is deducted from each bill and deposited by the 7th of the next month; retention is released after the defects period.") }}</p></div>
-
+		<section class="ha-card ha-list">{% for p in payments %}<div class="ha-item"><span class="ic c-green" data-i="cash"></span><span class="m"><b>{{ p.reference_no or p.name }}</b><span>{{ frappe.format(p.posting_date, {"fieldtype": "Date"}) }} · {{ p.mode_of_payment or "—" }}</span></span><span class="v">{{ frappe.format(p.paid_amount, INR) }}</span></div>
+		{% else %}<div class="ha-empty">{{ _("No payments yet.") }}</div>{% endfor %}</section>
+		<div class="ha-note info"><span data-i="shield"></span><span>{{ _("TDS under section 194C is deducted from each bill and deposited by the 7th of the next month; retention is released after the defects period.") }}</span></div>
 	{% elif tab == "labour" %}
-	<div class="card"><h4>{{ _("Upload labour documents") }}</h4><p class="mut">{{ _("As principal employer we hold a labour contractor's payment until last month's wage register, PF ECR and ESI challan are in.") }}</p>
-		<div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="lc-p">{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div>
-		<div><small class="mut">{{ _("Month") }}</small><select class="in" id="lc-m">{% for m in months %}<option value="{{ m }}">{{ m.strftime("%B %Y") }}</option>{% endfor %}</select></div>
-		<div><small class="mut">{{ _("Workers") }}</small><input class="in" type="number" id="lc-w"></div></div>
-		<div class="row"><div><small class="mut">{{ _("Wage register") }}</small><input class="in" type="file" id="lc-1" accept="image/*,application/pdf"></div>
-		<div><small class="mut">{{ _("PF ECR") }}</small><input class="in" type="file" id="lc-2" accept="image/*,application/pdf"></div>
-		<div><small class="mut">{{ _("ESI challan") }}</small><input class="in" type="file" id="lc-3" accept="image/*,application/pdf"></div></div>
-		<button class="btn p" {{ "disabled" if preview }} onclick="spLc()">{{ _("Upload") }}</button></div>
-	<div class="card"><h4>{{ _("Documents sent") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Month") }}</th><th>{{ _("Project") }}</th><th>{{ _("Workers") }}</th><th>{{ _("Files") }}</th><th>{{ _("Status") }}</th></tr>
-	{% for c in lcs %}<tr><td>{{ c.month.strftime("%b %Y") }}</td><td>{{ c.project }}</td><td>{{ c.workers or "—" }}</td>
-		<td class="mut">{{ [c.wage_register_file and _("wage register"), c.pf_ecr_file and _("PF ECR"), c.esi_file and _("ESI")]|select|join(", ") or "—" }}</td>
-		<td><span class="pill {{ 'green' if c.status == 'Complete' else 'orange' }}">{{ _("Verified") if c.status == "Complete" else (_("Being verified") if c.partner_submitted else _("Missing")) }}</span></td></tr>
-	{% else %}<tr><td colspan="5" class="mut">{{ _("Nothing yet.") }}</td></tr>{% endfor %}</table></div></div>
-
+		<section class="ha-card"><h4><span data-i="users"></span>{{ _("Upload labour documents") }}</h4><p class="ha-mut" style="margin-top:0">{{ _("As principal employer we hold a labour contractor's payment until last month's wage register, PF ECR and ESI challan are in.") }}</p>
+			<label class="ha-f"><span>{{ _("Project") }}</span><select class="ha-in" id="lc-p">{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></label>
+			<div class="ha-row"><label class="ha-f"><span>{{ _("Month") }}</span><select class="ha-in" id="lc-m">{% for m in months %}<option value="{{ m }}">{{ m.strftime("%B %Y") }}</option>{% endfor %}</select></label>
+			<label class="ha-f"><span>{{ _("Workers") }}</span><input class="ha-in" type="number" inputmode="numeric" id="lc-w"></label></div>
+			{% for k, l in [("1", _("Wage register")), ("2", _("PF ECR")), ("3", _("ESI challan"))] %}<label class="ha-btn"><span data-i="file"></span><span id="lc-l{{ k }}">{{ l }}</span><input type="file" id="lc-{{ k }}" accept="image/*,application/pdf" hidden></label>{% endfor %}
+			<button class="ha-btn p" {{ "disabled" if preview }} data-act="lc"><span data-i="send"></span>{{ _("Upload") }}</button></section>
+		<div class="ha-sec">{{ _("Documents sent") }}</div><section class="ha-card ha-list">
+		{% for c in lcs %}<div class="ha-item"><span class="ic {{ 'c-green' if c.status == 'Complete' else 'c-amber' }}" data-i="file"></span><span class="m"><b>{{ c.month.strftime("%b %Y") }} · {{ c.project }}</b>
+			<span>{{ [c.wage_register_file and _("wage register"), c.pf_ecr_file and _("PF ECR"), c.esi_file and _("ESI")]|select|join(", ") or "—" }}{% if c.workers %} · {{ c.workers }} {{ _("workers") }}{% endif %}</span></span>
+			<span class="v">{{ pill(_("Verified") if c.status == "Complete" else (_("Being verified") if c.partner_submitted else _("Missing")), 'green' if c.status == 'Complete' else 'orange') }}</span></div>
+		{% else %}<div class="ha-empty">{{ _("Nothing yet.") }}</div>{% endfor %}</section>
 	{% elif tab == "photos" %}
-	<div class="card"><h4>{{ _("Send a progress photo") }}</h4><div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="ph-p">{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div>
-		<div><small class="mut">{{ _("Caption") }}</small><input class="in" id="ph-c"></div></div><input class="in" type="file" id="ph-f" accept="image/*" capture="environment">
-		<button class="btn p" {{ "disabled" if preview }} onclick="spPhoto()">{{ _("Send photo") }}</button></div>
-	<div class="card"><h4>{{ _("Photos sent") }}</h4><table class="t">{% for x in photos %}<tr><td>{{ x.caption }}</td><td>{{ x.project }}</td><td>{{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</td>
-		<td><span class="pill {{ 'green' if x.status == 'In the project log' else 'orange' }}">{{ _("Accepted") if x.status == "In the project log" else _("Being verified") }}</span></td></tr>
-		{% else %}<tr><td class="mut">{{ _("No photos yet.") }}</td></tr>{% endfor %}</table></div>
+		<section class="ha-card"><h4><span data-i="camera"></span>{{ _("Send a progress photo") }}</h4>
+			<label class="ha-f"><span>{{ _("Project") }}</span><select class="ha-in" id="ph-p">{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></label>
+			<label class="ha-f"><span>{{ _("Caption") }}</span><input class="ha-in" id="ph-c"></label>
+			<label class="ha-btn"><span data-i="camera"></span><span id="ph-l">{{ _("Take or pick a photo") }}</span><input type="file" id="ph-f" accept="image/*" capture="environment" hidden></label>
+			<button class="ha-btn p" {{ "disabled" if preview }} data-act="photo"><span data-i="send"></span>{{ _("Send photo") }}</button></section>
+		<div class="ha-sec">{{ _("Photos sent") }}</div><section class="ha-card ha-list">{% for x in photos %}<div class="ha-item"><span class="ic c-teal" data-i="image"></span><span class="m"><b>{{ x.caption }}</b><span>{{ x.project }} · {{ frappe.format(x.taken_on, {"fieldtype": "Date"}) }}</span></span>
+			<span class="v">{{ pill(_("Accepted") if x.status == "In the project log" else _("Being verified"), 'green' if x.status == 'In the project log' else 'orange') }}</span></div>
+			{% else %}<div class="ha-empty">{{ _("No photos yet.") }}</div>{% endfor %}</section>
 	{% elif tab == "messages" %}
-		<div class="card"><h4>{{ _("Write to us") }}</h4><div class="row"><div><small class="mut">{{ _("Project") }}</small><select class="in" id="mg-p"><option value="">{{ _("General") }}</option>{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></div><div><small class="mut">{{ _("Subject") }}</small><input class="in" id="mg-s"></div></div>
-			<small class="mut">{{ _("Message") }}</small><textarea class="in" id="mg-m" rows="3"></textarea>
-			<button class="btn p" {{ "disabled" if preview }} onclick="spMsg()">{{ _("Send") }}</button></div>
-		<div class="card"><h4>{{ _("Messages") }}</h4><div class="tw"><table class="t"><tr><th>{{ _("Sent") }}</th><th>{{ _("Message") }}</th><th>{{ _("Our reply") }}</th></tr>
-		{% for m in msgs %}<tr><td class="mut" style="white-space:nowrap">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }}<div>{{ m.from_name or "" }}</div></td>
-			<td><b>{{ m.subject or "" }}</b><div>{{ m.message }}</div></td><td>{% if m.reply %}{{ m.reply }}<div class="mut">{{ m.replied_by or "" }}</div>{% else %}<span class="pill orange">{{ _("Waiting for our reply") }}</span>{% endif %}</td></tr>
-		{% else %}<tr><td colspan="3" class="mut">{{ _("No messages yet.") }}</td></tr>{% endfor %}</table></div></div>
+		<section class="ha-card"><h4><span data-i="chat"></span>{{ _("Write to us") }}</h4><label class="ha-f"><span>{{ _("Project") }}</span><select class="ha-in" id="mg-p"><option value="">{{ _("General") }}</option>{% for p, n in lab_projects %}<option value="{{ p }}">{{ n }}</option>{% endfor %}</select></label>
+			<label class="ha-f"><span>{{ _("Subject") }}</span><input class="ha-in" id="mg-s"></label><label class="ha-f"><span>{{ _("Message") }}</span><textarea class="ha-in" id="mg-m" rows="3"></textarea></label>
+			<button class="ha-btn p" {{ "disabled" if preview }} data-act="msg"><span data-i="send"></span>{{ _("Send") }}</button></section>
+		<div class="ha-sec">{{ _("Messages") }}</div>
+		{% for m in msgs %}<section class="ha-card"><div class="ha-mut">{{ frappe.format(m.sent_on, {"fieldtype": "Datetime"})[:16] }} · {{ m.from_name or "" }}</div><b style="display:block;margin-top:4px">{{ m.subject or "" }}</b><div style="margin-top:2px">{{ m.message }}</div>
+			{% if m.reply %}<div class="ha-note info" style="margin-top:10px;display:block;font-weight:500"><b style="display:block">{{ m.replied_by or _("Our reply") }}</b>{{ m.reply }}</div>{% else %}<div style="margin-top:8px">{{ pill(_("Waiting for our reply"), "orange") }}</div>{% endif %}</section>
+		{% else %}<section class="ha-card"><div class="ha-empty">{{ _("No messages yet.") }}</div></section>{% endfor %}
 	{% endif %}
+	</main>
 </div>
+{% include "templates/includes/hs_app_js.html" %}
 <script>
-const M = "hipersign_trading.api.construction_portal.";
-const done = (r) => { const m = (r && r.message && (r.message.message || r.message)) || "Done"; frappe.msgprint({ message: m, indicator: "green" }); setTimeout(() => location.href = location.pathname + "?party={{ supplier|urlencode }}&tab={{ tab }}", 1800); };
-const read = (el, max) => new Promise((ok) => { const f = el && el.files[0]; if (!f) return ok(null); const rd = new FileReader();
-	rd.onload = () => { if (!f.type.startsWith("image/")) return ok(rd.result); const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
-		c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .8)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
-function spMsg() {
-	const m = document.getElementById("mg-m").value;
-	if (!m.trim()) return frappe.msgprint("{{ _('Write the message.') }}");
-	frappe.call({ method: "hipersign_trading.api.construction_extra.sp_message", args: { project: document.getElementById("mg-p").value || null, subject: document.getElementById("mg-s").value, message: m }, freeze: true, callback: done });
-}
-function spBill(wo) {
-	const q = {}; document.querySelectorAll(".q").forEach((i) => { if (+i.value) q[i.dataset.item] = +i.value; });
-	if (!Object.keys(q).length) return frappe.msgprint("{{ _('Enter the quantity done on at least one item.') }}");
-	frappe.call({ method: M + "sp_bill", args: { work_order: wo, quantities: JSON.stringify(q), invoice_no: document.getElementById("inv").value, period_to: document.getElementById("upto").value }, freeze: true, callback: done });
-}
-async function spLc() {
-	const [a, b, c] = await Promise.all([read(document.getElementById("lc-1")), read(document.getElementById("lc-2")), read(document.getElementById("lc-3"))]);
-	if (!a && !b && !c) return frappe.msgprint("{{ _('Pick at least one file.') }}");
-	frappe.call({ method: M + "sp_compliance", args: { project: document.getElementById("lc-p").value, month: document.getElementById("lc-m").value, workers: document.getElementById("lc-w").value,
-		wage_register: a, pf_ecr: b, esi: c }, freeze: true, callback: done });
-}
-async function spPhoto() {
-	const img = await read(document.getElementById("ph-f"), 1600);
-	if (!img) return frappe.msgprint("{{ _('Take or pick a photo.') }}");
-	frappe.call({ method: M + "sp_photo", args: { project: document.getElementById("ph-p").value, caption: document.getElementById("ph-c").value, image: img }, freeze: true, callback: done });
-}
+(() => {
+	const A = HSApp, M = "hipersign_trading.api.construction_portal.", root = document.getElementById("ap"), $ = (id) => document.getElementById(id);
+	root.querySelectorAll("[data-i]").forEach((s) => (s.innerHTML = A.icon(s.dataset.i)));
+	const back = () => setTimeout(() => (location.href = "{{ base }}&tab={{ tab }}"), 1200);
+	const read = (el, max) => new Promise((ok) => { const f = el && el.files[0]; if (!f) return ok(null); const rd = new FileReader();
+		rd.onload = () => { if (!f.type.startsWith("image/")) return ok(rd.result); const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
+			c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .8)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
+	["1", "2", "3"].forEach((k) => { const f = $("lc-" + k); if (f) f.onchange = () => ($("lc-l" + k).textContent = "✓ " + f.files[0].name); });
+	if ($("ph-f")) $("ph-f").onchange = () => ($("ph-l").textContent = "✓ " + $("ph-f").files[0].name);
+	A.wire(root, { act: {
+		msg: () => { const m = $("mg-m").value; if (!m.trim()) return A.toast("{{ _('Write the message.') }}", 1);
+			A.call("hipersign_trading.api.construction_extra.sp_message", { project: $("mg-p").value || null, subject: $("mg-s").value, message: m }).then((r) => { A.done(r); back(); }).catch(() => {}); },
+		bill: (wo) => { const q = {}; root.querySelectorAll(".q").forEach((i) => { if (+i.value) q[i.dataset.item] = +i.value; });
+			if (!Object.keys(q).length) return A.toast("{{ _('Enter the quantity done on at least one item.') }}", 1);
+			A.call(M + "sp_bill", { work_order: wo, quantities: JSON.stringify(q), invoice_no: $("inv").value, period_to: $("upto").value }).then((r) => { A.done(r); setTimeout(() => (location.href = "{{ base }}&tab=bills"), 1200); }).catch(() => {}); },
+		lc: async () => { const [a, b, c] = await Promise.all([read($("lc-1")), read($("lc-2")), read($("lc-3"))]);
+			if (!a && !b && !c) return A.toast("{{ _('Pick at least one file.') }}", 1);
+			A.call(M + "sp_compliance", { project: $("lc-p").value, month: $("lc-m").value, workers: $("lc-w").value, wage_register: a, pf_ecr: b, esi: c }).then((r) => { A.done(r); back(); }).catch(() => {}); },
+		photo: async () => { const img = await read($("ph-f"), 1600); if (!img) return A.toast("{{ _('Take or pick a photo.') }}", 1);
+			A.call(M + "sp_photo", { project: $("ph-p").value, caption: $("ph-c").value, image: img }).then((r) => { A.done(r); back(); }).catch(() => {}); },
+	} });
+})();
 </script>
 {% endblock %}
