@@ -198,6 +198,10 @@ def _bars_rows(d, n=6, color="blue", route=None):
 
 # ---------------------------------------------------------------- Home
 def b_home():
+	from hipersign_trading.navigation import construction_only
+
+	if construction_only():  # v1.9.2 U5
+		return b_cn_home()
 	cos, start, end, label, cur = _scope()
 	ms = _months()
 	si = _rows("Sales Invoice", _co("Sales Invoice", cos, {"docstatus": 1, "posting_date": [">=", ms[0][0]]}), ["posting_date", "base_net_total", "customer", "customer_name", "outstanding_amount", "base_grand_total", "conversion_rate"], 2000)
@@ -230,6 +234,42 @@ def b_home():
 				vals.append([round(x) for x in d])
 			return W_heat(_("Who buys when"), _("Top customers · net sales by month"), top, [m[2] for m in ms], vals, True, cur, icon="users")
 		out.append(heat)
+	return out
+
+
+def b_cn_home():
+	"""v1.9.2 U5: Home on a construction edition — certified vs received by month, projects by phase, receivables by client."""
+	from hipersign_trading.api import construction as CN
+
+	cos, start, end, label, cur = _scope()
+	ms = _months()
+	names = frappe.get_all("Project", filters={"hs_cn": 1, "status": ["!=", "Cancelled"]}, fields=["name", "project_name", "customer"])
+	out = []
+	if not names:
+		return out
+	pn = [p.name for p in names]
+	ra = _rows("RA Bill", {"project": ["in", pn], "certified_on": [">=", ms[0][0]]}, ["certified_on", "certified_amount"], 2000)
+	pe = _rows("Payment Entry", {"docstatus": 1, "payment_type": "Receive", "project": ["in", pn], "posting_date": [">=", ms[0][0]]}, ["posting_date", "paid_amount"], 2000) \
+		if frappe.get_meta("Payment Entry").has_field("project") else []
+	lb, c = _monthly([r for r in ra if r.certified_on], "certified_on", lambda r: r.certified_amount)
+	_l, r_ = _monthly(pe, "posting_date", lambda r: r.paid_amount)
+	out.append(lambda: W_trend(_("Certified and received"), _("Last 6 months · {0}").format(cur), lb, [{"name": _("Certified"), "data": c, "color": "violet"},
+		{"name": _("Received"), "data": r_, "color": "green"}], True, cur))
+	F = {p.name: CN.fig(p.name) for p in names}
+
+	def phase():
+		ph = [(_("Winning & mobilising"), lambda s: s < 11, "blue"), (_("On site"), lambda s: 11 <= s < 22, "violet"), (_("Handover & DLP"), lambda s: s >= 22, "green")]
+		rows = [{"label": l, "value": len([f for f in F.values() if t(f.step)]), "color": col, "route": ["hipersign-cn-tracker"]} for l, t, col in ph]
+		return W_donut(_("Projects by phase"), _("{0} contracts").format(len(F)), rows, len(F), _("projects"), icon="hard-hat")
+	out.append(phase)
+
+	def recv():
+		by = {}
+		for p in names:
+			by[p.customer or p.project_name] = by.get(p.customer or p.project_name, 0) + F[p.name].outstanding
+		rows = [{"label": k, "value": round(v), "color": "amber"} for k, v in _top({k: v for k, v in by.items() if v > 1}, 6)]
+		return W_bars(_("Receivables by client"), _("RA bills invoiced, not yet received"), rows, True, cur, icon="banknote")
+	out.append(recv)
 	return out
 
 

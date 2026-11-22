@@ -54,6 +54,7 @@ def cn_acc_module():
 			{"key": "cash", "label": _("Cash forecast"), "chips": []},
 			{"key": "ar", "label": _("Receivables ageing"), "chips": []},
 			{"key": "ap", "label": _("Payables ageing"), "chips": [["all", _("All")], ["msme", _("MSME")]]},
+			{"key": "inv", "label": _("Invoices & journals"), "chips": [["si", _("Sales invoices")], ["pi", _("Purchase invoices")], ["pe", _("Payments")], ["je", _("Journals")]]},
 			{"key": "rep", "label": _("Statements & matrix"), "chips": []},
 		],
 	}
@@ -65,6 +66,8 @@ def _gl_rev(project):
 
 
 def cn_acc_rows(tab, chip, q=None):
+	if tab == "inv":  # v1.9.2 U5: the invoices, payments and journals behind the old side-menu sub-items
+		return _inv_rows(chip, q)
 	co = _co()
 	cur = _cur()
 	t = getdate(today())
@@ -334,11 +337,14 @@ def cn_pay_module():
 			{"key": "run", "label": _("Monthly payroll"), "chips": []},
 			{"key": "emp", "label": _("Staff"), "chips": []},
 			{"key": "dep", "label": _("Statutory payments"), "chips": []},
+			{"key": "att", "label": _("Attendance & leave"), "chips": [["att", _("Attendance")], ["leave", _("Leave")], ["adv", _("Advances")]]},
 		],
 	}
 
 
 def cn_pay_rows(tab, chip, q=None):
+	if tab == "att":  # v1.9.2 U5: staff attendance, leave and advances (HRMS records) in the Hipersign look
+		return _att_rows(chip, q)
 	co = _co()
 	cur = _cur()
 	if tab == "emp":
@@ -378,3 +384,72 @@ def cn_pay_rows(tab, chip, q=None):
 	return {"title": _("Monthly payroll"), "cols": [{"label": _("Month")}, {"label": _("Staff")}, {"label": _("Gross"), "cls": "num"}, {"label": _("Deductions"), "cls": "num"},
 		{"label": _("TDS 192"), "cls": "num"}, {"label": _("Net"), "cls": "num"}, {"label": _("Employer cost"), "cls": "num"}, {"label": _("Status")}, {"label": ""}], "rows": rows,
 		"empty": _("No payroll yet.")}
+
+
+# ---------------------------------------------------------------- v1.9.2 U5: lists behind the old side-menu sub-items
+def _inv_rows(chip, q):
+	co, cur = _co(), _cur()
+	chip = chip if chip in ("si", "pi", "pe", "je") else "si"
+	tone = {"Paid": "green", "Submitted": "blue", "Unpaid": "orange", "Overdue": "red", "Partly Paid": "blue", "Draft": "grey", "Cancelled": "grey", "Return": "grey"}
+	rows = []
+	if chip in ("si", "pi"):
+		dt = "Sales Invoice" if chip == "si" else "Purchase Invoice"
+		party = "customer" if chip == "si" else "supplier"
+		for d in frappe.get_list(dt, filters={"company": co}, fields=["name", party, "posting_date", "project", "grand_total", "outstanding_amount", "status", "due_date"],
+				order_by="posting_date desc", limit_page_length=200) if co and _perm(dt) else []:
+			if not _q(q, d.name, d.get(party), d.project):
+				continue
+			rows.append({"dt": dt, "name": d.name, "cells": [{"main": d.get(party), "sub": d.name}, _pcell(d.project) if d.project else "—", _date(d.posting_date),
+				{"money": d.grand_total, "currency": cur}, {"money": d.outstanding_amount, "currency": cur, "sub": (_("due {0}").format(frappe.format(d.due_date, {"fieldtype": "Date"})) if d.due_date and flt(d.outstanding_amount) else "")},
+				{"pill": _(d.status), "tone": tone.get(d.status, "grey")}]})
+		return {"title": _("Sales invoices") if chip == "si" else _("Purchase invoices"), "cols": [{"label": _("Customer") if chip == "si" else _("Supplier")}, {"label": _("Project")},
+			{"label": _("Date")}, {"label": _("Total"), "cls": "num"}, {"label": _("Outstanding"), "cls": "num"}, {"label": _("Status")}], "rows": rows, "empty": _("Nothing yet.")}
+	if chip == "pe":
+		for d in frappe.get_list("Payment Entry", filters={"company": co, "docstatus": ["<", 2]}, fields=["name", "payment_type", "party", "posting_date", "paid_amount", "reference_no", "mode_of_payment", "docstatus", "project"],
+				order_by="posting_date desc", limit_page_length=200) if co and _perm("Payment Entry") else []:
+			if not _q(q, d.name, d.party, d.reference_no):
+				continue
+			rows.append({"dt": "Payment Entry", "name": d.name, "cells": [{"main": d.party or "—", "sub": d.name}, _(d.payment_type), _date(d.posting_date), {"money": d.paid_amount, "currency": cur},
+				{"main": d.mode_of_payment or "—", "sub": d.reference_no or ""}, {"pill": _("Submitted") if d.docstatus == 1 else _("Draft"), "tone": "green" if d.docstatus == 1 else "grey"}]})
+		return {"title": _("Payments"), "cols": [{"label": _("Party")}, {"label": _("Type")}, {"label": _("Date")}, {"label": _("Amount"), "cls": "num"}, {"label": _("Mode · ref")},
+			{"label": _("Status")}], "rows": rows, "empty": _("No payments yet.")}
+	for d in frappe.get_list("Journal Entry", filters={"company": co, "docstatus": ["<", 2]}, fields=["name", "voucher_type", "posting_date", "total_debit", "user_remark", "docstatus"],
+			order_by="posting_date desc", limit_page_length=200) if co and _perm("Journal Entry") else []:
+		if not _q(q, d.name, d.user_remark, d.voucher_type):
+			continue
+		rows.append({"dt": "Journal Entry", "name": d.name, "cells": [{"main": _(d.voucher_type), "sub": d.name}, _date(d.posting_date), {"money": d.total_debit, "currency": cur},
+			{"main": (d.user_remark or "")[:90]}, {"pill": _("Submitted") if d.docstatus == 1 else _("Draft"), "tone": "green" if d.docstatus == 1 else "grey"}]})
+	return {"title": _("Journals"), "cols": [{"label": _("Journal")}, {"label": _("Date")}, {"label": _("Amount"), "cls": "num"}, {"label": _("Remark")}, {"label": _("Status")}],
+		"rows": rows, "empty": _("No journals yet.")}
+
+
+def _att_rows(chip, q):
+	co, cur = _co(), _cur()
+	chip = chip if chip in ("att", "leave", "adv") else "att"
+	rows = []
+	if chip == "att":
+		for d in frappe.get_list("Attendance", filters={"company": co, "docstatus": ["<", 2]}, fields=["name", "employee_name", "attendance_date", "status", "in_time", "out_time", "leave_type"],
+				order_by="attendance_date desc", limit_page_length=200) if co and _perm("Attendance") else []:
+			if not _q(q, d.employee_name, d.status):
+				continue
+			rows.append({"dt": "Attendance", "name": d.name, "cells": [{"main": d.employee_name, "sub": d.name}, _date(d.attendance_date), d.leave_type or "—",
+				{"pill": _(d.status), "tone": {"Present": "green", "Absent": "red", "On Leave": "blue", "Half Day": "orange", "Work From Home": "blue"}.get(d.status, "grey")}]})
+		return {"title": _("Attendance"), "cols": [{"label": _("Employee")}, {"label": _("Date")}, {"label": _("Leave type")}, {"label": _("Status")}], "rows": rows,
+			"empty": _("No attendance marked yet."), "actions": [{"label": _("Mark attendance"), "new": "Attendance", "primary": 1}]}
+	if chip == "leave":
+		for d in frappe.get_list("Leave Application", filters={"company": co, "docstatus": ["<", 2]}, fields=["name", "employee_name", "leave_type", "from_date", "to_date", "total_leave_days", "status"],
+				order_by="from_date desc", limit_page_length=200) if co and _perm("Leave Application") else []:
+			if not _q(q, d.employee_name, d.leave_type):
+				continue
+			rows.append({"dt": "Leave Application", "name": d.name, "cells": [{"main": d.employee_name, "sub": d.name}, d.leave_type, {"main": f"{frappe.format(d.from_date, {'fieldtype': 'Date'})} – {frappe.format(d.to_date, {'fieldtype': 'Date'})}"},
+				d.total_leave_days, {"pill": _(d.status), "tone": {"Approved": "green", "Rejected": "red", "Open": "orange"}.get(d.status, "grey")}]})
+		return {"title": _("Leave"), "cols": [{"label": _("Employee")}, {"label": _("Leave type")}, {"label": _("Dates")}, {"label": _("Days"), "cls": "num"}, {"label": _("Status")}],
+			"rows": rows, "empty": _("No leave applications yet."), "actions": [{"label": _("New leave application"), "new": "Leave Application", "primary": 1}]}
+	for d in frappe.get_list("Employee Advance", filters={"company": co, "docstatus": ["<", 2]}, fields=["name", "employee_name", "posting_date", "advance_amount", "paid_amount", "claimed_amount", "status", "purpose"],
+			order_by="posting_date desc", limit_page_length=200) if co and _perm("Employee Advance") else []:
+		if not _q(q, d.employee_name, d.purpose):
+			continue
+		rows.append({"dt": "Employee Advance", "name": d.name, "cells": [{"main": d.employee_name, "sub": (d.purpose or "")[:60]}, _date(d.posting_date), {"money": d.advance_amount, "currency": cur},
+			{"money": d.paid_amount, "currency": cur}, {"money": d.claimed_amount, "currency": cur}, {"pill": _(d.status), "tone": {"Paid": "blue", "Claimed": "green", "Returned": "green", "Unpaid": "orange"}.get(d.status, "grey")}]})
+	return {"title": _("Employee advances"), "cols": [{"label": _("Employee")}, {"label": _("Date")}, {"label": _("Advance"), "cls": "num"}, {"label": _("Paid"), "cls": "num"},
+		{"label": _("Claimed"), "cls": "num"}, {"label": _("Status")}], "rows": rows, "empty": _("No advances yet."), "actions": [{"label": _("New advance"), "new": "Employee Advance", "primary": 1}]}

@@ -1,0 +1,125 @@
+{#- v1.9.2 U1: the Hipersign app shell — shared script for the five phone apps (window.HSApp). -#}
+<script>
+(() => {
+	const KEY = "{{ hs_app }}", NAME = "{{ hs_app_name }}";
+	const P = {
+		home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+		users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.7c2 .7 3.3 2.6 3.6 5.3"/>',
+		clipboard: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>',
+		camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>',
+		wallet: '<path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12v3"/><circle cx="16" cy="13.5" r="1.3"/>',
+		truck: '<path d="M2 6h11v10H2zM13 9h4l4 4v3h-8"/><circle cx="6" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/>',
+		chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
+		check: '<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
+		alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.5v.5"/>',
+		file: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/>',
+		bill: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+		image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
+		more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+		back: '<path d="M15 5 8 12l7 7"/>', chev: '<path d="m9 5 7 7-7 7"/>', logout: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
+		pin: '<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+		phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/>',
+		nav: '<path d="m3 11 18-8-8 18-2-8z"/>', plus: '<path d="M12 5v14M5 12h14"/>', download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+		hat: '<path d="M2.5 17.5h19"/><path d="M4.5 17.5V15a7.5 7.5 0 0 1 15 0v2.5"/><path d="M12 6.5v5M8.5 8v4M15.5 8v4"/>', shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
+		calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', cash: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.5M18 14.5v.5"/>',
+		send: '<path d="m4 12 16-8-6 16-2.5-6.5z"/>', progress: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/>',
+		layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>', box: '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
+		bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>', sign: '<path d="M3 17c3-1 4-8 6-8s0 8 3 8 3-4 5-4 2 3 4 3"/>',
+		x: '<path d="M6 6l12 12M18 6 6 18"/>', lang: '<path d="M4 5h8M8 3v2c0 4-2 7-5 8M6 9c1 2 3 4 6 5"/><path d="m13 21 4-10 4 10M14.5 17h5"/>',
+		wrench: '<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19l-3 1 1-3 7.5-7.5"/><path d="M14.5 6.5 11 3"/>',
+	};
+	const icon = (n, cls) => `<svg class="${cls || ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || P.more}</svg>`;
+	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+	const inr = (v) => "₹" + Math.round(+v || 0).toLocaleString("en-IN");
+	const inrS = (v) => { v = +v || 0; const a = Math.abs(v); return a >= 1e7 ? "₹" + (v / 1e7).toFixed(2) + " Cr" : a >= 1e5 ? "₹" + (v / 1e5).toFixed(1) + " L" : inr(v); };
+	const date = (d) => { if (!d) return "—"; const x = new Date(String(d).replace(" ", "T")); return isNaN(x) ? esc(d) : x.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); };
+	const when = (d) => { if (!d) return ""; const x = new Date(String(d).replace(" ", "T")), s = (Date.now() - x) / 1000; if (isNaN(x)) return ""; if (s < 60) return "just now"; if (s < 3600) return Math.round(s / 60) + " min ago";
+		if (s < 86400) return Math.round(s / 3600) + " h ago"; return date(d); };
+	const initials = (n) => String(n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+
+	// ---------------------------------------------------------------- feedback: loader, toast, sheet
+	let loads = 0, loader = null;
+	const busy = (on) => { loads += on ? 1 : -1; if (loads > 0 && !loader) { loader = document.createElement("div"); loader.className = "ha-load"; loader.innerHTML = "<i></i>"; setTimeout(() => loader && loads > 0 && document.body.appendChild(loader), 250); }
+		if (loads <= 0 && loader) { loader.remove(); loader = null; loads = 0; } };
+	const toast = (msg, bad) => { const t = document.createElement("div"); t.className = "ha-toast" + (bad ? " bad" : ""); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), bad ? 5200 : 3200); };
+	// a bottom sheet: {title, html, ok, okClass, cancel} → Promise of the sheet element (resolved on OK) or null
+	const sheet = (o) => new Promise((done) => {
+		const s = document.createElement("div"); s.className = "ha-scrim";
+		s.innerHTML = `<div class="ha-sheet" role="dialog" aria-modal="true"><div class="gr"></div>${o.title ? `<h3>${esc(o.title)}</h3>` : ""}<div class="sb">${o.html || ""}</div>
+			${o.ok ? `<button class="ha-btn ${o.okClass || "p"}" data-ok>${esc(o.ok)}</button>` : ""}<button class="ha-btn" data-no style="${o.ok ? "" : ""}">${esc(o.cancel || (o.ok ? "Cancel" : "OK"))}</button></div>`;
+		const close = (v) => { s.remove(); done(v); };
+		s.addEventListener("click", (e) => { if (e.target === s) close(null); });
+		s.querySelector("[data-no]").onclick = () => close(null);
+		const ok = s.querySelector("[data-ok]"); if (ok) ok.onclick = () => { if (o.check && !o.check(s)) return; close(s); };
+		document.body.appendChild(s); const f = s.querySelector("input,textarea,select"); f && setTimeout(() => f.focus(), 200);
+	});
+	const alert = (msg, title) => sheet({ title: title || "", html: `<p>${esc(msg)}</p>` });
+	// a form in a sheet: fields [{name, label, type: text|number|textarea|select|money, options, value, req}] → Promise of {values} or null
+	const ask = (title, fields, ok, okClass) => sheet({ title, ok: ok || "Save", okClass,
+		html: fields.map((f) => `<label class="ha-f"><span>${esc(f.label)}</span>${f.type === "textarea" ? `<textarea class="ha-in" name="${f.name}">${esc(f.value || "")}</textarea>`
+			: f.type === "select" ? `<select class="ha-in" name="${f.name}">${f.options.map((x) => `<option ${x === f.value ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>`
+			: `<input class="ha-in" name="${f.name}" ${f.type === "number" || f.type === "money" ? 'type="number" step="any" inputmode="decimal"' : ""} value="${esc(f.value == null ? "" : f.value)}">`}</label>`).join(""),
+		check: (s) => { const miss = fields.find((f) => f.req && !s.querySelector(`[name="${f.name}"]`).value.trim()); if (miss) { toast(`${miss.label}?`, 1); return false; } return true; } })
+		.then((s) => s && Object.fromEntries(fields.map((f) => [f.name, s.querySelector(`[name="${f.name}"]`).value])));
+
+	// ---------------------------------------------------------------- server calls without the desk's dialogs
+	const errText = (j, st) => { try { if (j && j._server_messages) { const m = JSON.parse(j._server_messages).map((x) => { try { return JSON.parse(x).message; } catch (e) { return x; } }); return m.join("\n").replace(/<[^>]+>/g, ""); } } catch (e) {}
+		if (j && j.exception) return String(j.exception).split(":").slice(-1)[0].trim(); return st === 403 ? "You are not allowed to do this." : "Something went wrong — please try again."; };
+	const call = (method, args, o) => { o = o || {}; o.quiet || busy(true);
+		const body = new URLSearchParams(); Object.entries(args || {}).forEach(([k, v]) => v != null && body.append(k, typeof v === "object" ? JSON.stringify(v) : v));
+		return fetch("/api/method/" + method, { method: "POST", credentials: "same-origin", headers: { "Accept": "application/json", "X-Frappe-CSRF-Token": (window.frappe && frappe.csrf_token) || "", "X-Requested-With": "XMLHttpRequest" }, body })
+			.then((r) => r.json().catch(() => ({})).then((j) => { o.quiet || busy(false); if (!r.ok || j.exc || j.exception) { const e = new Error(errText(j, r.status)); e.type = j.exc_type; e.status = r.status; throw e; } return j.message; }))
+			.catch((e) => { if (!o.quiet) { busy(false); loads = Math.max(loads, 0); } if (!o.silent) toast(e.message, 1); throw e; }); };
+	const done = (r) => toast((r && (r.message || r)) && typeof (r.message || r) === "string" ? (r.message || r) : "Done");
+
+	// ---------------------------------------------------------------- photos, GPS, signature
+	const photo = (input, max) => new Promise((ok) => { const f = input && input.files && input.files[0]; if (!f) return ok(null); const rd = new FileReader();
+		rd.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
+			c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .82)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
+	const gps = { lat: null, lng: null, text: "" };
+	const locate = () => navigator.geolocation && navigator.geolocation.getCurrentPosition((p) => { gps.lat = p.coords.latitude; gps.lng = p.coords.longitude; gps.text = gps.lat.toFixed(5) + ", " + gps.lng.toFixed(5); }, () => {}, { enableHighAccuracy: true, timeout: 15000 });
+	const signature = (cv) => { const x = cv.getContext("2d"); x.lineWidth = 3.2; x.lineCap = "round"; x.strokeStyle = "#13235b"; let dn = false, has = false;
+		const pt = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+		cv.onpointerdown = (e) => { dn = true; cv.setPointerCapture(e.pointerId); x.beginPath(); x.moveTo(...pt(e)); };
+		cv.onpointermove = (e) => { if (dn) { x.lineTo(...pt(e)); x.stroke(); has = true; } }; cv.onpointerup = () => (dn = false);
+		return { clear: () => { x.clearRect(0, 0, cv.width, cv.height); has = false; }, value: () => (has ? cv.toDataURL("image/png") : null) }; };
+
+	// ---------------------------------------------------------------- shell: top bar, tabs, install
+	// top({title, sub, back, avatar, right, hero, extra}) → HTML of the app bar
+	const top = (o) => `<div class="ha-top ${o.hero ? "hero" : ""}">${o.back ? `<button class="ha-ib" data-back aria-label="Back">${icon("back")}</button>` : o.avatar ? `<span class="ha-av">${esc(initials(o.avatar))}</span>` : ""}
+		<div class="t">${o.kicker ? `<small>${esc(o.kicker)}</small>` : ""}<b>${esc(o.title)}</b>${o.sub ? `<small>${esc(o.sub)}</small>` : ""}</div>${o.right || ""}${o.extra ? `<div class="x">${o.extra}</div>` : ""}</div>`;
+	// tabs(items [{key, label, icon, badge, href}], active) → HTML of the bottom tab bar
+	const tabs = (items, active) => `<nav class="ha-tabs" role="tablist">${items.map((t) => { const inner = `${icon(t.icon)}<span>${esc(t.label)}</span>${t.badge ? `<em>${t.badge}</em>` : ""}`;
+		return t.href ? `<a class="ha-tab ${t.key === active ? "on" : ""}" href="${esc(t.href)}" role="tab">${inner}</a>` : `<button class="ha-tab ${t.key === active ? "on" : ""}" data-tab="${esc(t.key)}" role="tab">${inner}</button>`; }).join("")}</nav>`;
+	const empty = (msg, ic) => `<div class="ha-empty">${icon(ic || "layers")}${esc(msg)}</div>`;
+	const item = (o) => { const tag = o.href ? "a" : o.act ? "button" : "div";
+		return `<${tag} class="ha-item" ${o.href ? `href="${esc(o.href)}" ${o.blank ? 'target="_blank" rel="noopener"' : ""}` : ""} ${o.act ? `data-act="${esc(o.act)}" data-arg="${esc(o.arg || "")}"` : ""}>
+		${o.icon ? `<span class="ic ${o.tone || "c-blue"}">${P[o.icon] ? icon(o.icon) : `<b>${esc(o.icon)}</b>`}</span>` : ""}<span class="m"><b>${o.title}</b>${o.sub ? `<span>${o.sub}</span>` : ""}</span>
+		${o.value != null ? `<span class="v">${o.value}</span>` : ""}${o.href || o.act ? `<span class="chev">${icon("chev")}</span>` : ""}</${tag}>`; };
+	const pill = (txt, tone) => `<span class="ha-pill ${tone || ""}">${esc(txt)}</span>`;
+	const kv = (rows) => rows.map(([k, v, cls]) => `<div class="ha-kv ${cls || ""}"><span>${esc(k)}</span><b>${v}</b></div>`).join("");
+
+	let deferred = null;
+	const installCard = () => `<div class="ha-install" id="ha-install"><img src="/assets/hipersign_trading/images/apps/${KEY}-192.png" alt=""><div><b>Install ${esc(NAME)}</b><span id="ha-install-t">Open it from your home screen, full screen.</span></div>
+		<button class="ha-btn p sm" id="ha-install-b">Install</button><button class="ha-ib" id="ha-install-x" style="background:#f1f5f9;color:#64748b;width:32px;height:32px" aria-label="Not now">${icon("x")}</button></div>`;
+	const wireInstall = () => { const c = document.getElementById("ha-install"); if (!c) return; const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+		let dismissed = false; try { dismissed = localStorage.getItem("ha-inst-" + KEY) === "no"; } catch (e) {}
+		if (standalone || dismissed) return;
+		const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+		if (deferred) c.classList.add("on");
+		else if (ios) { c.classList.add("on"); document.getElementById("ha-install-t").textContent = "Tap Share, then “Add to Home Screen”."; document.getElementById("ha-install-b").style.display = "none"; }
+		document.getElementById("ha-install-b").onclick = () => deferred && deferred.prompt().then(() => { deferred = null; c.classList.remove("on"); });
+		document.getElementById("ha-install-x").onclick = () => { c.classList.remove("on"); try { localStorage.setItem("ha-inst-" + KEY, "no"); } catch (e) {} }; };
+	window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; wireInstall(); });
+	if ("serviceWorker" in navigator && location.protocol === "https:" || location.hostname === "localhost") {
+		const scope = { site: "/cn-site", worker: "/cn-worker", driver: "/driver", client: "/cn-client", partner: "/cn-partner" }[KEY];
+		scope && navigator.serviceWorker && navigator.serviceWorker.register("/hs-app-sw.js", { scope }).catch(() => {});
+	}
+	// one click handler per app root: [data-back], [data-tab], [data-act]
+	const wire = (root, h) => { root.onclick = (e) => { const b = e.target.closest("[data-back],[data-tab],[data-act]"); if (!b || !root.contains(b)) return;
+		if (b.hasAttribute("data-back")) return h.back && h.back(); if (b.dataset.tab) return h.tab && h.tab(b.dataset.tab);
+		if (b.dataset.act && h.act && h.act[b.dataset.act]) { e.preventDefault(); h.act[b.dataset.act](b.dataset.arg, b); } }; };
+
+	window.HSApp = { KEY, NAME, icon, esc, inr, inrS, date, when, initials, busy, toast, sheet, alert, ask, call, done, photo, gps, locate, signature, top, tabs, empty, item, pill, kv, installCard, wireInstall, wire };
+})();
+</script>

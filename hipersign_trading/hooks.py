@@ -28,6 +28,9 @@ _v = f"?v={app_version}.{_asset_stamp()}"
 
 required_apps = ["erpnext"]
 
+# v1.9.2 U1: the phone apps' manifests and service worker (/hs-app/<app>.webmanifest, /hs-app-sw.js)
+page_renderer = ["hipersign_trading.apps_web.AppAssets"]
+
 # ---------------------------------------------------------------- branding
 app_logo_url = "/assets/hipersign_trading/images/hipersign-logo.png"
 
@@ -56,6 +59,7 @@ app_include_css = [
 	"/assets/hipersign_trading/css/hs_manufacturing.css" + _v,
 	"/assets/hipersign_trading/css/hs_p20.css" + _v,
 	"/assets/hipersign_trading/css/hs_reports.css" + _v,  # v1.8.4: Reports, Workflows & Settings, Data Migration, report views
+	"/assets/hipersign_trading/css/hs_record.css" + _v,  # v1.9.2 U3: the record page
 ]
 app_include_js = [
 	"/assets/hipersign_trading/js/hipersign.js" + _v,
@@ -80,6 +84,7 @@ app_include_js = [
 	"/assets/hipersign_trading/js/hs_projects.js" + _v,
 	"/assets/hipersign_trading/js/hs_manufacturing.js" + _v,
 	"/assets/hipersign_trading/js/hs_construction.js" + _v,  # v1.9.0
+	"/assets/hipersign_trading/js/hs_record.js" + _v,  # v1.9.2 U3: the record page and designed form
 ]
 
 website_context = {

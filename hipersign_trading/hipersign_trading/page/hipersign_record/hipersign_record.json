@@ -1,0 +1,14 @@
+{
+ "doctype": "Page",
+ "name": "hipersign-record",
+ "page_name": "hipersign-record",
+ "title": "Record",
+ "module": "Hipersign Trading",
+ "standard": "Yes",
+ "system_page": 0,
+ "icon": "",
+ "roles": [],
+ "owner": "Administrator",
+ "creation": "2026-11-21 00:00:00",
+ "modified": "2026-11-21 00:00:00"
+}

@@ -1,83 +1,75 @@
-{% extends "templates/web.html" %}
+{% extends "templates/base.html" %}
 {% block title %}Hipersign Driver{% endblock %}
-{% block style %}
-<style>
-.hd{max-width:520px;margin:0 auto;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#13235b}
-.hd-bar{background:linear-gradient(135deg,#13235b,#2443b8);color:#fff;padding:16px;border-radius:0 0 18px 18px;display:flex;gap:10px;align-items:center}
-.hd-bar b{font-size:17px}.hd-bar small{opacity:.8;display:block}.hd-body{padding:12px;display:flex;flex-direction:column;gap:10px}
-.hd-card{background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px}.hd-card p{margin:4px 0;color:#5d6b8a;font-size:13px}
-.hd-stop{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:#fff;border:1px solid #e3e8f2;border-radius:14px;padding:12px}
-.hd-n{width:28px;height:28px;border-radius:50%;background:#2563eb;color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
-.hd-btn{display:block;width:100%;padding:13px;border-radius:12px;border:1px solid #d5dcea;background:#fff;font-weight:600;font-size:15px;margin-top:6px}
-.hd-btn.p{background:#2563eb;color:#fff;border-color:#2563eb}.hd-btn.g{background:#16a34a;color:#fff;border-color:#16a34a}
-.hd-chk{display:flex;gap:10px;padding:8px 0;border-top:1px solid #eef1f7;font-size:14px}.hd-chk input{width:22px;height:22px}
-#sig{width:100%;height:150px;border:1.5px dashed #c9d1e3;border-radius:10px;touch-action:none;background:#fff}
-.hd-in{width:100%;padding:11px;border:1px solid #d5dcea;border-radius:10px;font-size:15px}.hd-photo{width:100%;border-radius:10px;margin-top:6px}
-.hd-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#e8efff;color:#2443b8;margin-left:auto}.hd-muted{color:#5d6b8a;font-size:12px}
-</style>
-{% endblock %}
-{% block page_content %}
-<div class="hd" id="hd"><div class="hd-bar"><b>Hipersign Driver</b></div><div class="hd-body"><p class="hd-muted">Loading…</p></div></div>
+{% block navbar %}{% endblock %}
+{% block banner %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block style %}{% include "templates/includes/hs_app_head.html" %}
+<style>.dr-n{width:34px;height:34px;border-radius:50%;background:var(--ha-c);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}</style>{% endblock %}
+{% block content %}
+<div class="ha-app" id="ap"><header class="ha-top"><div class="t"><b>Hipersign Driver</b><small>{{ _("Loading…") }}</small></div></header></div>
+{% include "templates/includes/hs_app_js.html" %}
 <script>
 (() => {
-	const root = document.getElementById("hd");
-	let data = null, stop = null, sig = null, photo = null, gps = "";
-	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-	const call = (method, args) => frappe.call({ method: "hipersign_trading.api.driver." + method, args: args || {} });
-	if (navigator.geolocation) navigator.geolocation.getCurrentPosition((p) => (gps = p.coords.latitude.toFixed(5) + ", " + p.coords.longitude.toFixed(5)), () => {});
-	const load = () => call("my_stops").then((r) => { data = r.message; render(); });
+	// v1.9.2 U1: the driver app on the Hipersign app shell (was a website page) — same server calls (api.driver.*)
+	const A = HSApp, M = "hipersign_trading.api.driver.", root = document.getElementById("ap"), esc = A.esc, I = A.icon;
+	let data = null, tab = "stops", stop = null, sig = null, photo = null;
+	const q = (s) => root.querySelector(s);
+	const load = () => A.call(M + "my_stops").then((r) => { data = r; render(); });
+	const maps = (a) => "https://maps.google.com/?q=" + encodeURIComponent(a || "");
+	const LOGOUT = `<a class="ha-ib" href="/?cmd=web_logout" aria-label="{{ _('Log out') }}">${I("logout")}</a>`;
+	A.wire(root, { back: () => { stop = null; load(); }, tab: (k) => { tab = k; render(); }, act: {
+		open: (i) => { stop = data.stops[+i]; sig = photo = null; render(); },
+		start: () => A.call(M + "start_trip", { dn: stop.name }).then(() => { stop.hs_delivery_status = "Out for Delivery"; render(); }).catch(() => {}),
+		clear: () => sig && sig.clear(),
+		done: () => { if ([...root.querySelectorAll(".ck")].some((c) => !c.checked)) return A.toast("{{ _('Tick every item first.') }}", 1);
+			const s = sig && sig.value(); if (!s) return A.toast("{{ _('The receiver must sign.') }}", 1);
+			A.call(M + "confirm_delivery", { dn: stop.name, received_by: q("#rcv").value, signature: s, photo, gps: A.gps.text }).then(() => { A.toast("{{ _('Delivered') }}"); stop = null; load(); }).catch(() => {}); },
+		fail: () => A.ask("{{ _('Could not deliver') }}", [{ name: "reason", label: "{{ _('Reason') }}", type: "select", options: ["Site closed", "Customer not available", "Wrong address", "Customer refused — damaged", "Access not permitted"] }], "{{ _('Report') }}", "rr")
+			.then((v) => v && A.call(M + "report_failure", { dn: stop.name, reason: v.reason }).then(() => { stop = null; load(); })).catch(() => {}),
+		trip: (se) => A.ask("{{ _('Site delivery') }}", [{ name: "otp", label: "{{ _('OTP from the site engineer') }}", type: "number", req: 1 }], "{{ _('Confirm delivery') }}", "g")
+			.then((v) => v && A.call(M + "trip_deliver", { stock_entry: se, otp: v.otp }).then(() => { A.toast("{{ _('Delivered at site') }}"); load(); })).catch(() => {}),
+	} });
 	function render() {
+		root.classList.toggle("notabs", !!stop);
 		if (stop) return renderStop();
-		root.innerHTML = `<div class="hd-bar"><div><b>${esc(data.driver)}</b><small>${frappe.datetime.str_to_user(frappe.datetime.get_today())}</small></div><a href="/?cmd=web_logout" style="margin-left:auto;color:#fff;font-size:13px">Log out</a></div>
-		<div class="hd-body"><div class="hd-card"><b>${data.stops.length}</b> to deliver · <b>${data.done.length}</b> delivered today</div>
-		${data.stops.map((s, i) => `<button class="hd-stop" data-i="${i}"><span class="hd-n">${i + 1}</span><div><b>${esc(s.customer_name)}</b><p class="hd-muted">${esc(s.name)} · ${s.items.length} item(s)</p></div><span class="hd-badge">${esc(s.hs_delivery_status === "Out for Delivery" ? "On trip" : "Load")}</span></button>`).join("") || '<div class="hd-card">No stops — all deliveries are done.</div>'}
-		${data.done.map((d) => `<div class="hd-card">✓ <b>${esc(d.customer_name)}</b><p>${esc(d.name)} · signed by ${esc(d.hs_received_by)}</p></div>`).join("")}
-		${(data.trips || []).length ? `<p class="hd-muted" style="margin:6px 2px 0"><b>Site deliveries</b></p>` : ""}
-		${(data.trips || []).map((t) => `<div class="hd-card"><b>${esc(t.project_name || t.project)}</b><p>${esc(t.name)} · ${esc(t.hs_vehicle || "")} · e-way bill ${esc(t.hs_eway_bill || "—")}</p>
-			${t.items.map((i) => `<p>${esc(i.qty)} ${esc(i.uom)} × ${esc(i.item_name)}</p>`).join("")}
-			<a class="hd-btn" target="_blank" href="https://maps.google.com/?q=${encodeURIComponent([(t.address || {}).address_line1, (t.address || {}).city].filter(Boolean).join(", ") || t.project_name)}">Navigate</a>
-			<button class="hd-btn g hd-trip" data-se="${esc(t.name)}">Delivered — enter site OTP</button></div>`).join("")}</div>`;
-		root.querySelectorAll(".hd-stop").forEach((b) => (b.onclick = () => { stop = data.stops[+b.dataset.i]; sig = photo = null; render(); }));
-		root.querySelectorAll(".hd-trip").forEach((b) => (b.onclick = () => frappe.prompt({ fieldname: "otp", fieldtype: "Data", label: "OTP from the site engineer", reqd: 1 },
-			(v) => call("trip_deliver", { stock_entry: b.dataset.se, otp: v.otp }).then(() => { frappe.show_alert({ message: "Delivered at site", indicator: "green" }); load(); }), "Site delivery")));
+		const trips = data.trips || [];
+		const TABS = [{ key: "stops", label: "{{ _('Stops') }}", icon: "truck", badge: data.stops.length || "" }, { key: "site", label: "{{ _('Site trips') }}", icon: "hat", badge: trips.length || "" }, { key: "done", label: "{{ _('Delivered') }}", icon: "check" }];
+		const head = A.top({ hero: 1, avatar: data.driver, kicker: A.date(new Date().toISOString()), title: data.driver, right: LOGOUT,
+			extra: `<div class="ha-hstats"><div><b>${data.stops.length}</b><small>{{ _("to deliver") }}</small></div><div><b>${data.done.length}</b><small>{{ _("delivered today") }}</small></div><div><b>${trips.length}</b><small>{{ _("site trips") }}</small></div></div>` });
+		let body = "";
+		if (tab === "stops") body = A.installCard() + (data.stops.length ? `<section class="ha-card ha-list">${data.stops.map((s, i) => `<button class="ha-item" data-act="open" data-arg="${i}"><span class="dr-n">${i + 1}</span>
+			<span class="m"><b>${esc(s.customer_name)}</b><span>${esc(s.name)} · ${s.items.length} {{ _("item(s)") }}</span></span>${A.pill(s.hs_delivery_status === "Out for Delivery" ? "{{ _('On trip') }}" : "{{ _('To load') }}", s.hs_delivery_status === "Out for Delivery" ? "blue" : "")}<span class="chev">${I("chev")}</span></button>`).join("")}</section>`
+			: `<section class="ha-card">${A.empty("{{ _('No stops — all deliveries are done.') }}", "check")}</section>`);
+		else if (tab === "site") body = trips.map((t) => { const addr = [(t.address || {}).address_line1, (t.address || {}).city].filter(Boolean).join(", ") || t.project_name;
+			return `<section class="ha-card"><h4>${I("hat")} ${esc(t.project_name || t.project)}<small>${esc(t.name)}</small></h4><div class="ha-mut">${esc(t.hs_vehicle || "")} · {{ _("e-way bill") }} ${esc(t.hs_eway_bill || "—")}</div>
+				<div class="ha-list" style="margin-top:6px">${t.items.map((i) => A.item({ icon: "box", tone: "c-amber", title: esc(i.item_name), value: esc(i.qty) + " " + esc(i.uom) })).join("")}</div>
+				<div class="ha-row"><a class="ha-btn" target="_blank" rel="noopener" href="${maps(addr)}">${I("nav")} {{ _("Navigate") }}</a><button class="ha-btn g" data-act="trip" data-arg="${esc(t.name)}">${I("check")} {{ _("Delivered") }}</button></div></section>`; }).join("")
+			|| `<section class="ha-card">${A.empty("{{ _('No site deliveries for you.') }}", "hat")}</section>`;
+		else body = data.done.length ? `<section class="ha-card ha-list">${data.done.map((d) => A.item({ icon: "check", tone: "c-green", title: esc(d.customer_name), sub: esc(d.name) + " · {{ _('signed by') }} " + esc(d.hs_received_by || "") })).join("")}</section>`
+			: `<section class="ha-card">${A.empty("{{ _('Nothing delivered yet today.') }}", "truck")}</section>`;
+		root.innerHTML = head + `<main class="ha-body">${body}</main>` + A.tabs(TABS, tab);
+		A.wireInstall(); window.scrollTo(0, 0);
 	}
 	function renderStop() {
-		const s = stop, onTrip = s.hs_delivery_status === "Out for Delivery";
-		const addr = (s.address_display || "").replace(/<br>/g, ", ");
-		root.innerHTML = `<div class="hd-bar"><button id="back" style="background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;width:34px;height:34px">‹</button><b>${esc(s.name)}</b></div><div class="hd-body">
-		<div class="hd-card"><b>${esc(s.customer_name)}</b><p>${esc(addr)}</p>${s.contact_mobile ? `<a class="hd-btn" href="tel:${esc(s.contact_mobile)}">Call ${esc(s.contact_display || "")}</a>` : ""}<a class="hd-btn" target="_blank" href="https://maps.google.com/?q=${encodeURIComponent(addr)}">Navigate</a></div>
-		<div class="hd-card"><b>Check items</b>${s.items.map((it, k) => `<label class="hd-chk"><input type="checkbox" class="ck"> ${esc(it.qty)} ${esc(it.uom)} × ${esc(it.item_name)}</label>`).join("")}</div>
-		${!onTrip ? `<button class="hd-btn p" id="start">Start trip</button>` : `
-		<div class="hd-card"><b>Received by</b><input class="hd-in" id="rcv" value="${esc(s.contact_display || "")}"></div>
-		<div class="hd-card"><b>Signature</b> <a href="#" id="clr" style="float:right">Clear</a><canvas id="sig" width="600" height="300"></canvas></div>
-		<div class="hd-card"><b>Photo of delivered goods</b>${photo ? `<img class="hd-photo" src="${photo}">` : ""}<label class="hd-btn">${photo ? "Retake" : "Take photo"}<input type="file" accept="image/*" capture="environment" id="ph" hidden></label></div>
-		<p class="hd-muted" style="text-align:center">GPS ${esc(gps || "—")}</p>
-		<button class="hd-btn g" id="done">Confirm delivery</button><button class="hd-btn" id="fail">Could not deliver</button>`}</div>`;
-		root.querySelector("#back").onclick = () => { stop = null; load(); };
-		const st = root.querySelector("#start"); if (st) st.onclick = () => call("start_trip", { dn: s.name }).then(() => { s.hs_delivery_status = "Out for Delivery"; render(); });
-		const cv = root.querySelector("#sig");
-		if (cv) {
-			const x = cv.getContext("2d"); x.lineWidth = 3; x.lineCap = "round"; let dn = false;
-			const pt = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
-			cv.onpointerdown = (e) => { dn = true; cv.setPointerCapture(e.pointerId); x.beginPath(); x.moveTo(...pt(e)); };
-			cv.onpointermove = (e) => { if (dn) { x.lineTo(...pt(e)); x.stroke(); } };
-			cv.onpointerup = () => { dn = false; sig = cv.toDataURL("image/png"); };
-			root.querySelector("#clr").onclick = (e) => { e.preventDefault(); x.clearRect(0, 0, cv.width, cv.height); sig = null; };
-			root.querySelector("#ph").onchange = (e) => {
-				const f = e.target.files[0]; if (!f) return; const rd = new FileReader();
-				rd.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, 1200 / Math.max(im.width, im.height)); c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); photo = c.toDataURL("image/jpeg", 0.75); const keep = sig; renderStop(); sig = keep; }; im.src = rd.result; };
-				rd.readAsDataURL(f);
-			};
-			root.querySelector("#done").onclick = () => {
-				if ([...root.querySelectorAll(".ck")].some((c) => !c.checked)) return frappe.msgprint("Tick every item first.");
-				if (!sig) return frappe.msgprint("The receiver must sign.");
-				call("confirm_delivery", { dn: s.name, received_by: root.querySelector("#rcv").value, signature: sig, photo, gps }).then(() => { frappe.show_alert({ message: "Delivered", indicator: "green" }); stop = null; load(); });
-			};
-			root.querySelector("#fail").onclick = () => frappe.prompt({ fieldname: "reason", fieldtype: "Select", label: "Reason", options: ["Site closed", "Customer not available", "Wrong address", "Customer refused — damaged", "Access not permitted"].join("\n"), reqd: 1 },
-				(v) => call("report_failure", { dn: s.name, reason: v.reason }).then(() => { stop = null; load(); }));
-		}
+		const s = stop, onTrip = s.hs_delivery_status === "Out for Delivery", addr = (s.address_display || "").replace(/<br\s*\/?>/g, ", ").replace(/<[^>]+>/g, "");
+		root.innerHTML = A.top({ back: 1, title: s.customer_name, sub: s.name }) + `<main class="ha-body">
+			<section class="ha-card"><div class="ha-mut">${esc(addr) || "—"}</div><div class="ha-row">${s.contact_mobile ? `<a class="ha-btn" href="tel:${esc(s.contact_mobile)}">${I("phone")} {{ _("Call") }}</a>` : ""}
+				<a class="ha-btn" target="_blank" rel="noopener" href="${maps(addr)}">${I("nav")} {{ _("Navigate") }}</a></div></section>
+			<section class="ha-card"><h4>${I("box")} {{ _("Check items") }}</h4>${s.items.map((it) => `<label class="ha-chk"><input type="checkbox" class="ck"> ${esc(it.item_name)}<small>${esc(it.qty)} ${esc(it.uom)}</small></label>`).join("")}</section>
+			${!onTrip ? `<button class="ha-btn p" data-act="start">${I("truck")} {{ _("Start trip") }}</button>` : `
+			<section class="ha-card"><label class="ha-f" style="margin-top:0"><span>{{ _("Received by") }}</span><input class="ha-in" id="rcv" value="${esc(s.contact_display || "")}"></label></section>
+			<section class="ha-card"><h4>${I("sign")} {{ _("Signature") }}<small><button class="ha-btn sm" data-act="clear" style="min-height:30px;padding:4px 10px">{{ _("Clear") }}</button></small></h4><canvas class="ha-sig" id="sig" width="600" height="280"></canvas></section>
+			<section class="ha-card"><h4>${I("camera")} {{ _("Photo of delivered goods") }}</h4><img id="pv" style="width:100%;border-radius:14px;display:${photo ? "block" : "none"}" src="${photo || ""}" alt="">
+				<label class="ha-btn">${I("camera")} <span id="pl">${photo ? "{{ _('Retake') }}" : "{{ _('Take photo') }}"}</span><input type="file" accept="image/*" capture="environment" id="ph" hidden></label></section>
+			<p class="ha-mut" style="text-align:center">${I("pin").replace("<svg", '<svg style="width:13px;height:13px;vertical-align:-2px"')} GPS ${esc(A.gps.text || "—")}</p>
+			<button class="ha-btn g" data-act="done" style="margin-top:0">${I("check")} {{ _("Confirm delivery") }}</button><button class="ha-btn r" data-act="fail">{{ _("Could not deliver") }}</button>`}</main>`;
+		const cv = q("#sig"); if (cv) sig = A.signature(cv);
+		const ph = q("#ph"); if (ph) ph.onchange = async () => { photo = await A.photo(ph, 1200); const p = q("#pv"); p.src = photo; p.style.display = "block"; q("#pl").textContent = "{{ _('Retake') }}"; };
+		window.scrollTo(0, 0);
 	}
-	frappe.ready ? frappe.ready(load) : document.addEventListener("DOMContentLoaded", load);
+	A.locate();
+	const start = () => load().catch(() => { root.innerHTML = A.top({ title: "Hipersign Driver", right: LOGOUT }) + `<main class="ha-body">${A.empty("{{ _('Could not load your stops.') }}", "alert")}</main>`; });
+	document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start();
 })();
 </script>
 {% endblock %}

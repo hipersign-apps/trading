@@ -93,9 +93,9 @@ NAV = [
 		("Construction Tracker", "Page", "hipersign-cn-tracker", "list-checks", "construction", {}),  # v1.9.1 B2
 	]),
 	# v1.9.0 A6 (prototype C9): what clients, partners, site engineers and workers see
-	("Portals & Apps (India)", "smartphone", [
-		("Client Portal (India)", "Page", "hipersign-cn-client-portal", "building-2", "cn_portal", {}),
-		("Subcontractor Portal", "Page", "hipersign-cn-partner-portal", "briefcase", "cn_portal", {}),
+	("Apps (India)", "smartphone", [
+		("Client App", "Page", "hipersign-cn-client-portal", "building-2", "cn_portal", {}),
+		("Subcontractor App", "Page", "hipersign-cn-partner-portal", "briefcase", "cn_portal", {}),
 		("Site & Worker App", "Page", "hipersign-cn-apps", "smartphone", "cn_portal", {}),
 	]),
 	# v1.9.0 A4 (prototypes C4, C7): quality, safety, drawings and handover
@@ -195,8 +195,8 @@ NAV_SUB = {
 	# v1.9.0 A6
 	"Project Controls": [("Constraints", "DocType", "Project Constraint", None), ("Milestones", "DocType", "Construction Milestone", None), ("Reviews", "DocType", "Project Review", None),
 		("Tasks", "DocType", "Task", None), ("Risks & issues", "DocType", "Project Risk", None), ("Minutes of meeting", "DocType", "Project Meeting", None)],
-	"Client Portal (India)": [("Client messages", "DocType", "Portal Message", None)],
-	"Subcontractor Portal": [("Partner messages", "DocType", "Portal Message", None)],
+	"Client App": [("Client messages", "DocType", "Portal Message", None)],
+	"Subcontractor App": [("Partner messages", "DocType", "Portal Message", None)],
 	"Site & Worker App": [("Site Photos", "DocType", "Site Photo", None), ("Site Attendance", "DocType", "Site Attendance", None), ("Site Cash", "DocType", "Site Expense", None)],
 	# v1.9.0 A5: Finance (India)
 	"Accounts & Cash (India)": [("Journal Entries", "DocType", "Journal Entry", None), ("Sales Invoices", "DocType", "Sales Invoice", None), ("Purchase Invoices", "DocType", "Purchase Invoice", None)],
@@ -298,8 +298,8 @@ SUB_TABS = {
 	("Quality (QA/QC)", "NCRs"): ("hipersign-cn-quality", "ncr"), ("Quality (QA/QC)", "Inspection & Test Plan"): ("hipersign-cn-quality", "itp"),
 	("Safety (HSE)", "Incidents"): ("hipersign-cn-safety", "inc"), ("Safety (HSE)", "Permits to Work"): ("hipersign-cn-safety", "ptw"),
 	("Safety (HSE)", "Toolbox Talks"): ("hipersign-cn-safety", "tbt"), ("Safety (HSE)", "Safety Audits"): ("hipersign-cn-safety", "aud"),
-	("Drawings & RFIs", "Controlled documents"): ("hipersign-cn-drawings", "cdoc"), ("Client Portal (India)", "Client messages"): ("hipersign-cn-client-portal", "in"),
-	("Subcontractor Portal", "Partner messages"): ("hipersign-cn-partner-portal", "in"), ("Quotations & Sales", "Development units"): ("hipersign-cn-sales", "unit"),
+	("Drawings & RFIs", "Controlled documents"): ("hipersign-cn-drawings", "cdoc"), ("Client App", "Client messages"): ("hipersign-cn-client-portal", "in"),
+	("Subcontractor App", "Partner messages"): ("hipersign-cn-partner-portal", "in"), ("Quotations & Sales", "Development units"): ("hipersign-cn-sales", "unit"),
 	("Labour & Workers", "Contractor pay proof"): ("hipersign-cn-labour", "cpp"),
 	("Drawings & RFIs", "Drawings"): ("hipersign-cn-drawings", "dwg"), ("Drawings & RFIs", "RFIs"): ("hipersign-cn-drawings", "rfi"),
 	("Drawings & RFIs", "Transmittals"): ("hipersign-cn-drawings", "trn"), ("Handover & DLP", "Snags"): ("hipersign-cn-handover", "snag"),
@@ -353,6 +353,26 @@ SUB_TABS = {
 }
 # the chip a sub-item opens with, where the tab has several (Routings vs Operations)
 SUB_CHIPS = {("BOMs & routings", "Operations"): "ops"}
+# v1.9.2 U5: the construction lists that had no page tab now have one — the side menu leaves them out like the others
+SUB_TABS.update({
+	("Site & Worker App", "Site Attendance"): ("hipersign-cn-apps", "att"),
+	("Accounts & Cash (India)", "Journal Entries"): ("hipersign-cn-accounts", "inv"), ("Accounts & Cash (India)", "Sales Invoices"): ("hipersign-cn-accounts", "inv"),
+	("Accounts & Cash (India)", "Purchase Invoices"): ("hipersign-cn-accounts", "inv"), ("GST & TDS", "e-Way bills"): ("hipersign-cn-tax", "einv"),
+	("Payroll & Statutory", "Attendance"): ("hipersign-cn-payroll", "att"), ("Payroll & Statutory", "Leave"): ("hipersign-cn-payroll", "att"),
+	("Payroll & Statutory", "Employee advances"): ("hipersign-cn-payroll", "att"), ("Procurement & Stores", "Material Norms"): ("hipersign-cn-proc", "ind"),
+	("RA Billing", "Sales Invoices"): ("hipersign-cn-accounts", "inv"), ("RA Billing", "Payments"): ("hipersign-cn-accounts", "inv"),
+})
+SUB_CHIPS.update({("Accounts & Cash (India)", "Journal Entries"): "je", ("Accounts & Cash (India)", "Sales Invoices"): "si", ("Accounts & Cash (India)", "Purchase Invoices"): "pi",
+	("RA Billing", "Sales Invoices"): "si", ("RA Billing", "Payments"): "pe", ("Payroll & Statutory", "Leave"): "leave", ("Payroll & Statutory", "Employee advances"): "adv"})
+# v1.9.2 U5: on a construction edition (Foundation, Structure, Capstone) the trading company's menus are left out
+CN_EDITIONS = ("Foundation", "Structure", "Capstone")
+CN_HIDE_GROUPS = ("Sales", "Purchasing", "Inventory & Delivery", "Manufacturing", "Finance & Tax", "People & Assets", "Projects")
+CN_HIDE_ITEMS = ("hipersign-journey",)
+
+
+def construction_only(s=None):
+	s = s if s is not None else _s()
+	return bool(s.get("feat_construction")) and s.get("feature_pack") in CN_EDITIONS
 # v1.8.4: a Reports sub-item under each module group opens the Reports page on that group
 REPORT_GROUP = {"Quotations & Orders": "sales", "Purchase Orders": "purchasing", "Warehouse & Stock": "stock", "Finance": "finance", "Accounting": "finance",
 	"VAT & E-invoicing": "tax", "HR & Payroll": "hr", "Projects": "projects", "Production": "manufacturing"}
@@ -418,10 +438,15 @@ def nav_groups(s=None, check=True):
 	switched on, skipping anything this site lacks (check=False: every NAV entry, for the menu builder)."""
 	s = s if s is not None else (_s() if check else None)
 	out = []
+	cn_only = bool(check and s is not None and construction_only(s))
 	for group, gicon, links in NAV:
+		if cn_only and group in CN_HIDE_GROUPS:
+			continue
 		items = []
 		for label, ltype, target, icon, feature, extra in links:
 			if check and not _on(s, feature):
+				continue
+			if cn_only and target in CN_HIDE_ITEMS:
 				continue
 			if check and ltype in LINK_DOCTYPE and not frappe.db.exists(LINK_DOCTYPE[ltype], target):
 				continue

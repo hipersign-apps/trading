@@ -3,7 +3,9 @@ frappe.pages["hipersign-alerts"].on_page_load = function (wrapper) {
 	const ui = hipersign.ui;
 	const v = ui.page(wrapper, { band: "alerts",
 		title: __("Insights & Alerts"),
-		desc: __("Early warnings from shipments, stock, margins, credit and receivables. Each shows its evidence, the rule and a recommended action."),
+		desc: (frappe.boot.hipersign || {}).construction_only
+			? __("Early warnings from your contracts — the Construction Tracker's red flags, receivables and compliance. Each shows its evidence, the rule and a recommended action.")
+			: __("Early warnings from shipments, stock, margins, credit and receivables. Each shows its evidence, the rule and a recommended action."),
 	});
 	const st = { status: "Open", category: "", data: null };
 	v.$actions.html(`<span class="hsx-banner">${__("Deterministic rules — no AI model connected")}</span>`);

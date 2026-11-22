@@ -240,6 +240,11 @@ hipersign.module.render = function (wrapper, key) {
 	const act_html = (acts, cls) => (acts || []).map((a, i) => `<button class="btn btn-xs ${a.primary ? "btn-primary" : "btn-default"} hsx-bact" data-a="${hm_esc(JSON.stringify(a))}">${a.icon ? frappe.utils.icon(a.icon, "xs") + " " : ""}${hm_esc(a.label)}</button>`).join(" ");
 	function block(b) {
 		// v1.8.4: a stepper in a card (BOQ: from tender to contract), the prototype's flow
+		// v1.9.2 U1: the phone apps — a live preview of each in a phone frame, its QR code to install and its address
+		if (b.type === "apps") return `<div class="hsx-apps">${b.apps.map((a) => `<div class="hsx-app"><div class="hsx-phone"><i></i><iframe loading="lazy" src="${hm_esc(a.preview || a.path)}" title="${hm_esc(a.name)}"></iframe></div>
+			<div class="hsx-app-i"><div class="hsx-app-h"><img src="${hm_esc(a.icon)}" alt=""><div><b>${hm_esc(a.name)}</b><small>${hm_esc(a.path)}</small></div></div><p>${hm_esc(a.desc)}</p>
+			<div class="hsx-app-q">${a.qr}<span>${__("Scan with the phone camera, open it, then “Install” or “Add to Home Screen”.")}</span></div>
+			<div class="hsx-app-b"><a class="btn btn-sm btn-primary" target="_blank" rel="noopener" href="${hm_esc(a.path)}">${__("Open")}</a><button class="btn btn-sm btn-default hsx-copy" data-url="${hm_esc(a.url)}">${__("Copy link")}</button></div></div></div>`).join("")}</div>`;
 		if (b.type === "flow") return ui.card(b.title, `<div class="hsx-steps hsx-flow">${b.steps.map((t, i) => `<div class="hsx-step ${i < b.at ? "done" : i === b.at ? "on" : ""}"><i>${i < b.at ? frappe.utils.icon("check", "xs") : i + 1}</i><span>${hm_esc(t)}</span></div>`).join("")}</div>${b.note ? `<p class="text-muted small" style="margin:10px 0 0">${hm_esc(b.note)}</p>` : ""}`, { sub: b.sub });
 		if (b.type === "steps") return `<div class="hsx-steps">${b.steps.map((t, i) => `<div class="hsx-step ${i < b.at ? "done" : i === b.at ? "on" : ""}"><i>${i < b.at ? frappe.utils.icon("check", "xs") : i + 1}</i><span>${hm_esc(t)}</span></div>`).join("")}</div>`;
 		if (b.type === "statement") return ui.card(b.title, `<div class="hsx-stmt">${b.lines.map((l) => `<div class="hsx-sl ${l.hl ? "hl " + l.hl : ""} ${l.total ? "total" : ""} ${l.muted ? "muted" : ""}" ${l.dt ? `data-dt="${hm_esc(l.dt)}" data-name="${hm_esc(l.name)}"` : ""}>
@@ -320,6 +325,7 @@ hipersign.module.render = function (wrapper, key) {
 			});
 	}
 
+	v.$body.on("click", ".hsx-copy", function () { frappe.utils.copy_to_clipboard($(this).attr("data-url")); });
 	v.$body.on("click", ".hsx-mlink", function () { const l = st.data.links[+$(this).attr("data-li")]; frappe.route_options = l[2] || null; frappe.set_route(...l[1]); });
 	v.$body.on("click", ".hsx-mtabs button", function () { st.tab = $(this).attr("data-tab"); tab(); });
 	v.$body.on("click", ".hsx-chips [data-chip]", function () { st.chip[st.tab] = $(this).attr("data-chip"); tab(); });

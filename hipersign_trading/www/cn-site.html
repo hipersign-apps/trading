@@ -3,126 +3,114 @@
 {% block navbar %}{% endblock %}
 {% block banner %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block style %}{% include "templates/includes/cn_portal_style.html" %}
-<style>
-.ap{max-width:520px;width:100%;box-sizing:border-box;margin:0 auto;padding:0 0 30px}.ap .sel{width:100%}
-.ap .hd{border-radius:0 0 18px 18px;margin-bottom:10px}
-.ap .bd{padding:0 10px;display:flex;flex-direction:column;gap:10px}
-.ap .card{margin:0}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;font-weight:600;font-size:12.5px;cursor:pointer}
-.tile i{display:block;font-style:normal;font-size:22px;margin-bottom:4px}.tile b{display:block;font-size:11px;color:var(--mut);font-weight:500}
-.wk{display:flex;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid #f1f5f9;font-size:14px}.wk input{width:22px;height:22px}.wk small{color:var(--mut);margin-left:auto}
-.big{display:block;width:100%;padding:13px;border-radius:12px;font-size:15px;margin-top:8px;text-align:center}
-.chat{max-height:260px;overflow:auto;display:flex;flex-direction:column-reverse;gap:6px}.chat div{background:#f1f5f9;border-radius:10px;padding:7px 10px;font-size:13px}.chat b{font-size:12px;color:var(--blue)}
-.back{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;width:34px;height:34px;font-size:18px}
-.otp{font-size:26px;letter-spacing:6px;font-weight:700;color:var(--blue)}
-.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.thumbs img{width:100%;height:90px;object-fit:cover;border-radius:8px}
-</style>{% endblock %}
+{% block style %}{% include "templates/includes/hs_app_head.html" %}{% endblock %}
 {% block content %}
-<div class="ap" id="ap"><div class="hd"><b>Hipersign Site</b></div><div class="bd"><p class="mut">{{ _("Loading…") }}</p></div></div>
+<div class="ha-app" id="ap"><header class="ha-top"><div class="t"><b>Hipersign Site</b><small>{{ _("Loading…") }}</small></div></header></div>
+{% include "templates/includes/hs_app_js.html" %}
 <script>
 (() => {
-	const M = "hipersign_trading.api.construction_portal.";
-	const root = document.getElementById("ap");
-	let D = null, view = "home", gps = { lat: null, lng: null };
-	const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-	const inr = (v) => "₹" + Math.round(+v || 0).toLocaleString("en-IN");
-	const call = (m, args) => new Promise((ok, no) => frappe.call({ method: M + m, args: args || {}, freeze: true, callback: (r) => ok(r.message), error: no }));
-	const toast = (r) => frappe.show_alert({ message: (r && r.message) || "{{ _('Done') }}", indicator: "green" }, 6);
-	const locate = () => navigator.geolocation && navigator.geolocation.getCurrentPosition((p) => { gps = { lat: p.coords.latitude, lng: p.coords.longitude }; }, () => {}, { enableHighAccuracy: true });
-	const pic = (el, max) => new Promise((ok) => { const f = el && el.files[0]; if (!f) return ok(null); const rd = new FileReader();
-		rd.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"), k = Math.min(1, (max || 1600) / Math.max(im.width, im.height));
-			c.width = im.width * k; c.height = im.height * k; c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", .8)); }; im.src = rd.result; }; rd.readAsDataURL(f); });
-	const load = (p) => call("sa_home", { project: p || (D && D.project) }).then((d) => { D = d; render(); });
-	const bar = (title) => `<div class="hd">${view !== "home" ? `<button class="back" id="back">‹</button>` : ""}<div><small>${esc(D.me)}</small><b>${esc(title)}</b></div>
-		<div class="r"><a class="out" href="/app">{{ _("Desk") }}</a></div></div>`;
+	// v1.9.2 U1: the site app on the Hipersign app shell — same server calls as before (construction_portal.sa_*)
+	const A = HSApp, M = "hipersign_trading.api.construction_portal.", root = document.getElementById("ap"), esc = A.esc, I = A.icon;
+	let D = null, tab = "home", sub = null;
+	const load = (p) => A.call(M + "sa_home", { project: p || (D && D.project) }).then((d) => { D = d; render(); });
+	const TABS = () => [{ key: "home", label: "{{ _('Today') }}", icon: "home" }, { key: "gang", label: "{{ _('Workers') }}", icon: "users" },
+		{ key: "dpr", label: "{{ _('DPR') }}", icon: "clipboard" }, { key: "photo", label: "{{ _('Photos') }}", icon: "camera" }, { key: "chat", label: "{{ _('Chat') }}", icon: "chat", badge: D.chat.length || "" }];
+	const proj = () => (D.projects.find((p) => p.name === D.project) || {});
+	const mini = (n) => I(n).replace("<svg", '<svg style="width:13px;height:13px;vertical-align:-2px"');
 	function render() {
-		if (!D.projects || !D.projects.length) { root.innerHTML = `<div class="hd"><b>Hipersign Site</b></div><div class="bd"><div class="card">{{ _("No live projects for you.") }}</div></div>`; return; }
-		const v = VIEWS[view] || VIEWS.home;
-		root.innerHTML = bar(view === "home" ? D.project_name : v.title) + `<div class="bd">${v.html()}</div>`;
-		const b = root.querySelector("#back"); if (b) b.onclick = () => { view = "home"; render(); };
-		v.bind && v.bind();
+		if (!D.projects || !D.projects.length) { root.innerHTML = A.top({ title: "Hipersign Site" }) + `<main class="ha-body">${A.empty("{{ _('No live projects for you.') }}", "hat")}</main>`; root.classList.add("notabs"); return; }
+		const v = sub ? SUB[sub] : VIEWS[tab];
+		const head = sub ? A.top({ back: 1, title: v.title, sub: proj().label })
+			: tab === "home" ? A.top({ hero: 1, avatar: D.me, kicker: D.me, title: "{{ _('Hipersign Site') }}", right: `<a class="ha-ib" href="/app" aria-label="Desk">${I("layers")}</a>`,
+				extra: `<select class="ha-sel" id="proj">${D.projects.map((p) => `<option value="${esc(p.name)}" ${p.name === D.project ? "selected" : ""}>${esc(p.label)}</option>`).join("")}</select>
+				<div class="ha-hstats"><div><b>${D.present}/${D.workers.length}</b><small>{{ _("workers in") }}</small></div><div><b>${D.dpr.length ? "✓" : "—"}</b><small>{{ _("DPR today") }}</small></div><div><b>${A.inrS(D.imprest)}</b><small>{{ _("site cash") }}</small></div></div>` })
+			: A.top({ title: v.title, sub: proj().label });
+		root.innerHTML = head + `<main class="ha-body">${v.html()}</main>` + (sub ? "" : A.tabs(TABS(), tab));
+		root.classList.toggle("notabs", !!sub);
+		v.bind && v.bind(); A.wireInstall(); window.scrollTo(0, 0);
 	}
+	const q = (s) => root.querySelector(s);
+	A.wire(root, { back: () => { sub = null; render(); }, tab: (t) => { tab = t; sub = null; render(); }, act: {
+		go: (v) => { if (VIEWS[v]) { tab = v; sub = null; } else sub = v; render(); },
+		checkin: () => q("#selfie").click() } });
+	const photos = () => `<div class="ha-photos">${D.photos.map((p) => `<figure><img src="${esc(p.image)}" alt="" loading="lazy"><figcaption>${esc(p.caption || "")}</figcaption></figure>`).join("")}</div>`;
 	const VIEWS = {
-		home: { html: () => `
-			<select class="sel" id="proj">${D.projects.map((p) => `<option value="${esc(p.name)}" ${p.name === D.project ? "selected" : ""}>${esc(p.label)}</option>`).join("")}</select>
-			<div class="card"><div style="display:flex;align-items:center;gap:10px"><div><b>${D.checked_in ? "{{ _('Checked in at') }} " + esc(D.checked_in) : "{{ _('Not checked in') }}"}</b>
-				<div class="mut">${D.present} / ${D.workers.length} {{ _("workers present") }}</div></div>
-				${D.checked_in ? "" : `<label class="btn p" style="margin-left:auto">{{ _("Check in") }}<input type="file" accept="image/*" capture="user" id="selfie" hidden></label>`}</div></div>
-			<div class="grid">
-				<div class="tile" data-v="gang"><i>👷</i>{{ _("Gang check-in") }}<b>${D.present} {{ _("in") }}</b></div>
-				<div class="tile" data-v="dpr"><i>📋</i>{{ _("DPR") }}<b>${D.dpr.length ? "{{ _('sent') }}" : "{{ _('not yet') }}"}</b></div>
-				<div class="tile" data-v="photo"><i>📷</i>{{ _("Photo") }}<b>${D.photos.length} {{ _("recent") }}</b></div>
-				<div class="tile" data-v="cash"><i>💵</i>{{ _("Site cash") }}<b>${inr(D.imprest)}</b></div>
-				<div class="tile" data-v="del"><i>🚚</i>{{ _("Deliveries") }}<b>${D.trips.length} {{ _("on the way") }}</b></div>
-				<div class="tile" data-v="chat"><i>💬</i>{{ _("Site chat") }}<b>${D.chat.length} {{ _("messages") }}</b></div></div>
-			${D.permits.length ? `<div class="card"><b>{{ _("Permits in force") }}</b>${D.permits.map((p) => `<div class="mut">${esc(p.kind)} — ${esc(p.location)} · {{ _("to") }} ${esc(frappe.datetime.str_to_user(p.valid_to))}</div>`).join("")}</div>` : ""}
-			${D.photos.length ? `<div class="card"><b>{{ _("Recent photos") }}</b><div class="thumbs" style="margin-top:8px">${D.photos.map((p) => `<img src="${esc(p.image)}" title="${esc(p.caption)}">`).join("")}</div></div>` : ""}`,
-			bind() {
-				root.querySelector("#proj").onchange = (e) => load(e.target.value);
-				root.querySelectorAll(".tile").forEach((t) => (t.onclick = () => { view = t.dataset.v; render(); }));
-				const s = root.querySelector("#selfie");
-				if (s) s.onchange = async () => { const img = await pic(s, 800); call("sa_checkin", { project: D.project, latitude: gps.lat, longitude: gps.lng, selfie: img }).then((r) => { toast(r); load(); }); };
+		home: { html: () => `${A.installCard()}
+			<section class="ha-card"><div class="ha-row" style="align-items:center;flex-wrap:nowrap"><div style="flex:1;min-width:0"><b>${D.checked_in ? "{{ _('Checked in at') }} " + esc(D.checked_in) : "{{ _('You are not checked in') }}"}</b>
+				<div class="ha-mut">${A.gps.text ? mini("pin") + " " + A.gps.text : "{{ _('Selfie + GPS inside the site fence') }}"}</div></div>
+				${D.checked_in ? `<span class="ha-pill green" style="flex:0 0 auto">${mini("check")} {{ _("In") }}</span>` : `<button class="ha-btn g sm" style="flex:0 0 auto" data-act="checkin">${I("camera")} {{ _("Check in") }}</button>`}</div>
+				<input type="file" accept="image/*" capture="user" id="selfie" hidden></section>
+			<div class="ha-tiles">
+				<button class="ha-tile" data-act="go" data-arg="gang"><i class="c-blue">${I("users")}</i><b>{{ _("Gang check-in") }}</b><span>${D.present} {{ _("in") }}</span></button>
+				<button class="ha-tile" data-act="go" data-arg="dpr"><i class="c-violet">${I("clipboard")}</i><b>{{ _("DPR") }}</b><span>${D.dpr.length ? "{{ _('sent') }}" : "{{ _('not yet') }}"}</span></button>
+				<button class="ha-tile" data-act="go" data-arg="photo"><i class="c-teal">${I("camera")}</i><b>{{ _("Photo") }}</b><span>${D.photos.length} {{ _("recent") }}</span></button>
+				<button class="ha-tile" data-act="go" data-arg="cash"><i class="c-green">${I("wallet")}</i><b>{{ _("Site cash") }}</b><span>${A.inr(D.imprest)}</span></button>
+				<button class="ha-tile" data-act="go" data-arg="del"><i class="c-amber">${I("truck")}</i><b>{{ _("Deliveries") }}</b><span>${D.trips.length} {{ _("on the way") }}</span></button>
+				<button class="ha-tile" data-act="go" data-arg="chat"><i class="c-blue">${I("chat")}</i><b>{{ _("Site chat") }}</b><span>${D.chat.length} {{ _("messages") }}</span></button></div>
+			${D.permits.length ? `<div class="ha-sec">{{ _("Permits in force") }}</div><section class="ha-card ha-list">${D.permits.map((p) => A.item({ icon: "shield", tone: "c-amber", title: esc(p.kind), sub: esc(p.location) + " · {{ _('to') }} " + A.date(p.valid_to) })).join("")}</section>` : ""}
+			${D.photos.length ? `<div class="ha-sec">{{ _("Recent photos") }}</div><section class="ha-card">${photos()}</section>` : ""}`,
+			bind() { q("#proj").onchange = (e) => load(e.target.value);
+				const s = q("#selfie"); if (s) s.onchange = async () => { const img = await A.photo(s, 800); A.call(M + "sa_checkin", { project: D.project, latitude: A.gps.lat, longitude: A.gps.lng, selfie: img }).then((r) => { A.done(r); load(); }).catch(() => {}); };
 			} },
-		gang: { title: "{{ _('Gang check-in') }}", html: () => `<div class="card"><div class="mut">{{ _("Tick the workers at work today.") }} ${gps.lat ? "📍 " + gps.lat.toFixed(4) + ", " + gps.lng.toFixed(4) : ""}</div>
-			<label class="wk"><input type="checkbox" id="all"> <b>{{ _("All") }}</b></label>
-			${D.workers.map((w) => `<label class="wk"><input type="checkbox" class="w" value="${esc(w.name)}" ${w.present ? "checked disabled" : ""}> ${esc(w.worker_name)}<small>${esc(w.trade)}${w.contractor ? " · " + esc(w.contractor) : ""}</small></label>`).join("")}
-			<button class="btn g big" id="go">{{ _("Check in ticked workers") }}</button></div>`,
-			bind() {
-				root.querySelector("#all").onchange = (e) => root.querySelectorAll(".w:not(:disabled)").forEach((c) => (c.checked = e.target.checked));
-				root.querySelector("#go").onclick = () => { const W = [...root.querySelectorAll(".w:checked:not(:disabled)")].map((c) => c.value);
-					if (!W.length) return frappe.msgprint("{{ _('Tick at least one worker.') }}");
-					call("sa_gang", { project: D.project, workers: JSON.stringify(W), latitude: gps.lat, longitude: gps.lng }).then((r) => { toast(r); view = "home"; load(); }); };
-			} },
-		dpr: { title: "{{ _('Daily progress report') }}", html: () => `<div class="card">
-			${D.dpr.map((d) => `<div class="ok">✓ ${esc(d.activity)} — ${esc(d.actual_qty)} ${esc(d.unit || "")}</div>`).join("")}
-			<small class="mut">{{ _("BOQ item") }}</small><select class="in" id="boq"><option value="">—</option>${D.boq.map((b) => `<option value="${esc(b[0])}" data-u="${esc(b[2])}" data-d="${esc(b[1])}">${esc(b[0])} ${esc(b[1])}</option>`).join("")}</select>
-			<small class="mut">{{ _("Activity") }}</small><input class="in" id="act">
-			<div class="row"><div><small class="mut">{{ _("Quantity today") }}</small><input class="in" type="number" step="any" id="qty"></div><div><small class="mut">{{ _("Unit") }}</small><input class="in" id="unit"></div></div>
-			<div class="row"><div><small class="mut">{{ _("Weather") }}</small><select class="in" id="wx"><option>Fair</option><option>Light rain</option><option>Heavy rain</option><option>Extreme heat</option></select></div>
-				<div><small class="mut">{{ _("Hours lost") }}</small><input class="in" type="number" id="lost" value="0"></div></div>
-			<small class="mut">{{ _("Subcontractor labour") }}</small><input class="in" type="number" id="sub" value="0">
-			<small class="mut">{{ _("Remarks") }}</small><textarea class="in" id="rem" rows="2"></textarea>
-			<div class="mut">{{ _("Own labour from today's check-ins:") }} <b>${D.present}</b></div>
-			<button class="btn p big" id="go">{{ _("Send DPR") }}</button></div>`,
-			bind() {
-				const boq = root.querySelector("#boq");
-				boq.onchange = () => { const o = boq.selectedOptions[0]; if (o && o.value) { root.querySelector("#act").value = o.dataset.d; root.querySelector("#unit").value = o.dataset.u; } };
-				root.querySelector("#go").onclick = () => { const a = root.querySelector("#act").value; if (!a) return frappe.msgprint("{{ _('Enter the activity.') }}");
-					call("sa_dpr", { project: D.project, activity: a, boq_item: boq.value, qty: root.querySelector("#qty").value, unit: root.querySelector("#unit").value, weather: root.querySelector("#wx").value,
-						hours_lost: root.querySelector("#lost").value, sub_labour: root.querySelector("#sub").value, remarks: root.querySelector("#rem").value }).then((r) => { toast(r); view = "home"; load(); }); };
-			} },
-		photo: { title: "{{ _('Site photo') }}", html: () => `<div class="card"><label class="btn p big">📷 {{ _("Take photo") }}<input type="file" accept="image/*" capture="environment" id="f" hidden></label>
-			<img id="pv" style="width:100%;border-radius:10px;margin-top:8px;display:none">
-			<small class="mut">{{ _("Caption") }}</small><input class="in" id="cap"><small class="mut">{{ _("Where on site") }}</small><input class="in" id="loc">
-			<div class="mut">${gps.lat ? "📍 " + gps.lat.toFixed(5) + ", " + gps.lng.toFixed(5) : "{{ _('No GPS — allow location for geo-tagged photos') }}"}</div>
-			<button class="btn g big" id="go">{{ _("Save photo") }}</button><p class="mut">{{ _("The client sees it only after the PM publishes it.") }}</p></div>`,
-			bind() { let img = null; const f = root.querySelector("#f");
-				f.onchange = async () => { img = await pic(f, 1600); const p = root.querySelector("#pv"); p.src = img; p.style.display = "block"; };
-				root.querySelector("#go").onclick = () => { if (!img) return frappe.msgprint("{{ _('Take a photo first.') }}");
-					call("sa_photo", { project: D.project, image: img, caption: root.querySelector("#cap").value, location: root.querySelector("#loc").value, latitude: gps.lat, longitude: gps.lng })
-						.then((r) => { toast(r); view = "home"; load(); }); }; } },
-		cash: { title: "{{ _('Site cash') }}", html: () => `<div class="card"><div class="mut">{{ _("Imprest balance") }} <b>${inr(D.imprest)}</b> · {{ _("you book up to") }} <b>${inr(D.cash_limit)}</b> {{ _("at once; above it the PM approves") }}</div>
-			<small class="mut">{{ _("For") }}</small><input class="in" id="desc"><div class="row"><div><small class="mut">{{ _("Amount") }}</small><input class="in" type="number" id="amt"></div>
-			<div><small class="mut">{{ _("Head") }}</small><select class="in" id="head"><option>Site overheads</option><option>Materials</option><option>Labour</option><option>Plant & equipment</option></select></div></div>
-			<small class="mut">{{ _("Paid to") }}</small><input class="in" id="to"><label class="btn big">🧾 {{ _("Photo of the bill") }}<input type="file" accept="image/*" capture="environment" id="rc" hidden></label>
-			<button class="btn p big" id="go">{{ _("Book") }}</button></div>
-			<div class="card"><b>{{ _("Last two weeks") }}</b>${D.expenses.map((x) => `<div class="wk">${esc(x.description)}<small>${inr(x.amount)} · ${esc(x.status)}</small></div>`).join("") || `<p class="mut">—</p>`}</div>`,
-			bind() { let rc = null; root.querySelector("#rc").onchange = async (e) => { rc = await pic(e.target, 1400); frappe.show_alert("{{ _('Bill photo added') }}"); };
-				root.querySelector("#go").onclick = () => { const a = +root.querySelector("#amt").value, d = root.querySelector("#desc").value; if (!a || !d) return frappe.msgprint("{{ _('Enter what it was for and the amount.') }}");
-					call("sa_expense", { project: D.project, description: d, amount: a, head: root.querySelector("#head").value, paid_to: root.querySelector("#to").value, receipt: rc }).then((r) => { toast(r); load(); }); }; } },
-		del: { title: "{{ _('Deliveries') }}", html: () => `${D.trips.map((t) => `<div class="card"><b>${esc(t.name)}</b> · ${esc(t.hs_vehicle || "")}<div class="mut">{{ _("Driver") }} ${esc(t.hs_driver || "—")} ${t.hs_driver_mobile ? `· <a href="tel:${esc(t.hs_driver_mobile)}">${esc(t.hs_driver_mobile)}</a>` : ""} · {{ _("e-way bill") }} ${esc(t.hs_eway_bill || "—")}</div>
-				${t.items.map((i) => `<div class="wk">${esc(i.item_name)}<small>${esc(i.qty)} ${esc(i.uom)}</small></div>`).join("")}
-				<div style="margin-top:8px">{{ _("Give the driver this OTP when the load is checked:") }}<div class="otp">${esc(t.otp)}</div></div></div>`).join("") || `<div class="card mut">{{ _("Nothing on the way.") }}</div>`}
-			${D.pos.length ? `<div class="card"><b>{{ _("Expected from suppliers") }}</b>${D.pos.map((p) => `<div class="wk">${esc(p.supplier)}<small>${esc(p.name)} · ${esc(frappe.datetime.str_to_user(p.schedule_date))} · ${Math.round(p.per_received)}%</small></div>`).join("")}
-				<p class="mut">{{ _("The storekeeper books the receipt (GRN) in the desk.") }}</p></div>` : ""}` },
-		chat: { title: "{{ _('Site chat') }}", html: () => `<div class="card"><div class="chat">${D.chat.map((c) => `<div><b>${esc(c.who)}</b> <span class="mut">${esc(frappe.datetime.comment_when ? frappe.datetime.comment_when(c.creation) : c.creation)}</span><br>${esc(c.content)}</div>`).join("") || `<p class="mut">{{ _("No messages yet.") }}</p>`}</div>
-			<textarea class="in" id="t" rows="2" placeholder="{{ _('Message the project team (@name to mention)') }}"></textarea><button class="btn p big" id="go">{{ _("Send") }}</button></div>`,
-			bind() { root.querySelector("#go").onclick = () => { const t = root.querySelector("#t").value; if (!t.trim()) return; call("sa_chat", { project: D.project, text: t }).then(() => load()); }; } },
+		gang: { title: "{{ _('Gang check-in') }}", html: () => `<section class="ha-card"><h4>${I("users")} {{ _("Who is at work today?") }}<small>${D.present}/${D.workers.length}</small></h4>
+			<label class="ha-chk"><input type="checkbox" id="all"> <b>{{ _("Everyone") }}</b></label>
+			${D.workers.map((w) => `<label class="ha-chk"><input type="checkbox" class="w" value="${esc(w.name)}" ${w.present ? "checked disabled" : ""}> ${esc(w.worker_name)}<small>${esc(w.trade)}${w.contractor ? "<br>" + esc(w.contractor) : ""}</small></label>`).join("") || A.empty("{{ _('No workers on this project.') }}", "users")}
+			<button class="ha-btn g" id="go">${I("check")} {{ _("Check in ticked workers") }}</button><p class="ha-mut" style="text-align:center;margin:8px 0 0">${A.gps.text ? mini("pin") + " " + A.gps.text : "{{ _('Allow location to geo-tag the check-in') }}"}</p></section>`,
+			bind() { q("#all").onchange = (e) => root.querySelectorAll(".w:not(:disabled)").forEach((c) => (c.checked = e.target.checked));
+				q("#go").onclick = () => { const W = [...root.querySelectorAll(".w:checked:not(:disabled)")].map((c) => c.value);
+					if (!W.length) return A.toast("{{ _('Tick at least one worker.') }}", 1);
+					A.call(M + "sa_gang", { project: D.project, workers: JSON.stringify(W), latitude: A.gps.lat, longitude: A.gps.lng }).then((r) => { A.done(r); tab = "home"; sub = null; load(); }).catch(() => {}); }; } },
+		dpr: { title: "{{ _('Daily progress report') }}", html: () => `${D.dpr.length ? `<section class="ha-card ha-list">${D.dpr.map((d) => A.item({ icon: "check", tone: "c-green", title: esc(d.activity), value: esc(d.actual_qty) + " " + esc(d.unit || "") })).join("")}</section>` : ""}
+			<section class="ha-card"><h4>${I("clipboard")} {{ _("Add today's work") }}</h4>
+			<label class="ha-f"><span>{{ _("BOQ item") }}</span><select class="ha-in" id="boq"><option value="">—</option>${D.boq.map((b) => `<option value="${esc(b[0])}" data-u="${esc(b[2])}" data-d="${esc(b[1])}">${esc(b[0])} ${esc(b[1])}</option>`).join("")}</select></label>
+			<label class="ha-f"><span>{{ _("Activity") }}</span><input class="ha-in" id="act"></label>
+			<div class="ha-row"><label class="ha-f"><span>{{ _("Quantity today") }}</span><input class="ha-in" type="number" step="any" inputmode="decimal" id="qty"></label><label class="ha-f"><span>{{ _("Unit") }}</span><input class="ha-in" id="unit"></label></div>
+			<div class="ha-row"><label class="ha-f"><span>{{ _("Weather") }}</span><select class="ha-in" id="wx"><option>Fair</option><option>Light rain</option><option>Heavy rain</option><option>Extreme heat</option></select></label>
+				<label class="ha-f"><span>{{ _("Hours lost") }}</span><input class="ha-in" type="number" inputmode="decimal" id="lost" value="0"></label></div>
+			<label class="ha-f"><span>{{ _("Subcontractor labour") }}</span><input class="ha-in" type="number" inputmode="numeric" id="sub" value="0"></label>
+			<label class="ha-f"><span>{{ _("Remarks") }}</span><textarea class="ha-in" id="rem" rows="2"></textarea></label>
+			<div class="ha-note info" style="margin-top:12px">${I("users")} {{ _("Own labour from today's check-ins:") }} ${D.present}</div>
+			<button class="ha-btn p" id="go">${I("send")} {{ _("Send DPR") }}</button></section>`,
+			bind() { const boq = q("#boq");
+				boq.onchange = () => { const o = boq.selectedOptions[0]; if (o && o.value) { q("#act").value = o.dataset.d; q("#unit").value = o.dataset.u; } };
+				q("#go").onclick = () => { const a = q("#act").value; if (!a) return A.toast("{{ _('Enter the activity.') }}", 1);
+					A.call(M + "sa_dpr", { project: D.project, activity: a, boq_item: boq.value, qty: q("#qty").value, unit: q("#unit").value, weather: q("#wx").value,
+						hours_lost: q("#lost").value, sub_labour: q("#sub").value, remarks: q("#rem").value }).then((r) => { A.done(r); tab = "home"; sub = null; load(); }).catch(() => {}); }; } },
+		photo: { title: "{{ _('Site photos') }}", html: () => `<section class="ha-card"><label class="ha-btn p" style="margin-top:0">${I("camera")} {{ _("Take a photo") }}<input type="file" accept="image/*" capture="environment" id="f" hidden></label>
+			<img id="pv" style="width:100%;border-radius:14px;margin-top:10px;display:none" alt="">
+			<label class="ha-f"><span>{{ _("Caption") }}</span><input class="ha-in" id="cap"></label><label class="ha-f"><span>{{ _("Where on site") }}</span><input class="ha-in" id="loc"></label>
+			<p class="ha-mut">${A.gps.text ? mini("pin") + " " + A.gps.text : "{{ _('No GPS — allow location for geo-tagged photos') }}"}</p>
+			<button class="ha-btn g" id="go">${I("check")} {{ _("Save photo") }}</button><p class="ha-mut" style="text-align:center">{{ _("The client sees it only after the PM publishes it.") }}</p></section>
+			${D.photos.length ? `<div class="ha-sec">{{ _("Recent") }}</div><section class="ha-card">${photos()}</section>` : ""}`,
+			bind() { let img = null; const f = q("#f");
+				f.onchange = async () => { img = await A.photo(f, 1600); const p = q("#pv"); p.src = img; p.style.display = "block"; };
+				q("#go").onclick = () => { if (!img) return A.toast("{{ _('Take a photo first.') }}", 1);
+					A.call(M + "sa_photo", { project: D.project, image: img, caption: q("#cap").value, location: q("#loc").value, latitude: A.gps.lat, longitude: A.gps.lng }).then((r) => { A.done(r); load(); }).catch(() => {}); }; } },
+		chat: { title: "{{ _('Site chat') }}", html: () => `<section class="ha-card ha-list">${D.chat.map((c) => A.item({ icon: A.initials(c.who), tone: "c-blue", title: esc(c.who) + ` <span class="ha-mut" style="font-weight:400">· ${A.when(c.creation)}</span>`, sub: esc(c.content) })).join("") || A.empty("{{ _('No messages yet.') }}", "chat")}</section>
+			<section class="ha-card"><label class="ha-f" style="margin-top:0"><span>{{ _("Message the project team (@name to mention)") }}</span><textarea class="ha-in" id="t" rows="2"></textarea></label><button class="ha-btn p" id="go">${I("send")} {{ _("Send") }}</button></section>`,
+			bind() { q("#go").onclick = () => { const t = q("#t").value; if (!t.trim()) return; A.call(M + "sa_chat", { project: D.project, text: t }).then(() => load()).catch(() => {}); }; } },
 	};
-	locate();
-	frappe.ready ? frappe.ready(() => load()) : document.addEventListener("DOMContentLoaded", () => load());
+	const SUB = {
+		cash: { title: "{{ _('Site cash') }}", html: () => `<div class="ha-stats"><div class="ha-stat green"><small>{{ _("In hand") }}</small><b>${A.inr(D.imprest)}</b></div><div class="ha-stat"><small>{{ _("You book up to") }}</small><b>${A.inr(D.cash_limit)}</b><span>{{ _("above it the PM approves") }}</span></div></div>
+			<section class="ha-card"><h4>${I("wallet")} {{ _("Book an expense") }}</h4><label class="ha-f"><span>{{ _("For") }}</span><input class="ha-in" id="desc"></label>
+			<div class="ha-row"><label class="ha-f"><span>{{ _("Amount (₹)") }}</span><input class="ha-in" type="number" inputmode="decimal" id="amt"></label>
+			<label class="ha-f"><span>{{ _("Head") }}</span><select class="ha-in" id="head"><option>Site overheads</option><option>Materials</option><option>Labour</option><option>Plant & equipment</option></select></label></div>
+			<label class="ha-f"><span>{{ _("Paid to") }}</span><input class="ha-in" id="to"></label><label class="ha-btn">${I("camera")} <span id="rcl">{{ _("Photo of the bill") }}</span><input type="file" accept="image/*" capture="environment" id="rc" hidden></label>
+			<button class="ha-btn p" id="go">${I("check")} {{ _("Book") }}</button></section>
+			<div class="ha-sec">{{ _("Last two weeks") }}</div><section class="ha-card ha-list">${D.expenses.map((x) => A.item({ icon: "cash", tone: "c-green", title: esc(x.description), value: A.inr(x.amount) + `<span>${esc(x.status)}</span>` })).join("") || A.empty("{{ _('Nothing booked.') }}", "wallet")}</section>`,
+			bind() { let rc = null; q("#rc").onchange = async (e) => { rc = await A.photo(e.target, 1400); q("#rcl").textContent = "{{ _('Bill photo added ✓') }}"; };
+				q("#go").onclick = () => { const a = +q("#amt").value, d = q("#desc").value; if (!a || !d) return A.toast("{{ _('Enter what it was for and the amount.') }}", 1);
+					A.call(M + "sa_expense", { project: D.project, description: d, amount: a, head: q("#head").value, paid_to: q("#to").value, receipt: rc }).then((r) => { A.done(r); load(); }).catch(() => {}); }; } },
+		del: { title: "{{ _('Deliveries') }}", html: () => `${D.trips.map((t) => `<section class="ha-card"><h4>${I("truck")} ${esc(t.name)}<small>${esc(t.hs_vehicle || "")}</small></h4>
+				<div class="ha-list">${A.item({ icon: "phone", tone: "c-grey", title: "{{ _('Driver') }} " + esc(t.hs_driver || "—"), sub: "{{ _('e-way bill') }} " + esc(t.hs_eway_bill || "—"), href: t.hs_driver_mobile ? "tel:" + t.hs_driver_mobile : "" })}
+				${t.items.map((i) => A.item({ icon: "box", tone: "c-amber", title: esc(i.item_name), value: esc(i.qty) + " " + esc(i.uom) })).join("")}</div>
+				<div class="ha-note info" style="margin-top:10px">{{ _("Give the driver this OTP when the load is checked") }}</div><div class="ha-big">${esc(t.otp)}</div></section>`).join("") || `<section class="ha-card">${A.empty("{{ _('Nothing on the way.') }}", "truck")}</section>`}
+			${D.pos.length ? `<div class="ha-sec">{{ _("Expected from suppliers") }}</div><section class="ha-card ha-list">${D.pos.map((p) => A.item({ icon: "box", tone: "c-blue", title: esc(p.supplier), sub: esc(p.name) + " · " + A.date(p.schedule_date), value: Math.round(p.per_received) + "%" })).join("")}
+				<p class="ha-mut">{{ _("The storekeeper books the receipt (GRN) in the desk.") }}</p></section>` : ""}` },
+	};
+	A.locate();
+	const start = () => load().catch(() => { root.innerHTML = A.top({ title: "Hipersign Site" }) + `<main class="ha-body">${A.empty("{{ _('Could not load — check the connection and reopen.') }}", "alert")}</main>`; });
+	document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start();
 })();
 </script>
 {% endblock %}
